@@ -1,0 +1,5 @@
+export const USER_REPOSITORY = Symbol("USER_REPOSITORY");
+export const ROLE_REPOSITORY = Symbol("ROLE_REPOSITORY");
+export const USER_ROLE_REPOSITORY = Symbol("USER_ROLE_REPOSITORY");
+export const PASSWORD_HASHER = Symbol("PASSWORD_HASHER");
+export const TRANSACTION = Symbol("TRANSACTION");
