@@ -1,0 +1,26 @@
+{
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 120,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+
+  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+
+  "importOrder": [
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^@modules(/.*)?$",
+    "",
+    "^@core(/.*)?$",
+    "",
+    "^@config(/.*)?$",
+    "",
+    "^@app(/.*)?$"
+  ],
+  "importOrderParserPlugins": ["typescript", "decorators-legacy"],
+  "importOrderTypeScriptVersion": "5.0.0"
+}
