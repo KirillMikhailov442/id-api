@@ -12,6 +12,8 @@ import type { Email } from "@core/domain/value-object/email.value-object";
 import type { Name } from "@core/domain/value-object/name.value-object";
 import type { Surname } from "@core/domain/value-object/surname.value-object";
 
+export const PASSWORD_MAX_LENGTH = 72;
+
 export class User {
   static create(params: { name: Name; surname: Surname; email: Email; passwordHash: string }): User {
     return new User(
