@@ -4,7 +4,7 @@ import { UserEmailConfirmedStatus } from "@core/domain/enum/user-email-confirmed
 import { Email } from "@core/domain/value-object/email.value-object";
 import { Name } from "@core/domain/value-object/name.value-object";
 import { Surname } from "@core/domain/value-object/surname.value-object";
-import { DbUserRole } from "@core/infrastructure/entity/db-user-role.entity";
+import type { DbUserRole } from "@core/infrastructure/entity/db-user-role.entity";
 import { DbUser } from "@core/infrastructure/entity/db-user.entity";
 import { UserRoleMapper } from "@core/infrastructure/mapper/user-role.mapper";
 

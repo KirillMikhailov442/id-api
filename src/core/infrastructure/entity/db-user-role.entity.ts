@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 
 import { DbRole } from "@core/infrastructure/entity/db-role.entity";
 import { DbUser } from "@core/infrastructure/entity/db-user.entity";
@@ -9,6 +9,7 @@ export class DbUserRole {
   userId: string;
 
   @PrimaryColumn("uuid")
+  @Index()
   roleId: string;
 
   @Column("timestamptz")
