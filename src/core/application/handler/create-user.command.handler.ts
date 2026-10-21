@@ -8,6 +8,7 @@ import type { IUserRepository } from "@core/application/port/user-repository";
 import { PASSWORD_HASHER, TRANSACTION, USER_REPOSITORY } from "@core/core.tokens";
 import { User } from "@core/domain/entity/user";
 import { UserRole } from "@core/domain/entity/user-role";
+import { RoleType } from "@core/domain/enum/role-type.enum";
 import { EmailAlreadyRegisteredException } from "@core/domain/exception/email-already-registered.exception";
 import { RoleNotFoundException } from "@core/domain/exception/role-not-found.exception";
 import { Email } from "@core/domain/value-object/email.value-object";
@@ -15,7 +16,7 @@ import { Name } from "@core/domain/value-object/name.value-object";
 import { RoleName } from "@core/domain/value-object/role-name.value-object";
 import { Surname } from "@core/domain/value-object/surname.value-object";
 
-export const DEFAULT_ROLE_NAME = "USER";
+export const DEFAULT_ROLE_NAME = RoleType.User;
 
 @CommandHandler(CreateUserCommand)
 @Injectable()
