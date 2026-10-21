@@ -8,14 +8,9 @@ import {
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 
-import type { FieldError } from "@core/shared/presentation/exception/field-error";
+import { FieldError } from "@core/shared/presentation/exception/field-error";
 import { HttpStatus } from "@core/shared/presentation/exception/http-status.enum";
-import { BadRequestExceptionResponse } from "@core/shared/presentation/exception/responses/bad-request-exception.response";
-import { ConflictExceptionResponse } from "@core/shared/presentation/exception/responses/conflict-exception.response";
 import { ExceptionResponse } from "@core/shared/presentation/exception/responses/exception.response";
-import { ForbiddenExceptionResponse } from "@core/shared/presentation/exception/responses/forbidden-exception.response";
-import { NotFoundExceptionResponse } from "@core/shared/presentation/exception/responses/not-found-exception.response";
-import { UnauthorizedExceptionResponse } from "@core/shared/presentation/exception/responses/unauthorized-exception.response";
 import { ValidationExceptionResponse } from "@core/shared/presentation/exception/responses/validation-exception.response";
 
 interface HttpExceptionBody {
@@ -25,19 +20,23 @@ interface HttpExceptionBody {
   errors?: FieldError[];
 }
 
-type ResponseConstructor = new (
-  message: string,
-  path: string,
-  timestamp: string,
-  errors?: FieldError[]
-) => ExceptionResponse;
-
-const RESPONSE_FACTORIES: Record<number, ResponseConstructor> = {
-  [HttpStatus.BadRequest]: BadRequestExceptionResponse,
-  [HttpStatus.Unauthorized]: UnauthorizedExceptionResponse,
-  [HttpStatus.Forbidden]: ForbiddenExceptionResponse,
-  [HttpStatus.NotFound]: NotFoundExceptionResponse,
-  [HttpStatus.Conflict]: ConflictExceptionResponse,
+const DOMAIN_EXCEPTION_STATUSES: Record<string, number> = {
+  UserNotFoundException: HttpStatus.NotFound,
+  RoleNotFoundException: HttpStatus.NotFound,
+  RoleAlreadyExistsException: HttpStatus.Conflict,
+  EmailAlreadyRegisteredException: HttpStatus.Conflict,
+  EmailAlreadyConfirmedException: HttpStatus.Conflict,
+  RoleAlreadyAssignedException: HttpStatus.Conflict,
+  UserAlreadyBlockedException: HttpStatus.Conflict,
+  UserAlreadyUnblockedException: HttpStatus.Conflict,
+  InvalidCredentialsException: HttpStatus.Unauthorized,
+  InvalidRefreshTokenException: HttpStatus.Unauthorized,
+  SessionNotFoundException: HttpStatus.Unauthorized,
+  InvalidAccessTokenException: HttpStatus.Unauthorized,
+  AccessTokenExpiredException: HttpStatus.Unauthorized,
+  UserBlockedException: HttpStatus.Forbidden,
+  InsufficientRoleException: HttpStatus.Forbidden,
+  InvalidValueObjectException: HttpStatus.Validation,
 };
 
 @Catch()
@@ -54,7 +53,7 @@ export class ExceptionFilter implements NestExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException
         ? this.mapHttpException(exception, path, timestamp)
-        : this.mapUnknownException(path, timestamp);
+        : (this.mapDomainException(exception, path, timestamp) ?? this.mapUnknownException(path, timestamp));
 
     response.status(exceptionResponse.status).json(exceptionResponse);
   }
@@ -69,12 +68,24 @@ export class ExceptionFilter implements NestExceptionFilter {
 
     const message = this.extractMessage(body) ?? exception.message;
 
-    const ResponseClass = RESPONSE_FACTORIES[status];
-    if (ResponseClass !== undefined) {
-      return new ResponseClass(message, path, timestamp);
+    return new ExceptionResponse(status, message, path, timestamp);
+  }
+
+  private mapDomainException(exception: unknown, path: string, timestamp: string): ExceptionResponse | undefined {
+    if (!(exception instanceof Error)) {
+      return undefined;
     }
 
-    return new ExceptionResponse(status, message, path, timestamp);
+    const status = DOMAIN_EXCEPTION_STATUSES[exception.name];
+    if (status === undefined) {
+      return undefined;
+    }
+
+    if (status === HttpStatus.Validation) {
+      return new ValidationExceptionResponse([new FieldError("value", exception.message)], path, timestamp);
+    }
+
+    return new ExceptionResponse(status, exception.message, path, timestamp);
   }
 
   private mapUnknownException(path: string, timestamp: string): ExceptionResponse {
