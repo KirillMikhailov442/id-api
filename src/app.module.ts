@@ -1,11 +1,17 @@
 import { Module } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { APP_GUARD } from "@nestjs/core";
 import { CqrsModule } from "@nestjs/cqrs";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
+
+import { AuthModule } from "@modules/auth/auth.module";
 
 import { CoreModule } from "@core/core.module";
 
 import { getTypeOrmConfig } from "@config/database";
 import { registerEnvConfig } from "@config/env";
+import { getThrottlerConfig } from "@config/rate-limit";
 
 @Module({
   imports: [
@@ -16,7 +22,13 @@ import { registerEnvConfig } from "@config/env";
     CqrsModule.forRoot({
       rethrowUnhandled: true,
     }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: getThrottlerConfig,
+    }),
     CoreModule,
+    AuthModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

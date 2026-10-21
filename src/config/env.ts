@@ -1,5 +1,5 @@
-import { plainToInstance } from "class-transformer";
 import { ConfigModule } from "@nestjs/config";
+import { plainToInstance } from "class-transformer";
 import { IsInt, IsString, Min, validateSync } from "class-validator";
 
 class EnvironmentVariables {
@@ -22,6 +22,34 @@ class EnvironmentVariables {
 
   @IsString()
   DB_NAME: string;
+
+  @IsString()
+  SWAGGER_PATH: string = "docs/swagger";
+
+  @IsString()
+  NODE_ENV: string = "development";
+
+  @IsString()
+  JWT_ACCESS_SECRET: string;
+
+  @IsInt()
+  @Min(1)
+  JWT_ACCESS_TTL: number = 900;
+
+  @IsInt()
+  @Min(1)
+  REFRESH_TOKEN_TTL: number = 2592000;
+
+  @IsInt()
+  @Min(1)
+  THROTTLE_TTL: number = 60;
+
+  @IsInt()
+  @Min(1)
+  THROTTLE_LIMIT: number = 100;
+
+  @IsString()
+  API_GLOBAL_PREFIX: string = "api";
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {

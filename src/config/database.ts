@@ -1,7 +1,10 @@
-import "dotenv/config";
-
 import type { TypeOrmModuleOptions } from "@nestjs/typeorm";
+import * as dotenv from "dotenv";
 import { DataSource } from "typeorm";
+
+for (const path of [`.env.${process.env.NODE_ENV}`, ".env"]) {
+  dotenv.config({ path, override: false });
+}
 
 const baseConnectionOptions = {
   type: "postgres",
