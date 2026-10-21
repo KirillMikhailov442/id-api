@@ -29,6 +29,18 @@
       "rules": {
         "typescript/consistent-type-imports": "off"
       }
+    },
+    {
+      "files": ["**/user.controller.ts", "**/role.controller.ts", "**/auth.controller.ts"],
+      "rules": {
+        "typescript/consistent-type-imports": "off"
+      }
+    },
+    {
+      "files": ["**/migrations/**"],
+      "rules": {
+        "typescript/consistent-type-imports": "off"
+      }
     }
   ]
 }
