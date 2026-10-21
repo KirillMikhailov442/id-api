@@ -2,10 +2,16 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { BlockUserCommandHandler } from "@core/application/handler/block-user.command.handler";
+import { CreateRoleCommandHandler } from "@core/application/handler/create-role.command.handler";
 import { CreateUserCommandHandler } from "@core/application/handler/create-user.command.handler";
+import { DeleteRoleCommandHandler } from "@core/application/handler/delete-role.command.handler";
 import { DeleteUserCommandHandler } from "@core/application/handler/delete-user.command.handler";
+import { GetRoleQueryHandler } from "@core/application/handler/get-role.query.handler";
 import { GetUserQueryHandler } from "@core/application/handler/get-user.query.handler";
+import { ListRolesQueryHandler } from "@core/application/handler/list-roles.query.handler";
 import { ListUsersQueryHandler } from "@core/application/handler/list-users.query.handler";
+import { UnblockUserCommandHandler } from "@core/application/handler/unblock-user.command.handler";
+import { UpdateRoleCommandHandler } from "@core/application/handler/update-role.command.handler";
 import { UpdateUserCommandHandler } from "@core/application/handler/update-user.command.handler";
 import {
   PASSWORD_HASHER,
@@ -22,6 +28,8 @@ import { DbUserRoleRepository } from "@core/infrastructure/repository/db-user-ro
 import { DbUserRepository } from "@core/infrastructure/repository/db-user.repository";
 import { BcryptPasswordHasher } from "@core/infrastructure/security/bcrypt-password-hasher";
 import { DbTransaction } from "@core/infrastructure/transaction/db-transaction";
+import { RoleController } from "@core/presentation/controller/v1/role.controller";
+import { UserController } from "@core/presentation/controller/v1/user.controller";
 
 export {
   PASSWORD_HASHER,
@@ -30,9 +38,13 @@ export {
   USER_REPOSITORY,
   USER_ROLE_REPOSITORY,
 } from "@core/core.tokens";
+export type { IRoleRepository } from "@core/application/port/role-repository";
+export type { IPasswordHasher } from "@core/application/port/password-hasher";
+export type { IUserRepository } from "@core/application/port/user-repository";
 
 @Module({
   imports: [TypeOrmModule.forFeature([DbUser, DbRole, DbUserRole])],
+  controllers: [UserController, RoleController],
   providers: [
     DbUserRepository,
     DbRoleRepository,
@@ -48,8 +60,14 @@ export {
     UpdateUserCommandHandler,
     DeleteUserCommandHandler,
     BlockUserCommandHandler,
+    UnblockUserCommandHandler,
     GetUserQueryHandler,
     ListUsersQueryHandler,
+    CreateRoleCommandHandler,
+    UpdateRoleCommandHandler,
+    DeleteRoleCommandHandler,
+    GetRoleQueryHandler,
+    ListRolesQueryHandler,
   ],
   exports: [USER_REPOSITORY, ROLE_REPOSITORY, USER_ROLE_REPOSITORY, PASSWORD_HASHER, TRANSACTION],
 })
