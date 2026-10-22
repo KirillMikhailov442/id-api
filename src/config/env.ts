@@ -1,6 +1,6 @@
 import { ConfigModule } from "@nestjs/config";
 import { plainToInstance } from "class-transformer";
-import { IsInt, IsString, Min, validateSync } from "class-validator";
+import { IsIn, IsInt, IsString, Min, validateSync } from "class-validator";
 
 class EnvironmentVariables {
   @IsInt()
@@ -50,6 +50,38 @@ class EnvironmentVariables {
 
   @IsString()
   API_GLOBAL_PREFIX: string = "api";
+
+  @IsString()
+  SMTP_HOST: string;
+
+  @IsInt()
+  @Min(1)
+  SMTP_PORT: number = 587;
+
+  @IsString()
+  SMTP_USER: string;
+
+  @IsString()
+  SMTP_PASSWORD: string;
+
+  @IsIn(["true", "false"])
+  SMTP_SECURE: string = "false";
+
+  @IsString()
+  MAIL_FROM: string;
+
+  @IsString()
+  EMAIL_CONFIRM_SECRET: string;
+
+  @IsString()
+  APP_BASE_URL: string = "http://localhost:8080";
+
+  @IsString()
+  APP_WEB_URL: string = "http://localhost:3000";
+
+  @IsInt()
+  @Min(1)
+  EMAIL_CONFIRM_TTL: number = 86400;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
