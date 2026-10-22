@@ -26,6 +26,7 @@ const DOMAIN_EXCEPTION_STATUSES: Record<string, number> = {
   RoleAlreadyExistsException: HttpStatus.Conflict,
   EmailAlreadyRegisteredException: HttpStatus.Conflict,
   EmailAlreadyConfirmedException: HttpStatus.Conflict,
+  InvalidEmailConfirmationTokenException: HttpStatus.BadRequest,
   RoleAlreadyAssignedException: HttpStatus.Conflict,
   UserAlreadyBlockedException: HttpStatus.Conflict,
   UserAlreadyUnblockedException: HttpStatus.Conflict,
@@ -53,7 +54,7 @@ export class ExceptionFilter implements NestExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException
         ? this.mapHttpException(exception, path, timestamp)
-        : (this.mapDomainException(exception, path, timestamp) ?? this.mapUnknownException(path, timestamp));
+        : (this.mapDomainException(exception, path, timestamp) ?? this.mapUnknownException(exception, path, timestamp));
 
     response.status(exceptionResponse.status).json(exceptionResponse);
   }
@@ -88,8 +89,12 @@ export class ExceptionFilter implements NestExceptionFilter {
     return new ExceptionResponse(status, exception.message, path, timestamp);
   }
 
-  private mapUnknownException(path: string, timestamp: string): ExceptionResponse {
-    this.logger.error("Unhandled exception", undefined, ExceptionFilter.name);
+  private mapUnknownException(exception: unknown, path: string, timestamp: string): ExceptionResponse {
+    this.logger.error(
+      "Unhandled exception",
+      exception instanceof Error ? exception.stack : String(exception),
+      ExceptionFilter.name
+    );
     return new ExceptionResponse(NestHttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", path, timestamp);
   }
 

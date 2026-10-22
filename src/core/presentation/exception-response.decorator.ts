@@ -72,6 +72,34 @@ export const ApiEmailAlreadyRegisteredResponse = () =>
     })
   );
 
+export const ApiEmailAlreadyConfirmedResponse = () =>
+  applyDecorators(
+    ApiConflictResponse({
+      description: "Email is already confirmed",
+      type: ExceptionResponse,
+      example: {
+        status: HttpStatus.Conflict,
+        message: "Email is already confirmed",
+        path: "/users/confirm-email",
+        timestamp: EXAMPLE_TIMESTAMP,
+      },
+    })
+  );
+
+export const ApiInvalidEmailConfirmationTokenResponse = () =>
+  applyDecorators(
+    ApiBadRequestResponse({
+      description: "Email confirmation token is invalid or expired",
+      type: ExceptionResponse,
+      example: {
+        status: HttpStatus.BadRequest,
+        message: "Email confirmation token is invalid or expired",
+        path: "/users/confirm-email",
+        timestamp: EXAMPLE_TIMESTAMP,
+      },
+    })
+  );
+
 export const ApiUserAlreadyBlockedResponse = () =>
   applyDecorators(
     ApiConflictResponse({

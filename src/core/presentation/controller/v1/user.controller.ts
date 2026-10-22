@@ -23,6 +23,7 @@ import type { Request, Response } from "express";
 import { LoginCommand, type LoginResult } from "@modules/auth/application/command/login.command";
 
 import { BlockUserCommand } from "@core/application/command/block-user.command";
+import { ConfirmEmailCommand } from "@core/application/command/confirm-email.command";
 import { CreateUserCommand } from "@core/application/command/create-user.command";
 import { DeleteUserCommand } from "@core/application/command/delete-user.command";
 import { UnblockUserCommand } from "@core/application/command/unblock-user.command";
@@ -31,13 +32,16 @@ import { GetUserQuery } from "@core/application/query/get-user.query";
 import { ListUsersQuery } from "@core/application/query/list-users.query";
 import type { User } from "@core/domain/entity/user";
 import { RoleType } from "@core/domain/enum/role-type.enum";
+import { ConfirmEmailQuery } from "@core/presentation/dto/v1/confirm-email.query";
 import { CreateUserRequest } from "@core/presentation/dto/v1/create-user.request";
 import { CreateUserResponse } from "@core/presentation/dto/v1/create-user.response";
 import { UpdateUserRequest } from "@core/presentation/dto/v1/update-user.request";
 import { UserDto } from "@core/presentation/dto/v1/user.dto";
 import {
   ApiCreateValidationFailedResponse,
+  ApiEmailAlreadyConfirmedResponse,
   ApiEmailAlreadyRegisteredResponse,
+  ApiInvalidEmailConfirmationTokenResponse,
   ApiInvalidUserIdResponse,
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
@@ -136,6 +140,20 @@ export class UserController {
   async updateMe(@CurrentUser() currentUser: AuthenticatedUser, @Body() request: UpdateUserRequest): Promise<UserDto> {
     const command = new UpdateUserCommand(currentUser.userId, request.name, request.surname, request.email);
     const user = await this.commandBus.execute<UpdateUserCommand, User>(command);
+
+    return UserDto.fromDomain(user);
+  }
+
+  @Public()
+  @Get("confirm-email")
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOkResponse({ type: UserDto, description: "Email confirmed" })
+  @ApiInvalidEmailConfirmationTokenResponse()
+  @ApiEmailAlreadyConfirmedResponse()
+  @ApiUserNotFoundResponse()
+  @ApiUnexpectedErrorResponse()
+  async confirmEmail(@Query() query: ConfirmEmailQuery): Promise<UserDto> {
+    const user = await this.commandBus.execute<ConfirmEmailCommand, User>(new ConfirmEmailCommand(query.token));
 
     return UserDto.fromDomain(user);
   }

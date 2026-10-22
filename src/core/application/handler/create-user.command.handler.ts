@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
+import { CommandHandler, EventBus, type ICommandHandler } from "@nestjs/cqrs";
 
 import { CreateUserCommand } from "@core/application/command/create-user.command";
 import type { IPasswordHasher } from "@core/application/port/password-hasher";
@@ -9,6 +9,7 @@ import { PASSWORD_HASHER, TRANSACTION, USER_REPOSITORY } from "@core/core.tokens
 import { User } from "@core/domain/entity/user";
 import { UserRole } from "@core/domain/entity/user-role";
 import { RoleType } from "@core/domain/enum/role-type.enum";
+import { UserCreatedEvent } from "@core/domain/event/user-created.event";
 import { EmailAlreadyRegisteredException } from "@core/domain/exception/email-already-registered.exception";
 import { RoleNotFoundException } from "@core/domain/exception/role-not-found.exception";
 import { Email } from "@core/domain/value-object/email.value-object";
@@ -24,7 +25,8 @@ export class CreateUserCommandHandler implements ICommandHandler<CreateUserComma
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: IPasswordHasher,
-    @Inject(TRANSACTION) private readonly transaction: ITransaction
+    @Inject(TRANSACTION) private readonly transaction: ITransaction,
+    @Inject(EventBus) private readonly eventBus: EventBus
   ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
@@ -45,7 +47,7 @@ export class CreateUserCommandHandler implements ICommandHandler<CreateUserComma
       passwordHash,
     });
 
-    return this.transaction.run(async (context) => {
+    const createdUser = await this.transaction.run(async (context) => {
       await context.userRepository.save(user);
 
       const role = await context.roleRepository.findByName(new RoleName(DEFAULT_ROLE_NAME));
@@ -58,5 +60,9 @@ export class CreateUserCommandHandler implements ICommandHandler<CreateUserComma
 
       return user;
     });
+
+    this.eventBus.publish(new UserCreatedEvent(createdUser.getId(), email.getValue(), name.getValue()));
+
+    return createdUser;
   }
 }
