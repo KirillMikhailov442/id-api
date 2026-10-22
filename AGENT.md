@@ -29,22 +29,21 @@ All source code lives in `src/` with exactly three top-level directories. **Neve
 
 ```
 src/
-├── core/                          # User domain (the heart of the SSO)
-│   ├── shared/                    # PUBLIC shared kernel — usable by every aggregate
-│   │   ├── domain/                # Base domain contracts: IValueObject, IRepository
-│   │   └── presentation/          # Shared presentation contracts, split by purpose:
-│   │       ├── query/             #   input query contracts (pagination/sort/search)
-│   │       ├── response/          #   outgoing response envelopes (pagination meta + response)
-│   │       └── exception/         #   exception handling: filters/, factories/, responses/
-│   ├── domain/                    # User aggregate, value objects, domain events, domain interfaces
-│   ├── infrastructure/            # TypeORM entities, repository implementations, external adapters
-│   └── presentation/              # Controllers, request/response DTOs
-├── modules/                       # Feature aggregates (auth, account, session, ...)
+├── shared/                        # PUBLIC shared kernel — usable by every module
+│   ├── domain/                    # Base domain contracts: IValueObject, IRepository, RoleType, InvalidValueObjectException
+│   ├── infrastructure/            # Reusable infrastructure: mail/, transaction/
+│   └── presentation/              # Shared presentation contracts, split by purpose:
+│       ├── auth/                  #   Public/Roles/CurrentUser decorators, authenticated request types
+│       ├── query/                 #   input query contracts (pagination/sort/search)
+│       ├── response/              #   outgoing response envelopes (pagination meta + response)
+│       └── exception/             #   exception handling: filters/, factories/, responses/
+├── modules/                       # Feature aggregates (user, session, oauth, ...)
 │   └── <aggregate-name>/
-│       ├── domain/                # Aggregate roots, value objects, domain events, interfaces
+│       ├── domain/                # Aggregate roots, value objects, domain events, domain interfaces
 │       ├── infrastructure/        # Repositories, TypeORM entities, external service adapters
-│       └── presentation/          # Controllers, DTOs
-│       └── application/           # Command/Query handlers, event handlers (when the aggregate needs CQRS plumbing)
+│       ├── presentation/          # Controllers, DTOs
+│       ├── application/           # Command/Query handlers, event handlers (when the aggregate needs CQRS plumbing)
+│       └── <aggregate>.module.ts  # NestJS module + tokens at the root of the aggregate folder
 └── config/                        # App configuration: DB connection, logger, env loading & validation
 ```
 
@@ -55,11 +54,12 @@ src/
 | Aggregate roots, entities (domain), value objects | `<aggregate>/domain/` |
 | Domain events | `<aggregate>/domain/` (events subfolder) |
 | Domain repository interfaces (ports) | `<aggregate>/application/port/` |
-| Base domain contracts (`IValueObject`, `IRepository`) | `core/shared/domain/` |
-| Shared query contracts (pagination, sort, search) | `core/shared/presentation/query/` |
-| Shared response envelopes (pagination meta + response) | `core/shared/presentation/response/` |
-| Shared exception handling: `ExceptionFilter`, `validationExceptionFactory`, exception responses | `core/shared/presentation/exception/` |
-| Command / Query handlers | `<aggregate>/application/` (or `<aggregate>/` if no application folder exists yet) |
+| Base domain contracts (`IValueObject`, `IRepository`) | `shared/domain/` |
+| Shared query contracts (pagination, sort, search) | `shared/presentation/query/` |
+| Shared response envelopes (pagination meta + response) | `shared/presentation/response/` |
+| Shared exception handling: `ExceptionFilter`, `validationExceptionFactory`, exception responses | `shared/presentation/exception/` |
+| Generic infrastructure (`MailService`, `TemplateRenderer`, `DbTransactionRunner`) | `shared/infrastructure/` |
+| Command / Query handlers | `<aggregate>/application/` |
 | Event handlers (EventBus subscribers) | `<aggregate>/application/` |
 | TypeORM entities, repository implementations | `<aggregate>/infrastructure/` |
 | Controllers, guards, pipes | `<aggregate>/presentation/` |
@@ -67,12 +67,12 @@ src/
 | Module wiring (NestJS `@Module`) | root of the aggregate folder |
 | DB connection, env validation, logger setup | `config/` |
 
-### core vs modules
+### shared vs modules
 
-- `core/` holds the **User aggregate** — the central domain of the SSO. It follows DDD strictly.
-- `core/shared/` is the **public shared kernel**: every aggregate may import from it (`@core/shared/*`); it is the only part of `core` that is not internal.
-- `modules/` holds **feature aggregates**. Each aggregate mirrors the same DDD folder structure.
-- Aggregates in `modules/` must not reach into `core` internals (anything outside `core/shared/`) — use public interfaces or domain events.
+- `shared/` is the **public shared kernel**: every module may import from it (`@shared/*`). It owns only contracts and generic infrastructure — no aggregate-specific logic.
+- `modules/` holds **feature aggregates**. Each aggregate mirrors the same DDD folder structure. The **User aggregate** (`modules/user`) is the central domain of the SSO.
+- Aggregates must not reach into another aggregate's internals — use its public module exports (`<aggregate>.module.ts`, `<aggregate>.tokens.ts`), public interfaces or domain events.
+- Per-module Swagger decorators (`exception-response.decorator.ts`) live in each aggregate's `presentation/` and build on `shared/presentation/exception/` helpers (`responseExample`, `ApiValidationFailedResponse`).
 
 ## 3. Dependency Rules
 
@@ -86,7 +86,7 @@ presentation ──▶ domain ◀── infrastructure
 - `infrastructure/` implements interfaces declared in `domain/` (repository interfaces, ports).
 - `presentation/` depends on `application/` (commands/queries) — controllers never touch repositories or the database directly.
 - Modules communicate cross-aggregate **only** via public contracts or domain events on the Event Bus — never by importing another aggregate's internal files.
-- `config/` is imported by everything; `config/` imports nothing from `core/` or `modules/`.
+- `config/` is imported by everything; `config/` imports nothing from `shared/`, or `modules/`.
 
 ## 4. Imports — Aliases Only
 
@@ -100,8 +100,8 @@ import { FieldError } from '../field-error';
 
 // ✅ CORRECT — aliases only
 import { AppModule } from '@app/app.module';
-import { User } from '@core/domain/user.aggregate';
-import { FieldError } from '@core/shared/presentation/exception/field-error';
+import { User } from '@modules/user/domain/entity/user';
+import { FieldError } from '@shared/presentation/exception/field-error';
 ```
 
 Available aliases:
@@ -109,7 +109,7 @@ Available aliases:
 | Alias | Points to |
 |---|---|
 | `@app/*` | `src/*` (root composition: `main.ts`, `app.module.ts`) |
-| `@core/*` | `src/core/*` |
+| `@shared/*` | `src/shared/*` |
 | `@modules/*` | `src/modules/*` |
 | `@config/*` | `src/config/*` |
 
@@ -223,7 +223,7 @@ Rule of thumb: **do not wrap a single entity in a `Response` container** — ret
 
 ## 10. Prohibitions for Agents
 
-1. **No new top-level directories** — only `core/`, `modules/`, `config/` exist under `src/`.
+1. **No new top-level directories** — only `shared/`, `modules/`, `config/` exist under `src/`.
 2. **No relative imports at all** (`./` or `../`) in `src/` — aliases only (§4).
 3. **No `process.env` outside `config/`** — `ConfigService` only (§5).
 4. **No business logic in controllers** — controllers map HTTP ⇄ commands/queries.
@@ -240,7 +240,7 @@ Rule of thumb: **do not wrap a single entity in a `Response` container** — ret
 Before finishing any task, verify:
 
 - [ ] Files are in the correct DDD folders.
-- [ ] All imports use `@core`, `@modules`, `@config` aliases.
+- [ ] All imports use `@shared`, `@modules`, `@config` aliases.
 - [ ] All env access goes through `ConfigService`.
 - [ ] DTOs follow the `Query` / `Request` / `Response` / `Dto` naming rules.
 - [ ] Commands/Queries/Events follow the CQRS naming rules.
@@ -266,13 +266,13 @@ Commits follow the **Conventional Commits / Gitflow** style:
   - `perf` — performance improvement
   - `style` — formatting, no logic change
   - `revert` — reverting a previous commit
-- **scope** (optional but recommended) — the area of the change, e.g. `core`, `modules`, `config`, an aggregate name (`auth`, `account`, `session`), or `db` / `ci`.
+- **scope** (optional but recommended) — the area of the change, e.g. `shared`, `modules`, `config`, an aggregate name (`user`, `session`, `oauth`), or `db` / `ci`.
 - **summary** — short, lowercase, imperative, no trailing period, ≤ 72 chars.
 
 Examples:
 
 ```
-feat(core): add user registration endpoint
+feat(user): add user registration endpoint
 fix(config): load env files per NODE_ENV
 refactor(account): extract email verification into domain service
 chore: update typeorm to 1.1.2
