@@ -1,6 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
-import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from "@nestjs/swagger";
+import { DocumentBuilder, SwaggerModule, type SwaggerCustomOptions } from "@nestjs/swagger";
 
 export const SWAGGER_DEFAULT_PATH = "docs/swagger";
 

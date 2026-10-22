@@ -45,7 +45,7 @@ async function bootstrap() {
   const logger = new Logger("Bootstrap");
   logger.log(`Application started and is available at http://localhost:${port}`);
   const swaggerPath = configService.get<string>("SWAGGER_PATH");
-  if (swaggerPath) {
+  if (swaggerPath !== undefined && swaggerPath !== "") {
     logger.log(`Swagger UI is available at http://localhost:${port}/${swaggerPath}`);
   }
 }
