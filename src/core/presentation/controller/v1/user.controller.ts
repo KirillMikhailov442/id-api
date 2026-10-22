@@ -20,7 +20,7 @@ import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, 
 import { Throttle } from "@nestjs/throttler";
 import type { Request, Response } from "express";
 
-import { LoginCommand, type LoginResult } from "@modules/auth/application/command/login.command";
+import { LoginCommand, type LoginResult } from "@modules/session/application/command/login.command";
 
 import { BlockUserCommand } from "@core/application/command/block-user.command";
 import { BlockUserRequest } from "@core/presentation/dto/v1/block-user.request";
