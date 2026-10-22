@@ -1,6 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { RoleType } from "@shared/domain/role-type.enum";
+import { Roles } from "@shared/presentation/auth/roles.decorator";
+import { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
+import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
+import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
 import { CreateScopeCommand } from "@modules/oauth/application/command/create-scope.command";
 import { ListScopesQuery } from "@modules/oauth/application/query/list-scopes.query";
@@ -11,21 +17,14 @@ import {
   ApiScopeAlreadyExistsResponse,
   ApiScopeCreateValidationFailedResponse,
 } from "@modules/oauth/presentation/exception-response.decorator";
-
+import {
+  ApiAuthenticatedResponse,
+  ApiInsufficientRoleResponse,
+} from "@modules/session/presentation/exception-response.decorator";
 import {
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
 } from "@modules/user/presentation/exception-response.decorator";
-import { RoleType } from "@shared/domain/role-type.enum";
-import {
-  ApiAuthenticatedResponse,
-  ApiInsufficientRoleResponse,
-} from "@shared/presentation/auth/exception-response.decorator";
-import { Roles } from "@shared/presentation/auth/roles.decorator";
-import { PaginationQuery } from "@shared/presentation/query/pagination.query";
-import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
-import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
-import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
 @ApiTags("scopes")
 @Controller({ path: "scopes", version: "1" })

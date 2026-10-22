@@ -4,14 +4,13 @@ import {
   ApiConflictResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
-  ApiResponse,
 } from "@nestjs/swagger";
-
+import { ApiValidationFailedResponse as ApiValidationFailedResponseFactory } from "@shared/presentation/exception/api-validation-failed-response";
 import type { FieldError } from "@shared/presentation/exception/field-error";
 import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
+import { EXAMPLE_TIMESTAMP } from "@shared/presentation/exception/response-example";
 import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 
-const EXAMPLE_TIMESTAMP = "2026-10-21T09:00:00.000Z";
 const EXAMPLE_USER_ID = "00000000-0000-4000-8000-000000000000";
 
 const CREATE_FIELD_ERRORS: FieldError[] = [
@@ -129,20 +128,7 @@ export const ApiUserAlreadyUnblockedResponse = () =>
   );
 
 export const ApiValidationFailedResponse = (fieldErrors: FieldError[]) =>
-  applyDecorators(
-    ApiResponse({
-      status: HttpStatus.Validation,
-      description: "Request failed validation",
-      type: ExceptionResponse,
-      example: {
-        status: HttpStatus.Validation,
-        message: "Validation failed",
-        path: "/users",
-        timestamp: EXAMPLE_TIMESTAMP,
-        errors: fieldErrors,
-      },
-    })
-  );
+  ApiValidationFailedResponseFactory(fieldErrors, "/users");
 
 export const ApiUnexpectedErrorResponse = () =>
   applyDecorators(

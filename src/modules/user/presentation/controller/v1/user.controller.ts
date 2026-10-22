@@ -18,12 +18,24 @@ import { ConfigService } from "@nestjs/config";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import { RoleType } from "@shared/domain/role-type.enum";
+import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
+import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
+import { Public } from "@shared/presentation/auth/public.decorator";
+import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/presentation/auth/refresh-cookie.options";
+import { Roles } from "@shared/presentation/auth/roles.decorator";
+import { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
+import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
+import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 import type { Request, Response } from "express";
 
 import { LoginCommand, type LoginResult } from "@modules/session/application/command/login.command";
-
+import {
+  ApiAuthenticatedResponse,
+  ApiInsufficientRoleResponse,
+} from "@modules/session/presentation/exception-response.decorator";
 import { BlockUserCommand } from "@modules/user/application/command/block-user.command";
-import { BlockUserRequest } from "@modules/user/presentation/dto/v1/block-user.request";
 import { ConfirmEmailCommand } from "@modules/user/application/command/confirm-email.command";
 import { CreateUserCommand } from "@modules/user/application/command/create-user.command";
 import { DeleteUserCommand } from "@modules/user/application/command/delete-user.command";
@@ -32,7 +44,7 @@ import { UpdateUserCommand } from "@modules/user/application/command/update-user
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
 import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
 import type { User } from "@modules/user/domain/entity/user";
-import { RoleType } from "@modules/user/domain/enum/role-type.enum";
+import { BlockUserRequest } from "@modules/user/presentation/dto/v1/block-user.request";
 import { ConfirmEmailQuery } from "@modules/user/presentation/dto/v1/confirm-email.query";
 import { CreateUserRequest } from "@modules/user/presentation/dto/v1/create-user.request";
 import { CreateUserResponse } from "@modules/user/presentation/dto/v1/create-user.response";
@@ -51,19 +63,6 @@ import {
   ApiUserAlreadyUnblockedResponse,
   ApiUserNotFoundResponse,
 } from "@modules/user/presentation/exception-response.decorator";
-import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
-import {
-  ApiAuthenticatedResponse,
-  ApiInsufficientRoleResponse,
-} from "@shared/presentation/auth/exception-response.decorator";
-import { Public } from "@shared/presentation/auth/public.decorator";
-import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/presentation/auth/refresh-cookie.options";
-import { Roles } from "@shared/presentation/auth/roles.decorator";
-import { PaginationQuery } from "@shared/presentation/query/pagination.query";
-import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
-import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
-import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
 const UNKNOWN_VALUE = "unknown";
 

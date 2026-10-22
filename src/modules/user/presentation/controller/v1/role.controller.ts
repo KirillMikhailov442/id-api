@@ -8,14 +8,20 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { RoleType } from "@shared/domain/role-type.enum";
+import { Roles } from "@shared/presentation/auth/roles.decorator";
 
+import {
+  ApiAccessTokenExpiredResponse,
+  ApiInsufficientRoleResponse,
+  ApiInvalidAccessTokenResponse,
+} from "@modules/session/presentation/exception-response.decorator";
 import { CreateRoleCommand } from "@modules/user/application/command/create-role.command";
 import { DeleteRoleCommand } from "@modules/user/application/command/delete-role.command";
 import { UpdateRoleCommand } from "@modules/user/application/command/update-role.command";
 import { GetRoleQuery } from "@modules/user/application/query/get-role.query";
 import { ListRolesQuery } from "@modules/user/application/query/list-roles.query";
 import type { Role } from "@modules/user/domain/entity/role";
-import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { CreateRoleRequest } from "@modules/user/presentation/dto/v1/create-role.request";
 import { RoleDto } from "@modules/user/presentation/dto/v1/role.dto";
 import { UpdateRoleRequest } from "@modules/user/presentation/dto/v1/update-role.request";
@@ -27,12 +33,6 @@ import {
   ApiRoleUpdateValidationFailedResponse,
   ApiUnexpectedErrorResponse,
 } from "@modules/user/presentation/exception-response.decorator";
-import {
-  ApiAccessTokenExpiredResponse,
-  ApiInsufficientRoleResponse,
-  ApiInvalidAccessTokenResponse,
-} from "@shared/presentation/auth/exception-response.decorator";
-import { Roles } from "@shared/presentation/auth/roles.decorator";
 
 @ApiTags("roles")
 @ApiBearerAuth()

@@ -3,6 +3,9 @@ import { ConfigService } from "@nestjs/config";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
+import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
+import { Public } from "@shared/presentation/auth/public.decorator";
 import type { Response } from "express";
 
 import { IssueCodeCommand } from "@modules/oauth/application/command/issue-code.command";
@@ -11,6 +14,9 @@ import type { IssueCodeResult } from "@modules/oauth/application/handler/issue-c
 import type { RedeemCodeResult } from "@modules/oauth/application/handler/redeem-code.command.handler";
 import { ValidateAuthorizationQuery } from "@modules/oauth/application/query/validate-authorization.query";
 import type { Requester } from "@modules/oauth/application/requester.type";
+import { AuthorizationScopesNotAllowedException } from "@modules/oauth/domain/exception/authorization-scopes-not-allowed.exception";
+import { ClientInactiveException } from "@modules/oauth/domain/exception/client-inactive.exception";
+import { OAuthErrorCode, WEB_LOGIN_PAGE_PATH } from "@modules/oauth/oauth.constants";
 import { AuthorizeCodeRequest } from "@modules/oauth/presentation/dto/v1/authorize-code.request";
 import { AuthorizeQuery } from "@modules/oauth/presentation/dto/v1/authorize.query";
 import { AuthorizeResponse } from "@modules/oauth/presentation/dto/v1/authorize.response";
@@ -25,21 +31,8 @@ import {
   ApiInvalidClientCredentialsResponse,
   ApiRedirectUriNotAllowedResponse,
 } from "@modules/oauth/presentation/exception-response.decorator";
-import {
-  OAuthErrorCode,
-  WEB_LOGIN_PAGE_PATH,
-} from "@modules/oauth/oauth.constants";
-
+import { ApiAuthenticatedResponse } from "@modules/session/presentation/exception-response.decorator";
 import { ApiUnexpectedErrorResponse } from "@modules/user/presentation/exception-response.decorator";
-import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
-import { ApiAuthenticatedResponse } from "@shared/presentation/auth/exception-response.decorator";
-import { Public } from "@shared/presentation/auth/public.decorator";
-
-import {
-  AuthorizationScopesNotAllowedException,
-} from "@modules/oauth/domain/exception/authorization-scopes-not-allowed.exception";
-import { ClientInactiveException } from "@modules/oauth/domain/exception/client-inactive.exception";
 
 const toRequester = (authenticatedUser: AuthenticatedUser): Requester => ({
   userId: authenticatedUser.userId,
@@ -147,7 +140,6 @@ export class OAuthController {
     loginUrl.searchParams.set("client_id", query.client_id);
     loginUrl.searchParams.set("redirect_uri", query.redirect_uri);
     loginUrl.searchParams.set("scope", query.scope);
-
 
     if (query.state !== undefined) {
       loginUrl.searchParams.set("state", query.state);

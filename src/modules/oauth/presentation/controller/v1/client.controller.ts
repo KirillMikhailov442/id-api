@@ -15,6 +15,14 @@ import {
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import { RoleType } from "@shared/domain/role-type.enum";
+import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
+import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
+import { Roles } from "@shared/presentation/auth/roles.decorator";
+import { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
+import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
+import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
 import { AddLocationCommand } from "@modules/oauth/application/command/add-location.command";
 import { AssignScopesCommand } from "@modules/oauth/application/command/assign-scopes.command";
@@ -55,23 +63,14 @@ import {
   ApiScopeNotFoundResponse,
   ApiScopesValidationFailedResponse,
 } from "@modules/oauth/presentation/exception-response.decorator";
-
+import {
+  ApiAuthenticatedResponse,
+  ApiInsufficientRoleResponse,
+} from "@modules/session/presentation/exception-response.decorator";
 import {
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
 } from "@modules/user/presentation/exception-response.decorator";
-import { RoleType } from "@shared/domain/role-type.enum";
-import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
-import {
-  ApiAuthenticatedResponse,
-  ApiInsufficientRoleResponse,
-} from "@shared/presentation/auth/exception-response.decorator";
-import { Roles } from "@shared/presentation/auth/roles.decorator";
-import { PaginationQuery } from "@shared/presentation/query/pagination.query";
-import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
-import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
-import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
 const toRequester = (authenticatedUser: AuthenticatedUser): Requester => ({
   userId: authenticatedUser.userId,
