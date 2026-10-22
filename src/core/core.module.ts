@@ -16,6 +16,7 @@ import { ListUsersQueryHandler } from "@core/application/handler/list-users.quer
 import { UnblockUserCommandHandler } from "@core/application/handler/unblock-user.command.handler";
 import { UpdateRoleCommandHandler } from "@core/application/handler/update-role.command.handler";
 import { UpdateUserCommandHandler } from "@core/application/handler/update-user.command.handler";
+import { UserBlockedEventHandler } from "@core/application/handler/user-blocked.event.handler";
 import { UserCreatedEventHandler } from "@core/application/handler/user-created.event.handler";
 import {
   EMAIL_CONFIRMATION_TOKEN_SERVICE,
@@ -77,6 +78,7 @@ export type { IUserRepository } from "@core/application/port/user-repository";
     { provide: EMAIL_CONFIRMATION_TOKEN_SERVICE, useExisting: JwtEmailConfirmationTokenService },
     CreateUserCommandHandler,
     ConfirmEmailCommandHandler,
+    UserBlockedEventHandler,
     UserCreatedEventHandler,
     UpdateUserCommandHandler,
     DeleteUserCommandHandler,

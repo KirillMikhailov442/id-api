@@ -23,6 +23,7 @@ import type { Request, Response } from "express";
 import { LoginCommand, type LoginResult } from "@modules/auth/application/command/login.command";
 
 import { BlockUserCommand } from "@core/application/command/block-user.command";
+import { BlockUserRequest } from "@core/presentation/dto/v1/block-user.request";
 import { ConfirmEmailCommand } from "@core/application/command/confirm-email.command";
 import { CreateUserCommand } from "@core/application/command/create-user.command";
 import { DeleteUserCommand } from "@core/application/command/delete-user.command";
@@ -210,8 +211,8 @@ export class UserController {
   @ApiUserAlreadyBlockedResponse()
   @ApiUserNotFoundResponse()
   @ApiUnexpectedErrorResponse()
-  async block(@Param("id", ParseUUIDPipe) id: string): Promise<UserDto> {
-    const user = await this.commandBus.execute<BlockUserCommand, User>(new BlockUserCommand(id));
+  async block(@Param("id", ParseUUIDPipe) id: string, @Body() request?: BlockUserRequest): Promise<UserDto> {
+    const user = await this.commandBus.execute<BlockUserCommand, User>(new BlockUserCommand(id, request?.reason));
 
     return UserDto.fromDomain(user);
   }
