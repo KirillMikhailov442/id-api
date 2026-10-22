@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import { InjectDataSource } from "@nestjs/typeorm";
-import type { DataSource, EntityManager } from "typeorm";
+import { Inject, Injectable } from "@nestjs/common";
+import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
+import type { EntityManager } from "typeorm";
 
 import type { IClientsTransaction, IClientsTransactionContext } from "@modules/oauth/application/port/transaction.port";
 import { DbClientScope } from "@modules/oauth/infrastructure/entity/db-client-scope.entity";
@@ -14,10 +14,10 @@ import { DbScopeRepository } from "@modules/oauth/infrastructure/repository/db-s
 
 @Injectable()
 export class DbClientsTransaction implements IClientsTransaction {
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+  constructor(@Inject(DbTransactionRunner) private readonly runner: DbTransactionRunner) {}
 
   run<T>(work: (context: IClientsTransactionContext) => Promise<T>): Promise<T> {
-    return this.dataSource.transaction((entityManager) => work(this.buildContext(entityManager)));
+    return this.runner.run((entityManager) => work(this.buildContext(entityManager)));
   }
 
   private buildContext(entityManager: EntityManager): IClientsTransactionContext {

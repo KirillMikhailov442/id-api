@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
 
 import { AuthorizationRequestValidator } from "@modules/oauth/application/authorization-request-validator";
 import { AddLocationCommandHandler } from "@modules/oauth/application/handler/add-location.command.handler";
@@ -47,7 +48,6 @@ import {
 import { ClientController } from "@modules/oauth/presentation/controller/v1/client.controller";
 import { OAuthController } from "@modules/oauth/presentation/controller/v1/oauth.controller";
 import { ScopeController } from "@modules/oauth/presentation/controller/v1/scope.controller";
-
 import { UserModule } from "@modules/user/user.module";
 
 export {
@@ -75,6 +75,7 @@ export {
     DbClientScopeRepository,
     DbScopeRepository,
     DbAuthorizationCodeRepository,
+    DbTransactionRunner,
     DbClientsTransaction,
     CryptoAuthorizationCodeService,
     JwtIdTokenService,

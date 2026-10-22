@@ -2,6 +2,8 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { MailService } from "@shared/infrastructure/mail/mail.service";
+import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
 
 import { BlockUserCommandHandler } from "@modules/user/application/handler/block-user.command.handler";
 import { ConfirmEmailCommandHandler } from "@modules/user/application/handler/confirm-email.command.handler";
@@ -18,18 +20,9 @@ import { UpdateRoleCommandHandler } from "@modules/user/application/handler/upda
 import { UpdateUserCommandHandler } from "@modules/user/application/handler/update-user.command.handler";
 import { UserBlockedEventHandler } from "@modules/user/application/handler/user-blocked.event.handler";
 import { UserCreatedEventHandler } from "@modules/user/application/handler/user-created.event.handler";
-import {
-  EMAIL_CONFIRMATION_TOKEN_SERVICE,
-  PASSWORD_HASHER,
-  ROLE_REPOSITORY,
-  TRANSACTION,
-  USER_REPOSITORY,
-  USER_ROLE_REPOSITORY,
-} from "@modules/user/user.tokens";
 import { DbRole } from "@modules/user/infrastructure/entity/db-role.entity";
 import { DbUserRole } from "@modules/user/infrastructure/entity/db-user-role.entity";
 import { DbUser } from "@modules/user/infrastructure/entity/db-user.entity";
-import { MailService } from "@shared/infrastructure/mail/mail.service";
 import { UserMailService } from "@modules/user/infrastructure/mail/user-mail.service";
 import { DbRoleRepository } from "@modules/user/infrastructure/repository/db-role.repository";
 import { DbUserRoleRepository } from "@modules/user/infrastructure/repository/db-user-role.repository";
@@ -39,6 +32,14 @@ import { JwtEmailConfirmationTokenService } from "@modules/user/infrastructure/s
 import { DbTransaction } from "@modules/user/infrastructure/transaction/db-transaction";
 import { RoleController } from "@modules/user/presentation/controller/v1/role.controller";
 import { UserController } from "@modules/user/presentation/controller/v1/user.controller";
+import {
+  EMAIL_CONFIRMATION_TOKEN_SERVICE,
+  PASSWORD_HASHER,
+  ROLE_REPOSITORY,
+  TRANSACTION,
+  USER_REPOSITORY,
+  USER_ROLE_REPOSITORY,
+} from "@modules/user/user.tokens";
 
 export {
   PASSWORD_HASHER,
@@ -69,6 +70,7 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
     DbRoleRepository,
     DbUserRoleRepository,
     BcryptPasswordHasher,
+    DbTransactionRunner,
     DbTransaction,
     MailService,
     UserMailService,
