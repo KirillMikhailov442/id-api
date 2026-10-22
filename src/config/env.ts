@@ -86,6 +86,10 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   AUTHORIZATION_CODE_TTL: number = 600;
+
+  @IsInt()
+  @Min(1)
+  ID_TOKEN_TTL: number = 3600;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
