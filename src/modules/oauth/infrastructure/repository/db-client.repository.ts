@@ -1,12 +1,11 @@
 import { InjectRepository } from "@nestjs/typeorm";
+import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
 import type { Repository } from "typeorm";
 
 import type { IClientRepository } from "@modules/oauth/application/port/client-repository.type";
 import type { Client } from "@modules/oauth/domain/entity/client";
 import { DbClient } from "@modules/oauth/infrastructure/entity/db-client.entity";
 import { ClientMapper } from "@modules/oauth/infrastructure/mapper/client.mapper";
-
-import type { PaginationQuery } from "@core/shared/presentation/query/pagination.query";
 
 export class DbClientRepository implements IClientRepository {
   constructor(@InjectRepository(DbClient) private readonly repository: Repository<DbClient>) {}

@@ -30,11 +30,11 @@ import {
   WEB_LOGIN_PAGE_PATH,
 } from "@modules/oauth/oauth.constants";
 
-import { ApiUnexpectedErrorResponse } from "@core/presentation/exception-response.decorator";
-import type { AuthenticatedUser } from "@core/shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@core/shared/presentation/auth/current-user.decorator";
-import { ApiAuthenticatedResponse } from "@core/shared/presentation/auth/exception-response.decorator";
-import { Public } from "@core/shared/presentation/auth/public.decorator";
+import { ApiUnexpectedErrorResponse } from "@modules/user/presentation/exception-response.decorator";
+import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
+import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
+import { ApiAuthenticatedResponse } from "@shared/presentation/auth/exception-response.decorator";
+import { Public } from "@shared/presentation/auth/public.decorator";
 
 import {
   AuthorizationScopesNotAllowedException,

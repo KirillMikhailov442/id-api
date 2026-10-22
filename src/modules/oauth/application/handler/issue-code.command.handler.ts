@@ -10,10 +10,7 @@ import { AuthorizationCode } from "@modules/oauth/domain/entity/authorization-co
 import { AuthorizationCodeIssuedEvent } from "@modules/oauth/domain/event/authorization-code-issued.event";
 import { CodeScopes } from "@modules/oauth/domain/value-object/code-scopes.value-object";
 import { RedirectUri } from "@modules/oauth/domain/value-object/redirect-uri.value-object";
-import {
-  AUTHORIZATION_CODE_REPOSITORY,
-  AUTHORIZATION_CODE_SERVICE,
-} from "@modules/oauth/oauth.tokens";
+import { AUTHORIZATION_CODE_REPOSITORY, AUTHORIZATION_CODE_SERVICE } from "@modules/oauth/oauth.tokens";
 
 export interface IssueCodeResult {
   code: string;

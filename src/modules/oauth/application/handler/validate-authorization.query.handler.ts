@@ -1,4 +1,4 @@
-import { Injectable} from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { QueryHandler, type IQueryHandler } from "@nestjs/cqrs";
 
 import { AuthorizationRequestValidator } from "@modules/oauth/application/authorization-request-validator";

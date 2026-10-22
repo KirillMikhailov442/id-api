@@ -48,7 +48,7 @@ import { ClientController } from "@modules/oauth/presentation/controller/v1/clie
 import { OAuthController } from "@modules/oauth/presentation/controller/v1/oauth.controller";
 import { ScopeController } from "@modules/oauth/presentation/controller/v1/scope.controller";
 
-import { CoreModule } from "@core/core.module";
+import { UserModule } from "@modules/user/user.module";
 
 export {
   CLIENT_REPOSITORY,
@@ -59,7 +59,7 @@ export {
 
 @Module({
   imports: [
-    CoreModule,
+    UserModule,
     TypeOrmModule.forFeature([DbClient, DbLocation, DbScope, DbClientScope, DbAuthorizationCode]),
     JwtModule.registerAsync({
       inject: [ConfigService],

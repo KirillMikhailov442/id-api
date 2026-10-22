@@ -3,6 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { CommandBus } from "@nestjs/cqrs";
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import { Public } from "@shared/presentation/auth/public.decorator";
+import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/presentation/auth/refresh-cookie.options";
 import type { Request, Response } from "express";
 
 import { LoginCommand, type LoginResult } from "@modules/session/application/command/login.command";
@@ -18,9 +20,6 @@ import {
   ApiInvalidRefreshTokenResponse,
   ApiUserBlockedResponse,
 } from "@modules/session/presentation/exception-response.decorator";
-
-import { Public } from "@core/shared/presentation/auth/public.decorator";
-import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@core/shared/presentation/auth/refresh-cookie.options";
 
 const UNKNOWN_VALUE = "unknown";
 

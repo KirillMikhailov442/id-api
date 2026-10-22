@@ -15,17 +15,17 @@ import {
 import {
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
-} from "@core/presentation/exception-response.decorator";
-import { RoleType } from "@core/shared/domain/role-type.enum";
+} from "@modules/user/presentation/exception-response.decorator";
+import { RoleType } from "@shared/domain/role-type.enum";
 import {
   ApiAuthenticatedResponse,
   ApiInsufficientRoleResponse,
-} from "@core/shared/presentation/auth/exception-response.decorator";
-import { Roles } from "@core/shared/presentation/auth/roles.decorator";
-import { PaginationQuery } from "@core/shared/presentation/query/pagination.query";
-import { PaginationMeta } from "@core/shared/presentation/response/pagination-meta";
-import { ApiPaginationResponse } from "@core/shared/presentation/response/pagination-response.decorator";
-import { PaginationResponse } from "@core/shared/presentation/response/pagination.response";
+} from "@shared/presentation/auth/exception-response.decorator";
+import { Roles } from "@shared/presentation/auth/roles.decorator";
+import { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
+import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
+import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
 @ApiTags("scopes")
 @Controller({ path: "scopes", version: "1" })

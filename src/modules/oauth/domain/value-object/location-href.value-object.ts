@@ -1,5 +1,5 @@
-import { InvalidValueObjectException } from "@core/domain/exception/invalid-value-object.exception";
-import type { IValueObject } from "@core/shared/domain/value-object.type";
+import { InvalidValueObjectException } from "@modules/user/domain/exception/invalid-value-object.exception";
+import type { IValueObject } from "@shared/domain/value-object.type";
 
 export const MAX_LENGTH = 255;
 export const LOCATION_HREF_PATTERN = /^[a-zA-Z][a-zA-Z0-9+.-]*:\S+$/;

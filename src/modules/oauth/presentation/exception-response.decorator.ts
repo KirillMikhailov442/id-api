@@ -8,9 +8,9 @@ import {
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 
-import type { FieldError } from "@core/shared/presentation/exception/field-error";
-import { HttpStatus } from "@core/shared/presentation/exception/http-status.enum";
-import { ExceptionResponse } from "@core/shared/presentation/exception/responses/exception.response";
+import type { FieldError } from "@shared/presentation/exception/field-error";
+import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
+import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 
 const EXAMPLE_TIMESTAMP = "2026-10-21T09:00:00.000Z";
 const EXAMPLE_CLIENT_ID = "00000000-0000-4000-8000-000000000000";

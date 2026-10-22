@@ -5,10 +5,9 @@ import { CqrsModule } from "@nestjs/cqrs";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
-import { SessionModule } from "@modules/session/session.module";
 import { OAuthModule } from "@modules/oauth/oauth.module";
-
-import { CoreModule } from "@core/core.module";
+import { SessionModule } from "@modules/session/session.module";
+import { UserModule } from "@modules/user/user.module";
 
 import { getTypeOrmConfig } from "@config/database";
 import { registerEnvConfig } from "@config/env";
@@ -27,7 +26,7 @@ import { getThrottlerConfig } from "@config/rate-limit";
       inject: [ConfigService],
       useFactory: getThrottlerConfig,
     }),
-    CoreModule,
+    UserModule,
     SessionModule,
     OAuthModule,
   ],

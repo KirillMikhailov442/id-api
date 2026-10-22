@@ -6,15 +6,19 @@ import { RefreshCommand, type RefreshResult } from "@modules/session/application
 import type { IRefreshTokenService } from "@modules/session/application/port/refresh-token-service";
 import type { ISessionRepository } from "@modules/session/application/port/session-repository";
 import type { ITokenService } from "@modules/session/application/port/token-service";
-import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
 import { Session } from "@modules/session/domain/entity/session";
 import { InvalidRefreshTokenException } from "@modules/session/domain/exception/invalid-refresh-token.exception";
 import { UserBlockedException } from "@modules/session/domain/exception/user-blocked.exception";
 import { Ip } from "@modules/session/domain/value-object/ip.value-object";
 import { UserAgent } from "@modules/session/domain/value-object/user-agent.value-object";
-
-import { ROLE_REPOSITORY, USER_REPOSITORY, type IRoleRepository, type IUserRepository } from "@core/core.module";
-import { UserBlockedStatus } from "@core/domain/enum/user-blocked-status.enum";
+import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
+import { UserBlockedStatus } from "@modules/user/domain/enum/user-blocked-status.enum";
+import {
+  ROLE_REPOSITORY,
+  USER_REPOSITORY,
+  type IRoleRepository,
+  type IUserRepository,
+} from "@modules/user/user.module";
 
 const REFRESH_TOKEN_TTL_KEY = "REFRESH_TOKEN_TTL";
 const MS_PER_SECOND = 1000;

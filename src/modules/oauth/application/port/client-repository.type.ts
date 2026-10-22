@@ -1,7 +1,7 @@
-import type { Client } from "@modules/oauth/domain/entity/client";
+import type { IRepository } from "@shared/domain/repository.type";
+import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
 
-import type { IRepository } from "@core/shared/domain/repository.type";
-import type { PaginationQuery } from "@core/shared/presentation/query/pagination.query";
+import type { Client } from "@modules/oauth/domain/entity/client";
 
 export interface IClientRepository extends IRepository<Client, string> {
   findByUserId(userId: string, pagination: PaginationQuery): Promise<Client[]>;

@@ -3,8 +3,8 @@ import {
   LOCATION_HREF_PATTERN,
 } from "@modules/oauth/domain/value-object/location-href.value-object";
 
-import { InvalidValueObjectException } from "@core/domain/exception/invalid-value-object.exception";
-import type { IValueObject } from "@core/shared/domain/value-object.type";
+import { InvalidValueObjectException } from "@modules/user/domain/exception/invalid-value-object.exception";
+import type { IValueObject } from "@shared/domain/value-object.type";
 
 export const MAX_LENGTH = 255;
 export const REDIRECT_URI_PATTERN = LOCATION_HREF_PATTERN;

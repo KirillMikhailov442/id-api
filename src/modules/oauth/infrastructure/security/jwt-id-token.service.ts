@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 
-import type { IIdTokenService, IdTokenPayload } from "@modules/oauth/application/port/id-token-service.type";
+import type { IdTokenPayload, IIdTokenService } from "@modules/oauth/application/port/id-token-service.type";
 
 const ID_TOKEN_TTL_KEY = "ID_TOKEN_TTL";
 const APP_BASE_URL_KEY = "APP_BASE_URL";

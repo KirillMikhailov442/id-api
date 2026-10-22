@@ -1,12 +1,11 @@
 import { Inject, Injectable, type CanActivate, type ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import type { AuthenticatedRequest } from "@shared/presentation/auth/authenticated-request.type";
+import { IS_PUBLIC_KEY } from "@shared/presentation/auth/public.decorator";
 
 import type { ITokenService } from "@modules/session/application/port/token-service";
-import { TOKEN_SERVICE } from "@modules/session/session.tokens";
 import { InvalidAccessTokenException } from "@modules/session/domain/exception/invalid-access-token.exception";
-
-import type { AuthenticatedRequest } from "@core/shared/presentation/auth/authenticated-request.type";
-import { IS_PUBLIC_KEY } from "@core/shared/presentation/auth/public.decorator";
+import { TOKEN_SERVICE } from "@modules/session/session.tokens";
 
 const AUTHORIZATION_HEADER = "authorization";
 const BEARER_PREFIX = "Bearer ";

@@ -4,11 +4,10 @@ import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
-import { RefreshCommandHandler } from "@modules/session/application/handler/refresh.command.handler";
 import { LoginCommandHandler } from "@modules/session/application/handler/login.command.handler";
 import { LogoutAllCommandHandler } from "@modules/session/application/handler/logout-all.command.handler";
 import { LogoutCommandHandler } from "@modules/session/application/handler/logout.command.handler";
-import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
+import { RefreshCommandHandler } from "@modules/session/application/handler/refresh.command.handler";
 import { DbSession } from "@modules/session/infrastructure/entity/db-session.entity";
 import { DbSessionRepository } from "@modules/session/infrastructure/repository/db-session.repository";
 import { CryptoRefreshTokenService } from "@modules/session/infrastructure/security/crypto-refresh-token-service";
@@ -16,14 +15,14 @@ import { JwtTokenService } from "@modules/session/infrastructure/security/jwt-to
 import { AuthController } from "@modules/session/presentation/controller/v1/auth.controller";
 import { JwtAuthGuard } from "@modules/session/presentation/guard/jwt-auth/jwt-auth.guard";
 import { RolesGuard } from "@modules/session/presentation/guard/roles/roles.guard";
-
-import { CoreModule } from "@core/core.module";
+import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
+import { UserModule } from "@modules/user/user.module";
 
 export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modules/session/session.tokens";
 
 @Module({
   imports: [
-    CoreModule,
+    UserModule,
     TypeOrmModule.forFeature([DbSession]),
     JwtModule.registerAsync({
       inject: [ConfigService],

@@ -12,8 +12,7 @@ import { ClientName } from "@modules/oauth/domain/value-object/client-name.value
 import { ClientSecret } from "@modules/oauth/domain/value-object/client-secret.value-object";
 import { LocationHref } from "@modules/oauth/domain/value-object/location-href.value-object";
 import { CLIENT_REPOSITORY, CLIENTS_TRANSACTION, LOCATION_REPOSITORY } from "@modules/oauth/oauth.tokens";
-
-import { PASSWORD_HASHER, type IPasswordHasher } from "@core/core.module";
+import { PASSWORD_HASHER, type IPasswordHasher } from "@modules/user/user.module";
 
 export interface CreateClientResult {
   client: Client;

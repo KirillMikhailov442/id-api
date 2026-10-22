@@ -20,8 +20,7 @@ import {
   CLIENT_REPOSITORY,
   ID_TOKEN_SERVICE,
 } from "@modules/oauth/oauth.tokens";
-
-import { PASSWORD_HASHER, type IPasswordHasher } from "@core/core.module";
+import { PASSWORD_HASHER, type IPasswordHasher } from "@modules/user/user.module";
 
 export interface RedeemCodeResult {
   clientId: string;

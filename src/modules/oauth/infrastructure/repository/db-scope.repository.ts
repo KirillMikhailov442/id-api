@@ -1,4 +1,5 @@
 import { InjectRepository } from "@nestjs/typeorm";
+import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
 import { In, QueryFailedError, type Repository } from "typeorm";
 
 import type { IScopeRepository } from "@modules/oauth/application/port/scope-repository.type";
@@ -7,8 +8,6 @@ import { ScopeAlreadyExistsException } from "@modules/oauth/domain/exception/sco
 import type { ScopeName } from "@modules/oauth/domain/value-object/scope-name.value-object";
 import { DbScope } from "@modules/oauth/infrastructure/entity/db-scope.entity";
 import { ScopeMapper } from "@modules/oauth/infrastructure/mapper/scope.mapper";
-
-import type { PaginationQuery } from "@core/shared/presentation/query/pagination.query";
 
 const SCOPE_NAME_UNIQUE_CONSTRAINT = "scopes_name_key";
 

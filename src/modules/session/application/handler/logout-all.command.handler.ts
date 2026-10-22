@@ -4,8 +4,8 @@ import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 import { LogoutAllCommand } from "@modules/session/application/command/logout-all.command";
 import type { IRefreshTokenService } from "@modules/session/application/port/refresh-token-service";
 import type { ISessionRepository } from "@modules/session/application/port/session-repository";
-import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY } from "@modules/session/session.tokens";
 import { InvalidRefreshTokenException } from "@modules/session/domain/exception/invalid-refresh-token.exception";
+import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY } from "@modules/session/session.tokens";
 
 @CommandHandler(LogoutAllCommand)
 @Injectable()

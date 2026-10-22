@@ -59,19 +59,19 @@ import {
 import {
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
-} from "@core/presentation/exception-response.decorator";
-import { RoleType } from "@core/shared/domain/role-type.enum";
-import type { AuthenticatedUser } from "@core/shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@core/shared/presentation/auth/current-user.decorator";
+} from "@modules/user/presentation/exception-response.decorator";
+import { RoleType } from "@shared/domain/role-type.enum";
+import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
+import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
 import {
   ApiAuthenticatedResponse,
   ApiInsufficientRoleResponse,
-} from "@core/shared/presentation/auth/exception-response.decorator";
-import { Roles } from "@core/shared/presentation/auth/roles.decorator";
-import { PaginationQuery } from "@core/shared/presentation/query/pagination.query";
-import { PaginationMeta } from "@core/shared/presentation/response/pagination-meta";
-import { ApiPaginationResponse } from "@core/shared/presentation/response/pagination-response.decorator";
-import { PaginationResponse } from "@core/shared/presentation/response/pagination.response";
+} from "@shared/presentation/auth/exception-response.decorator";
+import { Roles } from "@shared/presentation/auth/roles.decorator";
+import { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
+import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
+import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
 const toRequester = (authenticatedUser: AuthenticatedUser): Requester => ({
   userId: authenticatedUser.userId,
