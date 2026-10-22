@@ -31,7 +31,15 @@
       }
     },
     {
-      "files": ["**/user.controller.ts", "**/role.controller.ts", "**/auth.controller.ts"],
+      "files": [
+        "**/user.controller.ts",
+        "**/role.controller.ts",
+        "**/auth.controller.ts",
+        "**/client.controller.ts",
+        "**/scope.controller.ts",
+        "**/oauth.controller.ts",
+        "**/issue-code.command.handler.ts"
+      ],
       "rules": {
         "typescript/consistent-type-imports": "off"
       }

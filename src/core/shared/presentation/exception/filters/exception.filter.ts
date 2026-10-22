@@ -38,6 +38,23 @@ const DOMAIN_EXCEPTION_STATUSES: Record<string, number> = {
   UserBlockedException: HttpStatus.Forbidden,
   InsufficientRoleException: HttpStatus.Forbidden,
   InvalidValueObjectException: HttpStatus.Validation,
+  ClientNotFoundException: HttpStatus.NotFound,
+  ClientAccessDeniedException: HttpStatus.Forbidden,
+  ClientAlreadyActiveException: HttpStatus.Conflict,
+  ClientAlreadyInactiveException: HttpStatus.Conflict,
+  LocationNotFoundException: HttpStatus.NotFound,
+  ScopeNotFoundException: HttpStatus.NotFound,
+  ScopeAlreadyExistsException: HttpStatus.Conflict,
+  ScopeAlreadyAssignedException: HttpStatus.Conflict,
+  ScopeNotAssignedException: HttpStatus.Conflict,
+  ClientInactiveException: HttpStatus.Forbidden,
+  AuthorizationCodeNotFoundException: HttpStatus.NotFound,
+  InvalidAuthorizationCodeException: HttpStatus.BadRequest,
+  AuthorizationCodeExpiredException: HttpStatus.BadRequest,
+  AuthorizationCodeAlreadyUsedException: HttpStatus.Conflict,
+  AuthorizationScopesNotAllowedException: HttpStatus.Validation,
+  RedirectUriNotAllowedException: HttpStatus.BadRequest,
+  InvalidClientCredentialsException: HttpStatus.Unauthorized,
 };
 
 @Catch()

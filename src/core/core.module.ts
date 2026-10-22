@@ -47,6 +47,7 @@ export {
   USER_ROLE_REPOSITORY,
   EMAIL_CONFIRMATION_TOKEN_SERVICE,
 } from "@core/core.tokens";
+export { UserNotFoundException } from "@core/domain/exception/user-not-found.exception";
 export type { IRoleRepository } from "@core/application/port/role-repository";
 export type { IPasswordHasher } from "@core/application/port/password-hasher";
 export type { IUserRepository } from "@core/application/port/user-repository";
