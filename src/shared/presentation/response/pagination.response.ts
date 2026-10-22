@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-
 import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
 
 export class PaginationResponse<T> {

@@ -3,9 +3,9 @@ import { QueryHandler, type IQueryHandler } from "@nestjs/cqrs";
 
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
-import { USER_REPOSITORY } from "@modules/user/user.tokens";
 import type { User } from "@modules/user/domain/entity/user";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { USER_REPOSITORY } from "@modules/user/user.tokens";
 
 @QueryHandler(GetUserQuery)
 @Injectable()

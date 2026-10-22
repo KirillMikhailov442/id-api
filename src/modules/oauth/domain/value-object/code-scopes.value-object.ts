@@ -1,10 +1,10 @@
+import { InvalidValueObjectException } from "@shared/domain/exception/invalid-value-object.exception";
+import type { IValueObject } from "@shared/domain/value-object.type";
+
 import {
   MAX_LENGTH as SCOPE_NAME_MAX_LENGTH,
   SCOPE_NAME_PATTERN,
 } from "@modules/oauth/domain/value-object/scope-name.value-object";
-
-import { InvalidValueObjectException } from "@modules/user/domain/exception/invalid-value-object.exception";
-import type { IValueObject } from "@shared/domain/value-object.type";
 
 export const MAX_LENGTH = 255;
 export const SCOPE_SEPARATOR = " ";

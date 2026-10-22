@@ -3,8 +3,8 @@ import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 
 import { DeleteUserCommand } from "@modules/user/application/command/delete-user.command";
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
-import { USER_REPOSITORY } from "@modules/user/user.tokens";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { USER_REPOSITORY } from "@modules/user/user.tokens";
 
 @CommandHandler(DeleteUserCommand)
 @Injectable()

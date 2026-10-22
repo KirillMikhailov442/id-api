@@ -1,14 +1,13 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CommandHandler, EventBus, type ICommandHandler } from "@nestjs/cqrs";
+import { RoleType } from "@shared/domain/role-type.enum";
 
 import { CreateUserCommand } from "@modules/user/application/command/create-user.command";
 import type { IPasswordHasher } from "@modules/user/application/port/password-hasher";
 import type { ITransaction } from "@modules/user/application/port/transaction.port";
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
-import { PASSWORD_HASHER, TRANSACTION, USER_REPOSITORY } from "@modules/user/user.tokens";
 import { User } from "@modules/user/domain/entity/user";
 import { UserRole } from "@modules/user/domain/entity/user-role";
-import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { UserCreatedEvent } from "@modules/user/domain/event/user-created.event";
 import { EmailAlreadyRegisteredException } from "@modules/user/domain/exception/email-already-registered.exception";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
@@ -16,6 +15,7 @@ import { Email } from "@modules/user/domain/value-object/email.value-object";
 import { Name } from "@modules/user/domain/value-object/name.value-object";
 import { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
 import { Surname } from "@modules/user/domain/value-object/surname.value-object";
+import { PASSWORD_HASHER, TRANSACTION, USER_REPOSITORY } from "@modules/user/user.tokens";
 
 export const DEFAULT_ROLE_NAME = RoleType.User;
 

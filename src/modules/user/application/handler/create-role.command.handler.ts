@@ -3,10 +3,10 @@ import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 
 import { CreateRoleCommand } from "@modules/user/application/command/create-role.command";
 import type { IRoleRepository } from "@modules/user/application/port/role-repository";
-import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 import { Role } from "@modules/user/domain/entity/role";
 import { RoleAlreadyExistsException } from "@modules/user/domain/exception/role-already-exists.exception";
 import { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
+import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 
 @CommandHandler(CreateRoleCommand)
 @Injectable()

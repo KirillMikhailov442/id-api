@@ -1,4 +1,4 @@
-import { InvalidValueObjectException } from "@modules/user/domain/exception/invalid-value-object.exception";
+import { InvalidValueObjectException } from "@shared/domain/exception/invalid-value-object.exception";
 import type { IValueObject } from "@shared/domain/value-object.type";
 
 export const MIN_LENGTH = 12;

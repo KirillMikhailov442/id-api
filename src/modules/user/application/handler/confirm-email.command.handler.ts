@@ -4,10 +4,10 @@ import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 import { ConfirmEmailCommand } from "@modules/user/application/command/confirm-email.command";
 import type { IEmailConfirmationTokenService } from "@modules/user/application/port/email-confirmation-token.port";
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
-import { EMAIL_CONFIRMATION_TOKEN_SERVICE, USER_REPOSITORY } from "@modules/user/user.tokens";
 import type { User } from "@modules/user/domain/entity/user";
 import { InvalidEmailConfirmationTokenException } from "@modules/user/domain/exception/invalid-email-confirmation-token.exception";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { EMAIL_CONFIRMATION_TOKEN_SERVICE, USER_REPOSITORY } from "@modules/user/user.tokens";
 
 @CommandHandler(ConfirmEmailCommand)
 @Injectable()

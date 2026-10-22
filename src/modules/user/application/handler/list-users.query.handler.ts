@@ -3,8 +3,8 @@ import { QueryHandler, type IQueryHandler } from "@nestjs/cqrs";
 
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
 import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
-import { USER_REPOSITORY } from "@modules/user/user.tokens";
 import type { User } from "@modules/user/domain/entity/user";
+import { USER_REPOSITORY } from "@modules/user/user.tokens";
 
 @QueryHandler(ListUsersQuery)
 @Injectable()

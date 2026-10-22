@@ -1,1 +1,4 @@
-export { RoleType } from "@modules/user/domain/enum/role-type.enum";
+export enum RoleType {
+  User = "USER",
+  Admin = "ADMIN",
+}

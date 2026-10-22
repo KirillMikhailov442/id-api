@@ -1,4 +1,5 @@
 import { InjectRepository } from "@nestjs/typeorm";
+import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
 import { In, QueryFailedError, type Repository } from "typeorm";
 
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
@@ -9,7 +10,6 @@ import type { Email } from "@modules/user/domain/value-object/email.value-object
 import { DbUserRole } from "@modules/user/infrastructure/entity/db-user-role.entity";
 import { DbUser } from "@modules/user/infrastructure/entity/db-user.entity";
 import { UserMapper } from "@modules/user/infrastructure/mapper/user.mapper";
-import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
 
 const EMAIL_UNIQUE_CONSTRAINT = "users_email_key";
 

@@ -6,12 +6,11 @@ import {
   type ArgumentsHost,
   type ExceptionFilter as NestExceptionFilter,
 } from "@nestjs/common";
-import type { Request, Response } from "express";
-
 import { FieldError } from "@shared/presentation/exception/field-error";
 import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
 import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 import { ValidationExceptionResponse } from "@shared/presentation/exception/responses/validation-exception.response";
+import type { Request, Response } from "express";
 
 interface HttpExceptionBody {
   message?: string | string[];

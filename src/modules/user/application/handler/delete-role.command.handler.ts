@@ -3,8 +3,8 @@ import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 
 import { DeleteRoleCommand } from "@modules/user/application/command/delete-role.command";
 import type { IRoleRepository } from "@modules/user/application/port/role-repository";
-import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
+import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 
 @CommandHandler(DeleteRoleCommand)
 @Injectable()

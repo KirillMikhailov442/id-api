@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { RoleType } from "@shared/domain/role-type.enum";
 
 import type { Role } from "@modules/user/domain/entity/role";
-import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { MAX_LENGTH, MIN_LENGTH } from "@modules/user/domain/value-object/role-name.value-object";
 
 export class RoleDto {

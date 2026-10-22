@@ -3,13 +3,13 @@ import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 
 import { UpdateUserCommand } from "@modules/user/application/command/update-user.command";
 import type { ITransaction, ITransactionContext } from "@modules/user/application/port/transaction.port";
-import { TRANSACTION } from "@modules/user/user.tokens";
 import type { User } from "@modules/user/domain/entity/user";
 import { EmailAlreadyRegisteredException } from "@modules/user/domain/exception/email-already-registered.exception";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
 import { Email } from "@modules/user/domain/value-object/email.value-object";
 import { Name } from "@modules/user/domain/value-object/name.value-object";
 import { Surname } from "@modules/user/domain/value-object/surname.value-object";
+import { TRANSACTION } from "@modules/user/user.tokens";
 
 @CommandHandler(UpdateUserCommand)
 @Injectable()

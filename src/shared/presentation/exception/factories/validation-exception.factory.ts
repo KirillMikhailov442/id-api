@@ -1,5 +1,4 @@
 import { HttpException, type ValidationError } from "@nestjs/common";
-
 import { FieldError } from "@shared/presentation/exception/field-error";
 import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
 
