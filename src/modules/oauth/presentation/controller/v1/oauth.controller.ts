@@ -26,7 +26,6 @@ import {
   ApiRedirectUriNotAllowedResponse,
 } from "@modules/oauth/presentation/exception-response.decorator";
 import {
-  GRANT_TYPE_AUTHORIZATION_CODE,
   OAuthErrorCode,
   WEB_LOGIN_PAGE_PATH,
 } from "@modules/oauth/oauth.constants";

@@ -40,7 +40,7 @@ export class RedeemCodeCommandHandler implements ICommandHandler<RedeemCodeComma
     @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
     @Inject(ID_TOKEN_SERVICE) private readonly idTokenService: IIdTokenService,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: IPasswordHasher,
-    private readonly configService: ConfigService,
+    @Inject(ConfigService) private readonly configService: ConfigService,
     @Inject(EventBus) private readonly eventBus: EventBus
   ) {}
 
