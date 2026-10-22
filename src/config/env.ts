@@ -82,6 +82,10 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   EMAIL_CONFIRM_TTL: number = 86400;
+
+  @IsInt()
+  @Min(1)
+  AUTHORIZATION_CODE_TTL: number = 600;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
