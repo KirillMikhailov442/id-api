@@ -3,9 +3,10 @@ import { ConfigService } from "@nestjs/config";
 import { EventsHandler, type IEventHandler } from "@nestjs/cqrs";
 
 import type { IEmailConfirmationTokenService } from "@modules/user/application/port/email-confirmation-token.port";
-import { EMAIL_CONFIRMATION_TOKEN_SERVICE } from "@modules/user/user.tokens";
 import { UserCreatedEvent } from "@modules/user/domain/event/user-created.event";
-import { MailService } from "@modules/user/infrastructure/mail/mail.service";
+import { UserMailService } from "@modules/user/infrastructure/mail/user-mail.service";
+import { EMAIL_CONFIRMATION_TOKEN_SERVICE } from "@modules/user/user.tokens";
+
 const CONFIRM_EMAIL_PATH = "/api/v1/users/confirm-email";
 
 @EventsHandler(UserCreatedEvent)
@@ -16,7 +17,7 @@ export class UserCreatedEventHandler implements IEventHandler<UserCreatedEvent> 
   constructor(
     @Inject(EMAIL_CONFIRMATION_TOKEN_SERVICE)
     private readonly emailConfirmationTokenService: IEmailConfirmationTokenService,
-    @Inject(MailService) private readonly mailService: MailService,
+    @Inject(UserMailService) private readonly mailService: UserMailService,
     @Inject(ConfigService) private readonly configService: ConfigService
   ) {}
 

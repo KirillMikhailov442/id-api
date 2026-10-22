@@ -29,7 +29,8 @@ import {
 import { DbRole } from "@modules/user/infrastructure/entity/db-role.entity";
 import { DbUserRole } from "@modules/user/infrastructure/entity/db-user-role.entity";
 import { DbUser } from "@modules/user/infrastructure/entity/db-user.entity";
-import { MailService } from "@modules/user/infrastructure/mail/mail.service";
+import { MailService } from "@shared/infrastructure/mail/mail.service";
+import { UserMailService } from "@modules/user/infrastructure/mail/user-mail.service";
 import { DbRoleRepository } from "@modules/user/infrastructure/repository/db-role.repository";
 import { DbUserRoleRepository } from "@modules/user/infrastructure/repository/db-user-role.repository";
 import { DbUserRepository } from "@modules/user/infrastructure/repository/db-user.repository";
@@ -70,6 +71,7 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
     BcryptPasswordHasher,
     DbTransaction,
     MailService,
+    UserMailService,
     JwtEmailConfirmationTokenService,
     { provide: USER_REPOSITORY, useExisting: DbUserRepository },
     { provide: ROLE_REPOSITORY, useExisting: DbRoleRepository },
