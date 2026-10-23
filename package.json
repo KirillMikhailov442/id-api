@@ -1,8 +1,12 @@
 {
-  "name": "temp-project",
+  "name": "id-api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Identity provider API with OAuth 2.0 / OpenID Connect support (users, roles, sessions, clients, scopes)",
+  "author": "Kirill Mikhailov <mikhailovkirill342@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikh-space/id-api.git"
+  },
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -19,10 +23,9 @@
     "test:cov": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage",
     "test:debug": "node --inspect-brk --experimental-vm-modules -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
-    "migration:generate": "node -r ts-node/register -r tsconfig-paths/register node_modules/typeorm/cli.js migration:generate src/migrations/AutoMigration -p -d src/config/database.ts",
-    "migration:run": "node -r ts-node/register -r tsconfig-paths/register node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
-    "migration:revert": "node -r ts-node/register -r tsconfig-paths/register node_modules/typeorm/cli.js migration:revert -d src/config/database.ts",
-    "seed": "cross-env NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register src/core/infrastructure/seed/seed-roles.ts"
+    "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate src/migrations/AutoMigration -p -d src/config/database.ts",
+    "migration:run": "tsx node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
+    "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d src/config/database.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -75,6 +78,7 @@
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.9.8",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.2"
   }
 }
