@@ -12,9 +12,11 @@ export class RefreshHash implements IValueObject<string> {
     if (trimmed.length === 0) {
       throw new InvalidValueObjectException("Refresh hash must not be empty");
     }
+
     if (trimmed.length > MAX_LENGTH) {
       throw new InvalidValueObjectException(`Refresh hash must be at most ${MAX_LENGTH} characters`);
     }
+
     this.value = trimmed;
   }
 

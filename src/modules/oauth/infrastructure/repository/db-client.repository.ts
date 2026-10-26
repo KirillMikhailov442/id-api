@@ -8,7 +8,14 @@ import { DbClient } from "@modules/oauth/infrastructure/entity/db-client.entity"
 import { ClientMapper } from "@modules/oauth/infrastructure/mapper/client.mapper";
 
 export class DbClientRepository implements IClientRepository {
-  constructor(@InjectRepository(DbClient) private readonly repository: Repository<DbClient>) {}
+  private readonly repository: Repository<DbClient>;
+
+  constructor(
+    @InjectRepository(DbClient)
+    repository: Repository<DbClient>
+  ) {
+    this.repository = repository;
+  }
 
   async findById(id: string): Promise<Client | null> {
     const dbClient = await this.repository.findOneBy({ id });
@@ -27,7 +34,6 @@ export class DbClientRepository implements IClientRepository {
       take: pagination.limit,
       order: { createdAt: "DESC" },
     });
-
     return dbClients.map(ClientMapper.toDomain);
   }
 
@@ -37,7 +43,6 @@ export class DbClientRepository implements IClientRepository {
       take: pagination.limit,
       order: { createdAt: "DESC" },
     });
-
     return dbClients.map(ClientMapper.toDomain);
   }
 
@@ -51,7 +56,6 @@ export class DbClientRepository implements IClientRepository {
 
   async save(client: Client): Promise<void> {
     const dbClient = ClientMapper.toPersistence(client);
-
     await this.repository.save(dbClient);
   }
 

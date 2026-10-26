@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-
 import * as bcrypt from "bcrypt";
 import { MigrationInterface, QueryRunner } from "typeorm";
 

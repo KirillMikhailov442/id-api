@@ -18,19 +18,16 @@ export class CreateUserRequest {
   @MinLength(NAME_MIN_LENGTH)
   @MaxLength(NAME_MAX_LENGTH)
   name: string;
-
   @ApiProperty({ minLength: SURNAME_MIN_LENGTH, maxLength: SURNAME_MAX_LENGTH, example: "Ivanov" })
   @IsString()
   @MinLength(SURNAME_MIN_LENGTH)
   @MaxLength(SURNAME_MAX_LENGTH)
   surname: string;
-
   @ApiProperty({ format: "email", maxLength: EMAIL_MAX_LENGTH, example: "ivan.ivanov@example.com" })
   @IsString()
   @MaxLength(EMAIL_MAX_LENGTH)
   @Matches(EMAIL_PATTERN)
   email: string;
-
   @ApiProperty({ minLength: 1, maxLength: PASSWORD_MAX_LENGTH, example: "S3cureP@ssw0rd" })
   @IsString()
   @MinLength(1)

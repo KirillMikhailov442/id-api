@@ -8,8 +8,14 @@ import { UserMailService } from "@modules/user/infrastructure/mail/user-mail.ser
 @Injectable()
 export class UserBlockedEventHandler implements IEventHandler<UserBlockedEvent> {
   private readonly logger = new Logger(UserBlockedEventHandler.name);
+  private readonly mailService: UserMailService;
 
-  constructor(@Inject(UserMailService) private readonly mailService: UserMailService) {}
+  constructor(
+    @Inject(UserMailService)
+    mailService: UserMailService
+  ) {
+    this.mailService = mailService;
+  }
 
   async handle(event: UserBlockedEvent): Promise<void> {
     try {

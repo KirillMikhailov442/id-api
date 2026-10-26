@@ -13,10 +13,18 @@ import { CLIENT_REPOSITORY, LOCATION_REPOSITORY } from "@modules/oauth/oauth.tok
 @CommandHandler(AddLocationCommand)
 @Injectable()
 export class AddLocationCommandHandler implements ICommandHandler<AddLocationCommand> {
+  private readonly clientRepository: IClientRepository;
+  private readonly locationRepository: ILocationRepository;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(LOCATION_REPOSITORY) private readonly locationRepository: ILocationRepository
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(LOCATION_REPOSITORY)
+    locationRepository: ILocationRepository
+  ) {
+    this.clientRepository = clientRepository;
+    this.locationRepository = locationRepository;
+  }
 
   async execute(command: AddLocationCommand): Promise<Location> {
     const client = await this.clientRepository.findById(command.clientId);
@@ -24,13 +32,9 @@ export class AddLocationCommandHandler implements ICommandHandler<AddLocationCom
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, command.requester);
-
     const location = Location.create({ clientId: client.getId(), href: new LocationHref(command.href) });
-
     await this.locationRepository.save(location);
-
     return location;
   }
 }

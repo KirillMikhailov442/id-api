@@ -14,7 +14,14 @@ import { DbScopeRepository } from "@modules/oauth/infrastructure/repository/db-s
 
 @Injectable()
 export class DbClientsTransaction implements IClientsTransaction {
-  constructor(@Inject(DbTransactionRunner) private readonly runner: DbTransactionRunner) {}
+  private readonly runner: DbTransactionRunner;
+
+  constructor(
+    @Inject(DbTransactionRunner)
+    runner: DbTransactionRunner
+  ) {
+    this.runner = runner;
+  }
 
   run<T>(work: (context: IClientsTransactionContext) => Promise<T>): Promise<T> {
     return this.runner.run((entityManager) => work(this.buildContext(entityManager)));

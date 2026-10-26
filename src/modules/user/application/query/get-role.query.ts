@@ -1,3 +1,7 @@
 export class GetRoleQuery {
-  constructor(public readonly roleId: string) {}
+  public readonly roleId: string;
+
+  constructor(roleId: string) {
+    this.roleId = roleId;
+  }
 }

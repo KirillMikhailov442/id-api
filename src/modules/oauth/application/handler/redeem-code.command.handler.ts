@@ -33,15 +33,38 @@ export interface RedeemCodeResult {
 @CommandHandler(RedeemCodeCommand)
 @Injectable()
 export class RedeemCodeCommandHandler implements ICommandHandler<RedeemCodeCommand> {
+  private readonly authorizationCodeRepository: IAuthorizationCodeRepository;
+  private readonly authorizationCodeService: IAuthorizationCodeService;
+  private readonly clientRepository: IClientRepository;
+  private readonly idTokenService: IIdTokenService;
+  private readonly passwordHasher: IPasswordHasher;
+  private readonly configService: ConfigService;
+  private readonly eventBus: EventBus;
+
   constructor(
-    @Inject(AUTHORIZATION_CODE_REPOSITORY) private readonly authorizationCodeRepository: IAuthorizationCodeRepository,
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: IAuthorizationCodeService,
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(ID_TOKEN_SERVICE) private readonly idTokenService: IIdTokenService,
-    @Inject(PASSWORD_HASHER) private readonly passwordHasher: IPasswordHasher,
-    @Inject(ConfigService) private readonly configService: ConfigService,
-    @Inject(EventBus) private readonly eventBus: EventBus
-  ) {}
+    @Inject(AUTHORIZATION_CODE_REPOSITORY)
+    authorizationCodeRepository: IAuthorizationCodeRepository,
+    @Inject(AUTHORIZATION_CODE_SERVICE)
+    authorizationCodeService: IAuthorizationCodeService,
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(ID_TOKEN_SERVICE)
+    idTokenService: IIdTokenService,
+    @Inject(PASSWORD_HASHER)
+    passwordHasher: IPasswordHasher,
+    @Inject(ConfigService)
+    configService: ConfigService,
+    @Inject(EventBus)
+    eventBus: EventBus
+  ) {
+    this.authorizationCodeRepository = authorizationCodeRepository;
+    this.authorizationCodeService = authorizationCodeService;
+    this.clientRepository = clientRepository;
+    this.idTokenService = idTokenService;
+    this.passwordHasher = passwordHasher;
+    this.configService = configService;
+    this.eventBus = eventBus;
+  }
 
   async execute(command: RedeemCodeCommand): Promise<RedeemCodeResult> {
     const codeHash = this.authorizationCodeService.hash(command.code);
@@ -52,7 +75,6 @@ export class RedeemCodeCommandHandler implements ICommandHandler<RedeemCodeComma
     }
 
     this.assertRedirectUri(authorizationCode, command.redirectUri);
-
     const client = await this.clientRepository.findById(authorizationCode.getClientId());
 
     if (client === null) {
@@ -74,9 +96,7 @@ export class RedeemCodeCommandHandler implements ICommandHandler<RedeemCodeComma
     }
 
     authorizationCode.markUsed();
-
     await this.authorizationCodeRepository.save(authorizationCode);
-
     this.eventBus.publish(
       new AuthorizationCodeRedeemedEvent(
         authorizationCode.getId(),
@@ -84,7 +104,6 @@ export class RedeemCodeCommandHandler implements ICommandHandler<RedeemCodeComma
         authorizationCode.getUserId()
       )
     );
-
     return this.toResult(authorizationCode);
   }
 
@@ -108,7 +127,6 @@ export class RedeemCodeCommandHandler implements ICommandHandler<RedeemCodeComma
       scopes,
     });
     const expiresIn = this.configService.getOrThrow<number>("ID_TOKEN_TTL");
-
     return {
       clientId: authorizationCode.getClientId(),
       userId: authorizationCode.getUserId(),

@@ -1,9 +1,13 @@
 export class ClientScope {
-  constructor(
-    private readonly clientId: string,
-    private readonly scopeId: string,
-    private readonly assignedAt: Date
-  ) {}
+  private readonly clientId: string;
+  private readonly scopeId: string;
+  private readonly assignedAt: Date;
+
+  constructor(clientId: string, scopeId: string, assignedAt: Date) {
+    this.clientId = clientId;
+    this.scopeId = scopeId;
+    this.assignedAt = assignedAt;
+  }
 
   getClientId(): string {
     return this.clientId;

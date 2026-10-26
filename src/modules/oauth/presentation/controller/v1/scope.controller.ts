@@ -1,7 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { RoleType } from "@modules/user/user.module";
 import { Roles } from "@shared/presentation/auth/roles.decorator";
 import { PaginationQuery } from "@shared/presentation/query/pagination.query";
 import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
@@ -25,25 +24,37 @@ import {
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
 } from "@modules/user/presentation/exception-response.decorator";
+import { RoleType } from "@modules/user/user.module";
 
 @ApiTags("scopes")
 @Controller({ path: "scopes", version: "1" })
 export class ScopeController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus
-  ) {}
+  private readonly commandBus: CommandBus;
+  private readonly queryBus: QueryBus;
+
+  constructor(commandBus: CommandBus, queryBus: QueryBus) {
+    this.commandBus = commandBus;
+    this.queryBus = queryBus;
+  }
 
   @Get()
   @ApiAuthenticatedResponse()
   @ApiPaginationResponse(ScopeDto, "Paginated list of scopes")
   @ApiPaginationValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
-  async list(@Query() pagination: PaginationQuery): Promise<PaginationResponse<ScopeDto>> {
+  async list(
+    @Query()
+    pagination: PaginationQuery
+  ): Promise<PaginationResponse<ScopeDto>> {
     const query = new ListScopesQuery(pagination.limit, pagination.offset);
-    const { items, total } = await this.queryBus.execute<ListScopesQuery, { items: Scope[]; total: number }>(query);
+    const { items, total } = await this.queryBus.execute<
+      ListScopesQuery,
+      {
+        items: Scope[];
+        total: number;
+      }
+    >(query);
     const scopes = items.map((scope) => ScopeDto.fromDomain(scope));
-
     return new PaginationResponse(scopes, new PaginationMeta(total, pagination.limit, pagination.offset));
   }
 
@@ -57,9 +68,11 @@ export class ScopeController {
   @ApiScopeAlreadyExistsResponse()
   @ApiScopeCreateValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
-  async create(@Body() request: CreateScopeRequest): Promise<ScopeDto> {
+  async create(
+    @Body()
+    request: CreateScopeRequest
+  ): Promise<ScopeDto> {
     const scope = await this.commandBus.execute<CreateScopeCommand, Scope>(new CreateScopeCommand(request.name));
-
     return ScopeDto.fromDomain(scope);
   }
 }

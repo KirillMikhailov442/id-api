@@ -10,7 +10,14 @@ import { USER_REPOSITORY } from "@modules/user/user.tokens";
 @QueryHandler(GetUserQuery)
 @Injectable()
 export class GetUserQueryHandler implements IQueryHandler<GetUserQuery> {
-  constructor(@Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository) {}
+  private readonly userRepository: IUserRepository;
+
+  constructor(
+    @Inject(USER_REPOSITORY)
+    userRepository: IUserRepository
+  ) {
+    this.userRepository = userRepository;
+  }
 
   async execute(query: GetUserQuery): Promise<User> {
     const user = await this.userRepository.findById(query.userId);

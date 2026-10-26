@@ -6,6 +6,38 @@ import type { RefreshHash } from "@modules/session/domain/value-object/refresh-h
 import type { UserAgent } from "@modules/session/domain/value-object/user-agent.value-object";
 
 export class Session {
+  private readonly id: string;
+  private readonly userId: string;
+  private readonly refreshHash: RefreshHash;
+  private readonly userAgent: UserAgent;
+  private readonly ip: Ip;
+  private readonly createdAt: Date;
+  private readonly expiresAt: Date;
+  private readonly familyId: string;
+  private revokedAt: Date | null;
+
+  constructor(
+    id: string,
+    userId: string,
+    refreshHash: RefreshHash,
+    userAgent: UserAgent,
+    ip: Ip,
+    createdAt: Date,
+    expiresAt: Date,
+    familyId: string,
+    revokedAt: Date | null
+  ) {
+    this.id = id;
+    this.userId = userId;
+    this.refreshHash = refreshHash;
+    this.userAgent = userAgent;
+    this.ip = ip;
+    this.createdAt = createdAt;
+    this.expiresAt = expiresAt;
+    this.familyId = familyId;
+    this.revokedAt = revokedAt;
+  }
+
   static create(params: {
     userId: string;
     refreshHash: RefreshHash;
@@ -26,18 +58,6 @@ export class Session {
       null
     );
   }
-
-  constructor(
-    private readonly id: string,
-    private readonly userId: string,
-    private readonly refreshHash: RefreshHash,
-    private readonly userAgent: UserAgent,
-    private readonly ip: Ip,
-    private readonly createdAt: Date,
-    private readonly expiresAt: Date,
-    private readonly familyId: string,
-    private revokedAt: Date | null
-  ) {}
 
   getId(): string {
     return this.id;
@@ -79,6 +99,7 @@ export class Session {
     if (this.revokedAt !== null) {
       throw new SessionAlreadyRevokedException();
     }
+
     this.revokedAt = new Date();
   }
 

@@ -15,11 +15,22 @@ import { CLIENT_REPOSITORY, CLIENT_SCOPE_REPOSITORY, SCOPE_REPOSITORY } from "@m
 @CommandHandler(UnassignScopeCommand)
 @Injectable()
 export class UnassignScopeCommandHandler implements ICommandHandler<UnassignScopeCommand> {
+  private readonly clientRepository: IClientRepository;
+  private readonly clientScopeRepository: IClientScopeRepository;
+  private readonly scopeRepository: IScopeRepository;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(CLIENT_SCOPE_REPOSITORY) private readonly clientScopeRepository: IClientScopeRepository,
-    @Inject(SCOPE_REPOSITORY) private readonly scopeRepository: IScopeRepository
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(CLIENT_SCOPE_REPOSITORY)
+    clientScopeRepository: IClientScopeRepository,
+    @Inject(SCOPE_REPOSITORY)
+    scopeRepository: IScopeRepository
+  ) {
+    this.clientRepository = clientRepository;
+    this.clientScopeRepository = clientScopeRepository;
+    this.scopeRepository = scopeRepository;
+  }
 
   async execute(command: UnassignScopeCommand): Promise<void> {
     const client = await this.clientRepository.findById(command.clientId);
@@ -27,9 +38,7 @@ export class UnassignScopeCommandHandler implements ICommandHandler<UnassignScop
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, command.requester);
-
     const name = new ScopeName(command.scopeName);
     const scope = await this.scopeRepository.findByName(name);
 

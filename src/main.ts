@@ -17,6 +17,7 @@ async function bootstrap() {
   app.enableVersioning({ type: VersioningType.URI });
 
   const globalPrefix = configService.getOrThrow<string>("API_GLOBAL_PREFIX");
+
   if (globalPrefix.length > 0) {
     app.setGlobalPrefix(globalPrefix);
   }
@@ -44,8 +45,10 @@ async function bootstrap() {
   const logger = new Logger("Bootstrap");
   logger.log(`Application started and is available at http://localhost:${port}`);
   const swaggerPath = configService.get<string>("SWAGGER_PATH");
+
   if (swaggerPath !== undefined && swaggerPath !== "") {
     logger.log(`Swagger UI is available at http://localhost:${port}/${swaggerPath}`);
   }
 }
+
 void bootstrap();

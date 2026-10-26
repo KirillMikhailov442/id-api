@@ -8,14 +8,23 @@ import { InvalidAccessTokenException } from "@modules/session/domain/exception/i
 import { TOKEN_SERVICE } from "@modules/session/session.tokens";
 
 const AUTHORIZATION_HEADER = "authorization";
+
 const BEARER_PREFIX = "Bearer ";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+  private readonly tokenService: ITokenService;
+  private readonly reflector: Reflector;
+
   constructor(
-    @Inject(TOKEN_SERVICE) private readonly tokenService: ITokenService,
-    @Inject(Reflector) private readonly reflector: Reflector
-  ) {}
+    @Inject(TOKEN_SERVICE)
+    tokenService: ITokenService,
+    @Inject(Reflector)
+    reflector: Reflector
+  ) {
+    this.tokenService = tokenService;
+    this.reflector = reflector;
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -35,7 +44,6 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     request.user = await this.tokenService.verifyAccessToken(token);
-
     return true;
   }
 
@@ -47,7 +55,6 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const token = header.slice(BEARER_PREFIX.length).trim();
-
     return token.length === 0 ? null : token;
   }
 }

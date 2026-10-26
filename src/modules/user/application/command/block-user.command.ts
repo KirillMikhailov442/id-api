@@ -1,6 +1,9 @@
 export class BlockUserCommand {
-  constructor(
-    public readonly userId: string,
-    public readonly reason?: string
-  ) {}
+  public readonly userId: string;
+  public readonly reason?: string;
+
+  constructor(userId: string, reason?: string) {
+    this.userId = userId;
+    this.reason = reason;
+  }
 }

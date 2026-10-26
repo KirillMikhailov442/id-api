@@ -1,3 +1,7 @@
 export class LogoutAllCommand {
-  constructor(public readonly refreshToken: string) {}
+  public readonly refreshToken: string;
+
+  constructor(refreshToken: string) {
+    this.refreshToken = refreshToken;
+  }
 }

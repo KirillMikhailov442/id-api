@@ -7,6 +7,7 @@ import {
 } from "@modules/oauth/domain/value-object/location-href.value-object";
 
 export const MAX_LENGTH = 255;
+
 export const REDIRECT_URI_PATTERN = LOCATION_HREF_PATTERN;
 
 export class RedirectUri implements IValueObject<string> {
@@ -18,9 +19,11 @@ export class RedirectUri implements IValueObject<string> {
     if (trimmed.length === 0) {
       throw new InvalidValueObjectException("Redirect uri must not be empty");
     }
+
     if (trimmed.length > HREF_MAX_LENGTH) {
       throw new InvalidValueObjectException(`Redirect uri must be at most ${HREF_MAX_LENGTH} characters`);
     }
+
     if (!LOCATION_HREF_PATTERN.test(trimmed)) {
       throw new InvalidValueObjectException("Redirect uri must be a valid absolute uri");
     }

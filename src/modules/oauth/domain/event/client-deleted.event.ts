@@ -1,6 +1,9 @@
 export class ClientDeletedEvent {
-  constructor(
-    public readonly clientId: string,
-    public readonly userId: string
-  ) {}
+  public readonly clientId: string;
+  public readonly userId: string;
+
+  constructor(clientId: string, userId: string) {
+    this.clientId = clientId;
+    this.userId = userId;
+  }
 }

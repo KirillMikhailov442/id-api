@@ -22,24 +22,39 @@ export interface CreateClientResult {
 @CommandHandler(CreateClientCommand)
 @Injectable()
 export class CreateClientCommandHandler implements ICommandHandler<CreateClientCommand> {
+  private readonly clientRepository: IClientRepository;
+  private readonly locationRepository: ILocationRepository;
+  private readonly passwordHasher: IPasswordHasher;
+  private readonly transaction: IClientsTransaction;
+  private readonly eventBus: EventBus;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(LOCATION_REPOSITORY) private readonly locationRepository: ILocationRepository,
-    @Inject(PASSWORD_HASHER) private readonly passwordHasher: IPasswordHasher,
-    @Inject(CLIENTS_TRANSACTION) private readonly transaction: IClientsTransaction,
-    @Inject(EventBus) private readonly eventBus: EventBus
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(LOCATION_REPOSITORY)
+    locationRepository: ILocationRepository,
+    @Inject(PASSWORD_HASHER)
+    passwordHasher: IPasswordHasher,
+    @Inject(CLIENTS_TRANSACTION)
+    transaction: IClientsTransaction,
+    @Inject(EventBus)
+    eventBus: EventBus
+  ) {
+    this.clientRepository = clientRepository;
+    this.locationRepository = locationRepository;
+    this.passwordHasher = passwordHasher;
+    this.transaction = transaction;
+    this.eventBus = eventBus;
+  }
 
   async execute(command: CreateClientCommand): Promise<CreateClientResult> {
     const name = new ClientName(command.name);
     const secret = new ClientSecret(command.secret);
     const secretHash = await this.passwordHasher.hash(secret.getValue());
-
     const client = Client.create({ userId: command.requester.userId, name, secretHash });
     const locations = (command.locations ?? []).map((href) =>
       Location.create({ clientId: client.getId(), href: new LocationHref(href) })
     );
-
     await this.transaction.run(async (context) => {
       await context.clientRepository.save(client);
 
@@ -47,9 +62,7 @@ export class CreateClientCommandHandler implements ICommandHandler<CreateClientC
         await context.locationRepository.save(location);
       }
     });
-
     this.eventBus.publish(new ClientCreatedEvent(client.getId(), client.getUserId(), name.getValue()));
-
     return { client, locations };
   }
 }

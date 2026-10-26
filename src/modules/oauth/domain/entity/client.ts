@@ -7,14 +7,21 @@ import type { ClientName } from "@modules/oauth/domain/value-object/client-name.
 export const SECRET_HASH_MAX_LENGTH = 255;
 
 export class Client {
-  constructor(
-    private readonly id: string,
-    private readonly userId: string,
-    private name: ClientName,
-    private readonly secretHash: string,
-    private isActive: boolean,
-    private readonly createdAt: Date
-  ) {}
+  private readonly id: string;
+  private readonly userId: string;
+  private name: ClientName;
+  private readonly secretHash: string;
+  private isActive: boolean;
+  private readonly createdAt: Date;
+
+  constructor(id: string, userId: string, name: ClientName, secretHash: string, isActive: boolean, createdAt: Date) {
+    this.id = id;
+    this.userId = userId;
+    this.name = name;
+    this.secretHash = secretHash;
+    this.isActive = isActive;
+    this.createdAt = createdAt;
+  }
 
   static create(params: { userId: string; name: ClientName; secretHash: string }): Client {
     return new Client(randomUUID(), params.userId, params.name, params.secretHash, true, new Date());

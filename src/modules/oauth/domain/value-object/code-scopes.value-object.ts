@@ -7,7 +7,9 @@ import {
 } from "@modules/oauth/domain/value-object/scope-name.value-object";
 
 export const MAX_LENGTH = 255;
+
 export const SCOPE_SEPARATOR = " ";
+
 export const MIN_SCOPES_COUNT = 1;
 
 export class CodeScopes implements IValueObject<string> {
@@ -17,9 +19,11 @@ export class CodeScopes implements IValueObject<string> {
     if (items.length < MIN_SCOPES_COUNT) {
       throw new InvalidValueObjectException(`Scopes must contain at least ${MIN_SCOPES_COUNT} scope`);
     }
+
     if (items.some((item) => item.length === 0 || item.length > SCOPE_NAME_MAX_LENGTH)) {
       throw new InvalidValueObjectException(`Each scope must be between 1 and ${SCOPE_NAME_MAX_LENGTH} characters`);
     }
+
     if (items.some((item) => !SCOPE_NAME_PATTERN.test(item))) {
       throw new InvalidValueObjectException(
         "Each scope must contain only latin letters, digits and ':', '_', '.', '-' characters"

@@ -6,7 +6,6 @@ import { ClientDto } from "@modules/oauth/presentation/dto/v1/client.dto";
 export class CreateClientResponse {
   @ApiProperty({ type: ClientDto })
   client: ClientDto;
-
   @ApiProperty({ type: [ClientLocationDto] })
   locations: ClientLocationDto[];
 

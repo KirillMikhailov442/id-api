@@ -3,11 +3,15 @@ import { randomUUID } from "node:crypto";
 import type { ScopeName } from "@modules/oauth/domain/value-object/scope-name.value-object";
 
 export class Scope {
-  constructor(
-    private readonly id: string,
-    private readonly name: ScopeName,
-    private readonly createdAt: Date
-  ) {}
+  private readonly id: string;
+  private readonly name: ScopeName;
+  private readonly createdAt: Date;
+
+  constructor(id: string, name: ScopeName, createdAt: Date) {
+    this.id = id;
+    this.name = name;
+    this.createdAt = createdAt;
+  }
 
   static create(params: { name: ScopeName }): Scope {
     return new Scope(randomUUID(), params.name, new Date());

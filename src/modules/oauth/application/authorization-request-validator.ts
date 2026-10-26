@@ -20,12 +20,26 @@ import {
 
 @Injectable()
 export class AuthorizationRequestValidator {
+  private readonly clientRepository: IClientRepository;
+  private readonly locationRepository: ILocationRepository;
+  private readonly clientScopeRepository: IClientScopeRepository;
+  private readonly scopeRepository: IScopeRepository;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(LOCATION_REPOSITORY) private readonly locationRepository: ILocationRepository,
-    @Inject(CLIENT_SCOPE_REPOSITORY) private readonly clientScopeRepository: IClientScopeRepository,
-    @Inject(SCOPE_REPOSITORY) private readonly scopeRepository: IScopeRepository
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(LOCATION_REPOSITORY)
+    locationRepository: ILocationRepository,
+    @Inject(CLIENT_SCOPE_REPOSITORY)
+    clientScopeRepository: IClientScopeRepository,
+    @Inject(SCOPE_REPOSITORY)
+    scopeRepository: IScopeRepository
+  ) {
+    this.clientRepository = clientRepository;
+    this.locationRepository = locationRepository;
+    this.clientScopeRepository = clientScopeRepository;
+    this.scopeRepository = scopeRepository;
+  }
 
   async validate(clientId: string, redirectUri: string, scopes: string[]): Promise<Client> {
     const client = await this.clientRepository.findById(clientId);

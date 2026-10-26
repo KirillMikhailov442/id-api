@@ -9,14 +9,23 @@ import { SCOPE_REPOSITORY } from "@modules/oauth/oauth.tokens";
 @QueryHandler(ListScopesQuery)
 @Injectable()
 export class ListScopesQueryHandler implements IQueryHandler<ListScopesQuery> {
-  constructor(@Inject(SCOPE_REPOSITORY) private readonly scopeRepository: IScopeRepository) {}
+  private readonly scopeRepository: IScopeRepository;
 
-  async execute(query: ListScopesQuery): Promise<{ items: Scope[]; total: number }> {
+  constructor(
+    @Inject(SCOPE_REPOSITORY)
+    scopeRepository: IScopeRepository
+  ) {
+    this.scopeRepository = scopeRepository;
+  }
+
+  async execute(query: ListScopesQuery): Promise<{
+    items: Scope[];
+    total: number;
+  }> {
     const [items, total] = await Promise.all([
       this.scopeRepository.findAll({ limit: query.limit, offset: query.offset }),
       this.scopeRepository.count(),
     ]);
-
     return { items, total };
   }
 }

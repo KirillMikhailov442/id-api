@@ -6,6 +6,38 @@ import type { CodeScopes } from "@modules/oauth/domain/value-object/code-scopes.
 import type { RedirectUri } from "@modules/oauth/domain/value-object/redirect-uri.value-object";
 
 export class AuthorizationCode {
+  private readonly id: string;
+  private readonly clientId: string;
+  private readonly userId: string;
+  private readonly codeHash: CodeHash;
+  private readonly scopes: CodeScopes;
+  private readonly redirectUri: RedirectUri;
+  private isUsed: boolean;
+  private readonly createdAt: Date;
+  private readonly expiresAt: Date;
+
+  constructor(
+    id: string,
+    clientId: string,
+    userId: string,
+    codeHash: CodeHash,
+    scopes: CodeScopes,
+    redirectUri: RedirectUri,
+    isUsed: boolean,
+    createdAt: Date,
+    expiresAt: Date
+  ) {
+    this.id = id;
+    this.clientId = clientId;
+    this.userId = userId;
+    this.codeHash = codeHash;
+    this.scopes = scopes;
+    this.redirectUri = redirectUri;
+    this.isUsed = isUsed;
+    this.createdAt = createdAt;
+    this.expiresAt = expiresAt;
+  }
+
   static create(params: {
     clientId: string;
     userId: string;
@@ -26,18 +58,6 @@ export class AuthorizationCode {
       params.expiresAt
     );
   }
-
-  constructor(
-    private readonly id: string,
-    private readonly clientId: string,
-    private readonly userId: string,
-    private readonly codeHash: CodeHash,
-    private readonly scopes: CodeScopes,
-    private readonly redirectUri: RedirectUri,
-    private isUsed: boolean,
-    private readonly createdAt: Date,
-    private readonly expiresAt: Date
-  ) {}
 
   getId(): string {
     return this.id;

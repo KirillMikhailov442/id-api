@@ -14,10 +14,18 @@ import { UserMapper } from "@modules/user/infrastructure/mapper/user.mapper";
 const EMAIL_UNIQUE_CONSTRAINT = "users_email_key";
 
 export class DbUserRepository implements IUserRepository {
+  private readonly userRepository: Repository<DbUser>;
+  private readonly userRoleRepository: Repository<DbUserRole>;
+
   constructor(
-    @InjectRepository(DbUser) private readonly userRepository: Repository<DbUser>,
-    @InjectRepository(DbUserRole) private readonly userRoleRepository: Repository<DbUserRole>
-  ) {}
+    @InjectRepository(DbUser)
+    userRepository: Repository<DbUser>,
+    @InjectRepository(DbUserRole)
+    userRoleRepository: Repository<DbUserRole>
+  ) {
+    this.userRepository = userRepository;
+    this.userRoleRepository = userRoleRepository;
+  }
 
   async findById(id: string): Promise<User | null> {
     const dbUser = await this.userRepository.findOneBy({ id });
@@ -27,7 +35,6 @@ export class DbUserRepository implements IUserRepository {
     }
 
     const dbUserRoles = await this.loadUserRoles(dbUser.id);
-
     return UserMapper.toDomain(dbUser, dbUserRoles);
   }
 
@@ -46,7 +53,6 @@ export class DbUserRepository implements IUserRepository {
     const dbUserRoles = await this.userRoleRepository.find({
       where: { userId: In(userIds) },
     });
-
     return dbUsers.map((dbUser) =>
       UserMapper.toDomain(
         dbUser,
@@ -69,7 +75,6 @@ export class DbUserRepository implements IUserRepository {
     }
 
     const dbUserRoles = await this.loadUserRoles(dbUser.id);
-
     return UserMapper.toDomain(dbUser, dbUserRoles);
   }
 
@@ -77,13 +82,11 @@ export class DbUserRepository implements IUserRepository {
     const count = await this.userRepository.count({
       where: { email: email.getValue() },
     });
-
     return count > 0;
   }
 
   async save(user: User): Promise<void> {
     const { user: dbUser } = UserMapper.toPersistence(user);
-
     try {
       await this.userRepository.save(dbUser);
     } catch (error) {
@@ -106,8 +109,19 @@ export class DbUserRepository implements IUserRepository {
   }
 
   private mapError(error: unknown): Error {
-    if (error instanceof QueryFailedError && (error as QueryFailedError & { code?: string }).code === "23505") {
-      const constraint = (error as QueryFailedError & { constraint?: string }).constraint;
+    if (
+      error instanceof QueryFailedError &&
+      (
+        error as QueryFailedError & {
+          code?: string;
+        }
+      ).code === "23505"
+    ) {
+      const constraint = (
+        error as QueryFailedError & {
+          constraint?: string;
+        }
+      ).constraint;
 
       if (constraint === EMAIL_UNIQUE_CONSTRAINT) {
         return new EmailAlreadyRegisteredException();

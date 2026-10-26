@@ -17,13 +17,11 @@ export class UpdateUserRequest {
   @MinLength(NAME_MIN_LENGTH)
   @MaxLength(NAME_MAX_LENGTH)
   name: string;
-
   @ApiProperty({ minLength: SURNAME_MIN_LENGTH, maxLength: SURNAME_MAX_LENGTH, example: "Ivanov" })
   @IsString()
   @MinLength(SURNAME_MIN_LENGTH)
   @MaxLength(SURNAME_MAX_LENGTH)
   surname: string;
-
   @ApiProperty({ format: "email", maxLength: EMAIL_MAX_LENGTH, example: "ivan.ivanov@example.com" })
   @IsString()
   @MaxLength(EMAIL_MAX_LENGTH)

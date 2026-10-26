@@ -10,7 +10,6 @@ export class LoginRequest {
   @MaxLength(EMAIL_MAX_LENGTH)
   @Matches(EMAIL_PATTERN)
   email: string;
-
   @ApiProperty({ minLength: 1, maxLength: PASSWORD_MAX_LENGTH, example: "S3cureP@ssw0rd" })
   @IsString()
   @MinLength(1)

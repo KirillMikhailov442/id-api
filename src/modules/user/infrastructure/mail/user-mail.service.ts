@@ -1,4 +1,9 @@
 import { join } from "node:path";
+import { Inject, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { MailService } from "@shared/infrastructure/mail/mail.service";
+import { TemplateRenderer } from "@shared/infrastructure/mail/template-renderer";
+
 import {
   BLOCKED_ACCOUNT_TEMPLATE,
   CONFIRMATION_TEMPLATE,
@@ -9,11 +14,11 @@ import {
   SUBJECTS,
   WELCOME_TEMPLATE,
 } from "@modules/user/infrastructure/mail/user-mail.constants";
-import type { BlockedAccountEmailData, ConfirmationEmailData, WelcomeEmailData } from "@modules/user/infrastructure/mail/user-mail.types";
-import { Inject, Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { MailService } from "@shared/infrastructure/mail/mail.service";
-import { TemplateRenderer } from "@shared/infrastructure/mail/template-renderer";
+import type {
+  BlockedAccountEmailData,
+  ConfirmationEmailData,
+  WelcomeEmailData,
+} from "@modules/user/infrastructure/mail/user-mail.types";
 
 const TEMPLATES_DIR = join(__dirname, "templates");
 
@@ -21,11 +26,15 @@ const TEMPLATES_DIR = join(__dirname, "templates");
 export class UserMailService {
   private readonly renderer = new TemplateRenderer(TEMPLATES_DIR);
   private readonly confirmTtlHours: number;
+  private readonly mailService: MailService;
 
   constructor(
-    @Inject(MailService) private readonly mailService: MailService,
-    @Inject(ConfigService) configService: ConfigService
+    @Inject(MailService)
+    mailService: MailService,
+    @Inject(ConfigService)
+    configService: ConfigService
   ) {
+    this.mailService = mailService;
     this.confirmTtlHours = Math.max(
       1,
       Math.ceil(configService.getOrThrow<number>(EMAIL_CONFIRM_TTL_KEY) / SECONDS_PER_HOUR)

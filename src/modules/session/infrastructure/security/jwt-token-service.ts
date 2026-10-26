@@ -7,8 +7,11 @@ import { AccessTokenExpiredException } from "@modules/session/domain/exception/a
 import { InvalidAccessTokenException } from "@modules/session/domain/exception/invalid-access-token.exception";
 
 const JWT_ACCESS_TTL_KEY = "JWT_ACCESS_TTL";
+
 const USER_ID_CLAIM = "sub";
+
 const SESSION_ID_CLAIM = "sid";
+
 const ROLES_CLAIM = "roles";
 
 interface JwtClaims {
@@ -23,14 +26,21 @@ interface JwtClaims {
 
 @Injectable()
 export class JwtTokenService implements ITokenService {
+  private readonly jwtService: JwtService;
+  private readonly configService: ConfigService;
+
   constructor(
-    @Inject(JwtService) private readonly jwtService: JwtService,
-    @Inject(ConfigService) private readonly configService: ConfigService
-  ) {}
+    @Inject(JwtService)
+    jwtService: JwtService,
+    @Inject(ConfigService)
+    configService: ConfigService
+  ) {
+    this.jwtService = jwtService;
+    this.configService = configService;
+  }
 
   issueAccessToken(payload: AccessTokenPayload): Promise<string> {
     const expiresIn = this.configService.getOrThrow<number>(JWT_ACCESS_TTL_KEY);
-
     return this.jwtService.signAsync(
       {
         [USER_ID_CLAIM]: payload.userId,
@@ -45,7 +55,6 @@ export class JwtTokenService implements ITokenService {
     const claims = await this.jwtService.verifyAsync<JwtClaims>(token).catch((error: unknown) => {
       throw this.mapVerifyError(error);
     });
-
     return this.mapClaims(claims);
   }
 
@@ -57,9 +66,11 @@ export class JwtTokenService implements ITokenService {
     if (typeof userId !== "string" || userId.length === 0) {
       throw new InvalidAccessTokenException("Access token payload has no user");
     }
+
     if (typeof sessionId !== "string" || sessionId.length === 0) {
       throw new InvalidAccessTokenException("Access token payload has no session");
     }
+
     if (!this.isValidRoles(roles)) {
       throw new InvalidAccessTokenException("Access token payload has invalid roles");
     }
@@ -75,6 +86,7 @@ export class JwtTokenService implements ITokenService {
     if (error instanceof TokenExpiredError) {
       return new AccessTokenExpiredException();
     }
+
     if (error instanceof JsonWebTokenError || error instanceof NotBeforeError) {
       return new InvalidAccessTokenException();
     }

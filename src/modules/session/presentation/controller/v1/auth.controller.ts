@@ -26,15 +26,18 @@ const UNKNOWN_VALUE = "unknown";
 @ApiTags("auth")
 @Controller({ path: "auth", version: "1" })
 export class AuthController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly configService: ConfigService
-  ) {}
+  private readonly commandBus: CommandBus;
+  private readonly configService: ConfigService;
+
+  constructor(commandBus: CommandBus, configService: ConfigService) {
+    this.commandBus = commandBus;
+    this.configService = configService;
+  }
 
   @Public()
   @Post("login")
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOkResponse({
     type: LoginResponse,
     description: "User authenticated. Refresh token is set as httpOnly cookie 'refresh_token'",
@@ -42,9 +45,12 @@ export class AuthController {
   @ApiInvalidCredentialsResponse()
   @ApiUserBlockedResponse()
   async login(
-    @Body() request: LoginRequest,
-    @Req() httpRequest: Request,
-    @Res({ passthrough: true }) httpResponse: Response
+    @Body()
+    request: LoginRequest,
+    @Req()
+    httpRequest: Request,
+    @Res({ passthrough: true })
+    httpResponse: Response
   ): Promise<LoginResponse> {
     const command = new LoginCommand(
       request.email,
@@ -53,9 +59,7 @@ export class AuthController {
       httpRequest.ip ?? UNKNOWN_VALUE
     );
     const result = await this.commandBus.execute<LoginCommand, LoginResult>(command);
-
     httpResponse.cookie(REFRESH_TOKEN_COOKIE, result.refreshToken, refreshCookieOptions(this.configService));
-
     return new LoginResponse(result.accessToken);
   }
 
@@ -69,9 +73,12 @@ export class AuthController {
   @ApiInvalidRefreshTokenResponse()
   @ApiUserBlockedResponse()
   async refresh(
-    @Cookies(REFRESH_TOKEN_COOKIE) refreshToken: string | undefined,
-    @Req() httpRequest: Request,
-    @Res({ passthrough: true }) httpResponse: Response
+    @Cookies(REFRESH_TOKEN_COOKIE)
+    refreshToken: string | undefined,
+    @Req()
+    httpRequest: Request,
+    @Res({ passthrough: true })
+    httpResponse: Response
   ): Promise<RefreshResponse> {
     if (refreshToken === undefined) {
       throw new InvalidRefreshTokenException("Refresh token cookie is missing");
@@ -84,9 +91,7 @@ export class AuthController {
         httpRequest.ip ?? UNKNOWN_VALUE
       )
     );
-
     httpResponse.cookie(REFRESH_TOKEN_COOKIE, result.refreshToken, refreshCookieOptions(this.configService));
-
     return new RefreshResponse(result.accessToken);
   }
 
@@ -96,15 +101,16 @@ export class AuthController {
   @ApiNoContentResponse({ description: "Current session revoked" })
   @ApiInvalidRefreshTokenResponse()
   async logout(
-    @Cookies(REFRESH_TOKEN_COOKIE) refreshToken: string | undefined,
-    @Res({ passthrough: true }) httpResponse: Response
+    @Cookies(REFRESH_TOKEN_COOKIE)
+    refreshToken: string | undefined,
+    @Res({ passthrough: true })
+    httpResponse: Response
   ): Promise<void> {
     if (refreshToken === undefined) {
       throw new InvalidRefreshTokenException("Refresh token cookie is missing");
     }
 
     await this.commandBus.execute<LogoutCommand, void>(new LogoutCommand(refreshToken));
-
     httpResponse.clearCookie(REFRESH_TOKEN_COOKIE, refreshCookieOptions(this.configService));
   }
 
@@ -114,15 +120,16 @@ export class AuthController {
   @ApiNoContentResponse({ description: "All user sessions revoked" })
   @ApiInvalidRefreshTokenResponse()
   async logoutAll(
-    @Cookies(REFRESH_TOKEN_COOKIE) refreshToken: string | undefined,
-    @Res({ passthrough: true }) httpResponse: Response
+    @Cookies(REFRESH_TOKEN_COOKIE)
+    refreshToken: string | undefined,
+    @Res({ passthrough: true })
+    httpResponse: Response
   ): Promise<void> {
     if (refreshToken === undefined) {
       throw new InvalidRefreshTokenException("Refresh token cookie is missing");
     }
 
     await this.commandBus.execute<LogoutAllCommand, void>(new LogoutAllCommand(refreshToken));
-
     httpResponse.clearCookie(REFRESH_TOKEN_COOKIE, refreshCookieOptions(this.configService));
   }
 }

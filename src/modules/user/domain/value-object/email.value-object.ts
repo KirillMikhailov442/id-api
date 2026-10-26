@@ -2,6 +2,7 @@ import { InvalidValueObjectException } from "@shared/domain/exception/invalid-va
 import type { IValueObject } from "@shared/domain/value-object.type";
 
 export const MAX_LENGTH = 128;
+
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class Email implements IValueObject<string> {
@@ -13,12 +14,15 @@ export class Email implements IValueObject<string> {
     if (trimmed.length === 0) {
       throw new InvalidValueObjectException("Email must not be empty");
     }
+
     if (trimmed.length > MAX_LENGTH) {
       throw new InvalidValueObjectException(`Email must be at most ${MAX_LENGTH} characters`);
     }
+
     if (!EMAIL_PATTERN.test(trimmed)) {
       throw new InvalidValueObjectException("Email must be a valid email address");
     }
+
     this.value = trimmed;
   }
 

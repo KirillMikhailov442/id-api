@@ -14,7 +14,14 @@ import { TRANSACTION } from "@modules/user/user.tokens";
 @CommandHandler(UpdateUserCommand)
 @Injectable()
 export class UpdateUserCommandHandler implements ICommandHandler<UpdateUserCommand> {
-  constructor(@Inject(TRANSACTION) private readonly transaction: ITransaction) {}
+  private readonly transaction: ITransaction;
+
+  constructor(
+    @Inject(TRANSACTION)
+    transaction: ITransaction
+  ) {
+    this.transaction = transaction;
+  }
 
   async execute(command: UpdateUserCommand): Promise<User> {
     return this.transaction.run(async (context) => {
@@ -41,10 +48,8 @@ export class UpdateUserCommandHandler implements ICommandHandler<UpdateUserComma
         surname: command.surname ? new Surname(command.surname) : undefined,
         email: command.email ? new Email(command.email) : undefined,
       });
-
       await context.userRepository.save(user);
       await this.syncUserRoles(context, user);
-
       return user;
     });
   }

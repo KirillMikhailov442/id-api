@@ -12,11 +12,18 @@ import { EMAIL_CONFIRMATION_TOKEN_SERVICE, USER_REPOSITORY } from "@modules/user
 @CommandHandler(ConfirmEmailCommand)
 @Injectable()
 export class ConfirmEmailCommandHandler implements ICommandHandler<ConfirmEmailCommand> {
+  private readonly emailConfirmationTokenService: IEmailConfirmationTokenService;
+  private readonly userRepository: IUserRepository;
+
   constructor(
     @Inject(EMAIL_CONFIRMATION_TOKEN_SERVICE)
-    private readonly emailConfirmationTokenService: IEmailConfirmationTokenService,
-    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository
-  ) {}
+    emailConfirmationTokenService: IEmailConfirmationTokenService,
+    @Inject(USER_REPOSITORY)
+    userRepository: IUserRepository
+  ) {
+    this.emailConfirmationTokenService = emailConfirmationTokenService;
+    this.userRepository = userRepository;
+  }
 
   async execute(command: ConfirmEmailCommand): Promise<User> {
     const payload = await this.emailConfirmationTokenService.verify(command.token);
@@ -26,13 +33,12 @@ export class ConfirmEmailCommandHandler implements ICommandHandler<ConfirmEmailC
       throw new UserNotFoundException();
     }
 
-    if (user.getEmail().getValue() !== payload.email) {
+  if (user.getEmail().getValue() !== payload.email) {
       throw new InvalidEmailConfirmationTokenException();
     }
 
     user.confirmEmail();
     await this.userRepository.save(user);
-
     return user;
   }
 }

@@ -9,7 +9,14 @@ import { USER_REPOSITORY } from "@modules/user/user.tokens";
 @CommandHandler(DeleteUserCommand)
 @Injectable()
 export class DeleteUserCommandHandler implements ICommandHandler<DeleteUserCommand> {
-  constructor(@Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository) {}
+  private readonly userRepository: IUserRepository;
+
+  constructor(
+    @Inject(USER_REPOSITORY)
+    userRepository: IUserRepository
+  ) {
+    this.userRepository = userRepository;
+  }
 
   async execute(command: DeleteUserCommand): Promise<void> {
     const user = await this.userRepository.findById(command.userId);

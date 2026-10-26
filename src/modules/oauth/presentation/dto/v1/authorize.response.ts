@@ -8,13 +8,10 @@ export class AuthorizeResponse {
     example: "https://pet-dashboard.example.com/auth/callback",
   })
   redirectUri: string;
-
   @ApiProperty({ description: "Raw one-time authorization code, shown only once", example: EXAMPLE_CODE })
   code: string;
-
   @ApiPropertyOptional({ type: String, nullable: true, example: "xyz" })
   state?: string | null;
-
   @ApiProperty({ format: "date-time", example: "2026-10-21T09:10:00.000Z" })
   expiresAt: string;
 

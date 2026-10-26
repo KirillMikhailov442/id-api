@@ -22,13 +22,11 @@ export class CreateClientRequest {
   @MinLength(NAME_MIN_LENGTH)
   @MaxLength(NAME_MAX_LENGTH)
   name: string;
-
   @ApiProperty({ minLength: SECRET_MIN_LENGTH, maxLength: SECRET_MAX_LENGTH, example: "s3cr3t-client-p@ss" })
   @IsString()
   @MinLength(SECRET_MIN_LENGTH)
   @MaxLength(SECRET_MAX_LENGTH)
   secret: string;
-
   @ApiPropertyOptional({
     type: [String],
     maxItems: MAX_LOCATIONS_PER_CLIENT,

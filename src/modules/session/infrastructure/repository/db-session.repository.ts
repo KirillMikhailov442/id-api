@@ -8,11 +8,17 @@ import { DbSession } from "@modules/session/infrastructure/entity/db-session.ent
 import { SessionMapper } from "@modules/session/infrastructure/mapper/session.mapper";
 
 export class DbSessionRepository implements ISessionRepository {
-  constructor(@InjectRepository(DbSession) private readonly sessionRepository: Repository<DbSession>) {}
+  private readonly sessionRepository: Repository<DbSession>;
+
+  constructor(
+    @InjectRepository(DbSession)
+    sessionRepository: Repository<DbSession>
+  ) {
+    this.sessionRepository = sessionRepository;
+  }
 
   async findById(id: string): Promise<Session | null> {
     const dbSession = await this.sessionRepository.findOneBy({ id });
-
     return dbSession === null ? null : SessionMapper.toDomain(dbSession);
   }
 
@@ -20,7 +26,6 @@ export class DbSessionRepository implements ISessionRepository {
     const dbSession = await this.sessionRepository.findOneBy({
       refreshHash: refreshHash.getValue(),
     });
-
     return dbSession === null ? null : SessionMapper.toDomain(dbSession);
   }
 
@@ -29,7 +34,6 @@ export class DbSessionRepository implements ISessionRepository {
       where: { userId },
       order: { createdAt: "DESC" },
     });
-
     return dbSessions.map(SessionMapper.toDomain);
   }
 
@@ -38,13 +42,11 @@ export class DbSessionRepository implements ISessionRepository {
       where: { familyId },
       order: { createdAt: "DESC" },
     });
-
     return dbSessions.map(SessionMapper.toDomain);
   }
 
   async save(session: Session): Promise<void> {
     const dbSession = SessionMapper.toPersistence(session);
-
     await this.sessionRepository.save(dbSession);
   }
 

@@ -12,7 +12,14 @@ import { RoleMapper } from "@modules/user/infrastructure/mapper/role.mapper";
 const ROLES_NAME_UNIQUE_CONSTRAINT = "UQ_648e3f5447f725579d7d4ffdfb7";
 
 export class DbRoleRepository implements IRoleRepository {
-  constructor(@InjectRepository(DbRole) private readonly roleRepository: Repository<DbRole>) {}
+  private readonly roleRepository: Repository<DbRole>;
+
+  constructor(
+    @InjectRepository(DbRole)
+    roleRepository: Repository<DbRole>
+  ) {
+    this.roleRepository = roleRepository;
+  }
 
   async findById(id: string): Promise<Role | null> {
     const dbRole = await this.roleRepository.findOneBy({ id });
@@ -28,7 +35,6 @@ export class DbRoleRepository implements IRoleRepository {
     const dbRoles = await this.roleRepository.find({
       order: { createdAt: "ASC" },
     });
-
     return dbRoles.map(RoleMapper.toDomain);
   }
 
@@ -40,7 +46,6 @@ export class DbRoleRepository implements IRoleRepository {
     const dbRoles = await this.roleRepository.find({
       where: { id: In(roleIds) },
     });
-
     return dbRoles.map(RoleMapper.toDomain);
   }
 
@@ -58,7 +63,6 @@ export class DbRoleRepository implements IRoleRepository {
 
   async save(role: Role): Promise<void> {
     const dbRole = RoleMapper.toPersistence(role);
-
     try {
       await this.roleRepository.save(dbRole);
     } catch (error) {
@@ -77,8 +81,19 @@ export class DbRoleRepository implements IRoleRepository {
   }
 
   private mapError(error: unknown): Error {
-    if (error instanceof QueryFailedError && (error as QueryFailedError & { code?: string }).code === "23505") {
-      const constraint = (error as QueryFailedError & { constraint?: string }).constraint;
+    if (
+      error instanceof QueryFailedError &&
+      (
+        error as QueryFailedError & {
+          code?: string;
+        }
+      ).code === "23505"
+    ) {
+      const constraint = (
+        error as QueryFailedError & {
+          constraint?: string;
+        }
+      ).constraint;
 
       if (constraint === ROLES_NAME_UNIQUE_CONSTRAINT) {
         return new RoleAlreadyExistsException();

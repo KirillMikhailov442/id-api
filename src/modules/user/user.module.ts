@@ -49,11 +49,15 @@ export {
   USER_ROLE_REPOSITORY,
   EMAIL_CONFIRMATION_TOKEN_SERVICE,
 } from "@modules/user/user.tokens";
+
 export { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
 
 export { RoleType } from "@modules/user/domain/enum/role-type.enum";
+
 export type { IRoleRepository } from "@modules/user/application/port/role-repository";
+
 export type { IPasswordHasher } from "@modules/user/application/port/password-hasher";
+
 export type { IUserRepository } from "@modules/user/application/port/user-repository";
 
 @Module({

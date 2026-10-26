@@ -11,7 +11,14 @@ import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 @CommandHandler(CreateRoleCommand)
 @Injectable()
 export class CreateRoleCommandHandler implements ICommandHandler<CreateRoleCommand> {
-  constructor(@Inject(ROLE_REPOSITORY) private readonly roleRepository: IRoleRepository) {}
+  private readonly roleRepository: IRoleRepository;
+
+  constructor(
+    @Inject(ROLE_REPOSITORY)
+    roleRepository: IRoleRepository
+  ) {
+    this.roleRepository = roleRepository;
+  }
 
   async execute(command: CreateRoleCommand): Promise<Role> {
     const name = new RoleName(command.name);
@@ -21,9 +28,7 @@ export class CreateRoleCommandHandler implements ICommandHandler<CreateRoleComma
     }
 
     const role = Role.create({ name });
-
     await this.roleRepository.save(role);
-
     return role;
   }
 }

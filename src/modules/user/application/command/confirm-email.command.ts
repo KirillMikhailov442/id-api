@@ -1,3 +1,7 @@
 export class ConfirmEmailCommand {
-  constructor(public readonly token: string) {}
+  public readonly token: string;
+
+  constructor(token: string) {
+    this.token = token;
+  }
 }

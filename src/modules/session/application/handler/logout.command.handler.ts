@@ -10,10 +10,18 @@ import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY } from "@modules/session/sess
 @CommandHandler(LogoutCommand)
 @Injectable()
 export class LogoutCommandHandler implements ICommandHandler<LogoutCommand> {
+  private readonly sessionRepository: ISessionRepository;
+  private readonly refreshTokenService: IRefreshTokenService;
+
   constructor(
-    @Inject(SESSION_REPOSITORY) private readonly sessionRepository: ISessionRepository,
-    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: IRefreshTokenService
-  ) {}
+    @Inject(SESSION_REPOSITORY)
+    sessionRepository: ISessionRepository,
+    @Inject(REFRESH_TOKEN_SERVICE)
+    refreshTokenService: IRefreshTokenService
+  ) {
+    this.sessionRepository = sessionRepository;
+    this.refreshTokenService = refreshTokenService;
+  }
 
   async execute(command: LogoutCommand): Promise<void> {
     const session = await this.sessionRepository.findByRefreshHash(this.refreshTokenService.hash(command.refreshToken));

@@ -1,3 +1,5 @@
 export const SESSION_REPOSITORY = Symbol("SESSION_REPOSITORY");
+
 export const TOKEN_SERVICE = Symbol("TOKEN_SERVICE");
+
 export const REFRESH_TOKEN_SERVICE = Symbol("REFRESH_TOKEN_SERVICE");

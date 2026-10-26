@@ -12,7 +12,14 @@ import { DbUserRepository } from "@modules/user/infrastructure/repository/db-use
 
 @Injectable()
 export class DbTransaction implements ITransaction {
-  constructor(@Inject(DbTransactionRunner) private readonly runner: DbTransactionRunner) {}
+  private readonly runner: DbTransactionRunner;
+
+  constructor(
+    @Inject(DbTransactionRunner)
+    runner: DbTransactionRunner
+  ) {
+    this.runner = runner;
+  }
 
   run<T>(work: (context: ITransactionContext) => Promise<T>): Promise<T> {
     return this.runner.run((entityManager) => work(this.buildContext(entityManager)));

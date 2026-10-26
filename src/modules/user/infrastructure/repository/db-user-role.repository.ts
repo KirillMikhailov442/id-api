@@ -10,14 +10,21 @@ import { RoleMapper } from "@modules/user/infrastructure/mapper/role.mapper";
 import { UserRoleMapper } from "@modules/user/infrastructure/mapper/user-role.mapper";
 
 export class DbUserRoleRepository implements IUserRoleRepository {
+  private readonly userRoleRepository: Repository<DbUserRole>;
+  private readonly roleRepository: Repository<DbRole>;
+
   constructor(
-    @InjectRepository(DbUserRole) private readonly userRoleRepository: Repository<DbUserRole>,
-    @InjectRepository(DbRole) private readonly roleRepository: Repository<DbRole>
-  ) {}
+    @InjectRepository(DbUserRole)
+    userRoleRepository: Repository<DbUserRole>,
+    @InjectRepository(DbRole)
+    roleRepository: Repository<DbRole>
+  ) {
+    this.userRoleRepository = userRoleRepository;
+    this.roleRepository = roleRepository;
+  }
 
   async save(userRole: UserRole): Promise<void> {
     const dbUserRole = UserRoleMapper.toPersistence(userRole);
-
     await this.userRoleRepository.save(dbUserRole);
   }
 
@@ -25,7 +32,6 @@ export class DbUserRoleRepository implements IUserRoleRepository {
     const count = await this.userRoleRepository.count({
       where: { userId, roleId },
     });
-
     return count > 0;
   }
 
@@ -36,7 +42,6 @@ export class DbUserRoleRepository implements IUserRoleRepository {
       .where("userRole.userId = :userId", { userId })
       .orderBy("userRole.appointedAt", "ASC")
       .getMany();
-
     return dbRoles.map(RoleMapper.toDomain);
   }
 

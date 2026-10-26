@@ -12,9 +12,11 @@ export class UserAgent implements IValueObject<string> {
     if (trimmed.length === 0) {
       throw new InvalidValueObjectException("User agent must not be empty");
     }
+
     if (trimmed.length > MAX_LENGTH) {
       throw new InvalidValueObjectException(`User agent must be at most ${MAX_LENGTH} characters`);
     }
+
     this.value = trimmed;
   }
 

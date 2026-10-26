@@ -9,28 +9,20 @@ import { MAX_LENGTH as SURNAME_MAX_LENGTH } from "@modules/user/domain/value-obj
 export class DbUser {
   @PrimaryColumn("uuid")
   id: string;
-
   @Column("varchar", { length: NAME_MAX_LENGTH })
   name: string;
-
   @Column("varchar", { length: SURNAME_MAX_LENGTH })
   surname: string;
-
   @Column("varchar", { length: EMAIL_MAX_LENGTH, unique: true })
   email: string;
-
   @Column("varchar", { length: PASSWORD_MAX_LENGTH })
   passwordHash: string;
-
   @Column("boolean")
   emailConfirmed: boolean;
-
   @Column("boolean")
   blocked: boolean;
-
   @Column({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
-
   @Column({ type: "timestamptz", name: "updated_at" })
   @Index("IX_users_updated_at")
   updatedAt: Date;

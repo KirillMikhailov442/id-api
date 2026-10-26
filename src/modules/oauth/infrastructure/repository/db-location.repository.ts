@@ -7,7 +7,14 @@ import { DbLocation } from "@modules/oauth/infrastructure/entity/db-location.ent
 import { LocationMapper } from "@modules/oauth/infrastructure/mapper/location.mapper";
 
 export class DbLocationRepository implements ILocationRepository {
-  constructor(@InjectRepository(DbLocation) private readonly repository: Repository<DbLocation>) {}
+  private readonly repository: Repository<DbLocation>;
+
+  constructor(
+    @InjectRepository(DbLocation)
+    repository: Repository<DbLocation>
+  ) {
+    this.repository = repository;
+  }
 
   async findById(id: string): Promise<Location | null> {
     const dbLocation = await this.repository.findOneBy({ id });
@@ -24,7 +31,6 @@ export class DbLocationRepository implements ILocationRepository {
       where: { clientId },
       order: { createdAt: "DESC" },
     });
-
     return dbLocations.map(LocationMapper.toDomain);
   }
 

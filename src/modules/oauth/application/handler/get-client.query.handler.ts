@@ -11,7 +11,14 @@ import { CLIENT_REPOSITORY } from "@modules/oauth/oauth.tokens";
 @QueryHandler(GetClientQuery)
 @Injectable()
 export class GetClientQueryHandler implements IQueryHandler<GetClientQuery> {
-  constructor(@Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository) {}
+  private readonly clientRepository: IClientRepository;
+
+  constructor(
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository
+  ) {
+    this.clientRepository = clientRepository;
+  }
 
   async execute(query: GetClientQuery): Promise<Client> {
     const client = await this.clientRepository.findById(query.clientId);
@@ -19,9 +26,7 @@ export class GetClientQueryHandler implements IQueryHandler<GetClientQuery> {
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, query.requester);
-
     return client;
   }
 }

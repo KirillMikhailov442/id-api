@@ -40,16 +40,21 @@ const toRequester = (authenticatedUser: AuthenticatedUser): Requester => ({
 });
 
 const SCOPE_SEPARATOR = " ";
+
 const STATE_MAX_LENGTH = 255;
 
 @ApiTags("oauth")
 @Controller({ path: "oauth", version: "1" })
 export class OAuthController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-    private readonly configService: ConfigService
-  ) {}
+  private readonly commandBus: CommandBus;
+  private readonly queryBus: QueryBus;
+  private readonly configService: ConfigService;
+
+  constructor(commandBus: CommandBus, queryBus: QueryBus, configService: ConfigService) {
+    this.commandBus = commandBus;
+    this.queryBus = queryBus;
+    this.configService = configService;
+  }
 
   @Public()
   @Get("authorize")
@@ -61,7 +66,12 @@ export class OAuthController {
   @ApiResponse({ status: HttpStatus.FOUND, description: "Redirect to the IdP login page or to the client callback" })
   @ApiRedirectUriNotAllowedResponse()
   @ApiUnexpectedErrorResponse()
-  async authorizeRedirect(@Query() query: AuthorizeQuery, @Res() res: Response): Promise<void> {
+  async authorizeRedirect(
+    @Query()
+    query: AuthorizeQuery,
+    @Res()
+    res: Response
+  ): Promise<void> {
     try {
       await this.queryBus.execute(
         new ValidateAuthorizationQuery(query.client_id, query.redirect_uri, query.scope.split(SCOPE_SEPARATOR))
@@ -79,7 +89,6 @@ export class OAuthController {
 
       throw error;
     }
-
     res.redirect(HttpStatus.FOUND, this.buildLoginUrl(query));
   }
 
@@ -97,8 +106,10 @@ export class OAuthController {
   @ApiClientInactiveResponse()
   @ApiUnexpectedErrorResponse()
   async authorize(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Body() request: AuthorizeCodeRequest
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Body()
+    request: AuthorizeCodeRequest
   ): Promise<AuthorizeResponse> {
     const command = new IssueCodeCommand(
       toRequester(currentUser),
@@ -107,14 +118,13 @@ export class OAuthController {
       request.scope.split(SCOPE_SEPARATOR)
     );
     const result = await this.commandBus.execute<IssueCodeCommand, IssueCodeResult>(command);
-
     return new AuthorizeResponse(request.redirectUri, result.code, request.state, result.expiresAt);
   }
 
   @Public()
   @Post("token")
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({
     description: "Exchanges the authorization code for an id token, requires client secret",
   })
@@ -125,17 +135,18 @@ export class OAuthController {
   @ApiAuthorizationCodeAlreadyUsedResponse()
   @ApiClientInactiveResponse()
   @ApiUnexpectedErrorResponse()
-  async token(@Body() request: TokenRequest): Promise<TokenResponse> {
+  async token(
+    @Body()
+    request: TokenRequest
+  ): Promise<TokenResponse> {
     const command = new RedeemCodeCommand(request.clientId, request.clientSecret, request.code, request.redirectUri);
     const result = await this.commandBus.execute<RedeemCodeCommand, RedeemCodeResult>(command);
-
     return new TokenResponse(result.idToken, result.expiresIn, result.clientId, result.userId, result.scopes);
   }
 
   private buildLoginUrl(query: AuthorizeQuery): string {
     const appWebUrl = this.configService.getOrThrow<string>("APP_WEB_URL");
     const loginUrl = new URL(WEB_LOGIN_PAGE_PATH, appWebUrl);
-
     loginUrl.searchParams.set("response_type", query.response_type);
     loginUrl.searchParams.set("client_id", query.client_id);
     loginUrl.searchParams.set("redirect_uri", query.redirect_uri);
@@ -150,7 +161,6 @@ export class OAuthController {
 
   private buildErrorRedirectUrl(query: AuthorizeQuery, errorCode: string): string {
     const callbackUrl = new URL(query.redirect_uri);
-
     callbackUrl.searchParams.set("error", errorCode);
 
     if (query.state !== undefined && query.state.length <= STATE_MAX_LENGTH) {

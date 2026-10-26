@@ -5,7 +5,6 @@ import { UserDto } from "@modules/user/presentation/dto/v1/user.dto";
 export class CreateUserResponse {
   @ApiProperty({ type: UserDto })
   user: UserDto;
-
   @ApiProperty({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." })
   accessToken: string;
 

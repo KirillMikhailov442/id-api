@@ -13,11 +13,22 @@ import { CLIENT_REPOSITORY, CLIENT_SCOPE_REPOSITORY, SCOPE_REPOSITORY } from "@m
 @QueryHandler(ListClientScopesQuery)
 @Injectable()
 export class ListClientScopesQueryHandler implements IQueryHandler<ListClientScopesQuery> {
+  private readonly clientRepository: IClientRepository;
+  private readonly clientScopeRepository: IClientScopeRepository;
+  private readonly scopeRepository: IScopeRepository;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(CLIENT_SCOPE_REPOSITORY) private readonly clientScopeRepository: IClientScopeRepository,
-    @Inject(SCOPE_REPOSITORY) private readonly scopeRepository: IScopeRepository
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(CLIENT_SCOPE_REPOSITORY)
+    clientScopeRepository: IClientScopeRepository,
+    @Inject(SCOPE_REPOSITORY)
+    scopeRepository: IScopeRepository
+  ) {
+    this.clientRepository = clientRepository;
+    this.clientScopeRepository = clientScopeRepository;
+    this.scopeRepository = scopeRepository;
+  }
 
   async execute(query: ListClientScopesQuery): Promise<Scope[]> {
     const client = await this.clientRepository.findById(query.clientId);
@@ -25,12 +36,9 @@ export class ListClientScopesQueryHandler implements IQueryHandler<ListClientSco
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, query.requester);
-
     const assignments = await this.clientScopeRepository.findByClientId(client.getId());
     const scopeIds = assignments.map((assignment) => assignment.getScopeId());
-
     return this.scopeRepository.findByIds(scopeIds);
   }
 }

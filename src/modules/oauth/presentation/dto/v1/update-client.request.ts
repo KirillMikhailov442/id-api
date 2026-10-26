@@ -13,7 +13,6 @@ export class UpdateClientRequest {
   @MinLength(NAME_MIN_LENGTH)
   @MaxLength(NAME_MAX_LENGTH)
   name?: string;
-
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()

@@ -2,6 +2,7 @@ import { InvalidValueObjectException } from "@shared/domain/exception/invalid-va
 import type { IValueObject } from "@shared/domain/value-object.type";
 
 export const MIN_LENGTH = 2;
+
 export const MAX_LENGTH = 64;
 
 export class ClientName implements IValueObject<string> {
@@ -13,6 +14,7 @@ export class ClientName implements IValueObject<string> {
     if (trimmed.length < MIN_LENGTH) {
       throw new InvalidValueObjectException(`Client name must be at least ${MIN_LENGTH} characters`);
     }
+
     if (trimmed.length > MAX_LENGTH) {
       throw new InvalidValueObjectException(`Client name must be at most ${MAX_LENGTH} characters`);
     }

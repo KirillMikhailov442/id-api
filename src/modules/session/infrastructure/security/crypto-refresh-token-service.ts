@@ -5,6 +5,7 @@ import type { IRefreshTokenService } from "@modules/session/application/port/ref
 import { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
 
 const TOKEN_BYTES = 32;
+
 const SHA256_ALGORITHM = "sha256";
 
 @Injectable()

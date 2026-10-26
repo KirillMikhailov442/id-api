@@ -15,6 +15,41 @@ import type { Surname } from "@modules/user/domain/value-object/surname.value-ob
 export const PASSWORD_MAX_LENGTH = 72;
 
 export class User {
+  private readonly id: string;
+  private name: Name;
+  private surname: Surname;
+  private email: Email;
+  private readonly passwordHash: string;
+  private isConfirmed: UserEmailConfirmedStatus;
+  private isBlocked: UserBlockedStatus;
+  private readonly createdAt: Date;
+  private updatedAt: Date;
+  private roles: UserRole[];
+
+  constructor(
+    id: string,
+    name: Name,
+    surname: Surname,
+    email: Email,
+    passwordHash: string,
+    isConfirmed: UserEmailConfirmedStatus,
+    isBlocked: UserBlockedStatus,
+    createdAt: Date,
+    updatedAt: Date,
+    roles: UserRole[] = []
+  ) {
+    this.id = id;
+    this.name = name;
+    this.surname = surname;
+    this.email = email;
+    this.passwordHash = passwordHash;
+    this.isConfirmed = isConfirmed;
+    this.isBlocked = isBlocked;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.roles = roles;
+  }
+
   static create(params: { name: Name; surname: Surname; email: Email; passwordHash: string }): User {
     return new User(
       randomUUID(),
@@ -29,19 +64,6 @@ export class User {
       []
     );
   }
-
-  constructor(
-    private readonly id: string,
-    private name: Name,
-    private surname: Surname,
-    private email: Email,
-    private readonly passwordHash: string,
-    private isConfirmed: UserEmailConfirmedStatus,
-    private isBlocked: UserBlockedStatus,
-    private readonly createdAt: Date,
-    private updatedAt: Date,
-    private roles: UserRole[] = []
-  ) {}
 
   getId(): string {
     return this.id;
@@ -111,6 +133,7 @@ export class User {
     if (this.isConfirmed === UserEmailConfirmedStatus.Confirmed) {
       throw new EmailAlreadyConfirmedException();
     }
+
     this.isConfirmed = UserEmailConfirmedStatus.Confirmed;
     this.updatedAt = new Date();
   }
@@ -119,6 +142,7 @@ export class User {
     if (this.isBlocked === UserBlockedStatus.Inactive) {
       throw new UserAlreadyBlockedException();
     }
+
     this.isBlocked = UserBlockedStatus.Inactive;
     this.updatedAt = new Date();
   }
@@ -127,6 +151,7 @@ export class User {
     if (this.isBlocked === UserBlockedStatus.Active) {
       throw new UserAlreadyUnblockedException();
     }
+
     this.isBlocked = UserBlockedStatus.Active;
     this.updatedAt = new Date();
   }
@@ -135,6 +160,7 @@ export class User {
     if (this.roles.some((userRole) => userRole.getRoleId() === role.getId())) {
       throw new RoleAlreadyAssignedException();
     }
+
     this.roles.push(new UserRole(this.id, role.getId()));
     this.updatedAt = new Date();
   }

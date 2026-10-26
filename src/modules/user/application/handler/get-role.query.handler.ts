@@ -10,7 +10,14 @@ import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 @QueryHandler(GetRoleQuery)
 @Injectable()
 export class GetRoleQueryHandler implements IQueryHandler<GetRoleQuery> {
-  constructor(@Inject(ROLE_REPOSITORY) private readonly roleRepository: IRoleRepository) {}
+  private readonly roleRepository: IRoleRepository;
+
+  constructor(
+    @Inject(ROLE_REPOSITORY)
+    roleRepository: IRoleRepository
+  ) {
+    this.roleRepository = roleRepository;
+  }
 
   async execute(query: GetRoleQuery): Promise<Role> {
     const role = await this.roleRepository.findById(query.roleId);

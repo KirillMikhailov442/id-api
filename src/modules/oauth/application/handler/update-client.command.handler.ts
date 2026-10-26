@@ -12,7 +12,14 @@ import { CLIENT_REPOSITORY } from "@modules/oauth/oauth.tokens";
 @CommandHandler(UpdateClientCommand)
 @Injectable()
 export class UpdateClientCommandHandler implements ICommandHandler<UpdateClientCommand> {
-  constructor(@Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository) {}
+  private readonly clientRepository: IClientRepository;
+
+  constructor(
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository
+  ) {
+    this.clientRepository = clientRepository;
+  }
 
   async execute(command: UpdateClientCommand): Promise<Client> {
     const client = await this.clientRepository.findById(command.clientId);
@@ -20,7 +27,6 @@ export class UpdateClientCommandHandler implements ICommandHandler<UpdateClientC
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, command.requester);
 
     if (command.name !== undefined) {
@@ -36,7 +42,6 @@ export class UpdateClientCommandHandler implements ICommandHandler<UpdateClientC
     }
 
     await this.clientRepository.save(client);
-
     return client;
   }
 }

@@ -11,10 +11,18 @@ import { USER_REPOSITORY } from "@modules/user/user.tokens";
 @CommandHandler(BlockUserCommand)
 @Injectable()
 export class BlockUserCommandHandler implements ICommandHandler<BlockUserCommand> {
+  private readonly userRepository: IUserRepository;
+  private readonly eventBus: EventBus;
+
   constructor(
-    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(EventBus) private readonly eventBus: EventBus
-  ) {}
+    @Inject(USER_REPOSITORY)
+    userRepository: IUserRepository,
+    @Inject(EventBus)
+    eventBus: EventBus
+  ) {
+    this.userRepository = userRepository;
+    this.eventBus = eventBus;
+  }
 
   async execute(command: BlockUserCommand): Promise<User> {
     const user = await this.userRepository.findById(command.userId);
@@ -25,9 +33,7 @@ export class BlockUserCommandHandler implements ICommandHandler<BlockUserCommand
 
     user.block();
     await this.userRepository.save(user);
-
     this.eventBus.publish(new UserBlockedEvent(user.getId(), user.getEmail().getValue(), command.reason, new Date()));
-
     return user;
   }
 }

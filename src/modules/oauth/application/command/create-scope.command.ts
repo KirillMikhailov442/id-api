@@ -1,3 +1,7 @@
 export class CreateScopeCommand {
-  constructor(public readonly name: string) {}
+  public readonly name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
 }

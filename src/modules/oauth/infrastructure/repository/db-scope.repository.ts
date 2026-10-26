@@ -12,7 +12,14 @@ import { ScopeMapper } from "@modules/oauth/infrastructure/mapper/scope.mapper";
 const SCOPE_NAME_UNIQUE_CONSTRAINT = "scopes_name_key";
 
 export class DbScopeRepository implements IScopeRepository {
-  constructor(@InjectRepository(DbScope) private readonly repository: Repository<DbScope>) {}
+  private readonly repository: Repository<DbScope>;
+
+  constructor(
+    @InjectRepository(DbScope)
+    repository: Repository<DbScope>
+  ) {
+    this.repository = repository;
+  }
 
   async findById(id: string): Promise<Scope | null> {
     const dbScope = await this.repository.findOneBy({ id });
@@ -40,7 +47,6 @@ export class DbScopeRepository implements IScopeRepository {
     }
 
     const dbScopes = await this.repository.find({ where: { id: In(ids) } });
-
     return dbScopes.map(ScopeMapper.toDomain);
   }
 
@@ -50,7 +56,6 @@ export class DbScopeRepository implements IScopeRepository {
       take: pagination.limit,
       order: { createdAt: "DESC" },
     });
-
     return dbScopes.map(ScopeMapper.toDomain);
   }
 
@@ -71,8 +76,19 @@ export class DbScopeRepository implements IScopeRepository {
   }
 
   private mapError(error: unknown): Error {
-    if (error instanceof QueryFailedError && (error as QueryFailedError & { code?: string }).code === "23505") {
-      const constraint = (error as QueryFailedError & { constraint?: string }).constraint;
+    if (
+      error instanceof QueryFailedError &&
+      (
+        error as QueryFailedError & {
+          code?: string;
+        }
+      ).code === "23505"
+    ) {
+      const constraint = (
+        error as QueryFailedError & {
+          constraint?: string;
+        }
+      ).constraint;
 
       if (constraint === SCOPE_NAME_UNIQUE_CONSTRAINT) {
         return new ScopeAlreadyExistsException();

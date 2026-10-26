@@ -7,25 +7,18 @@ import { UserEmailConfirmedStatus } from "@modules/user/domain/enum/user-email-c
 export class UserDto {
   @ApiProperty({ format: "uuid", example: "00000000-0000-4000-8000-000000000000" })
   id: string;
-
   @ApiProperty({ minLength: 2, maxLength: 64, example: "Ivan" })
   name: string;
-
   @ApiProperty({ minLength: 2, maxLength: 64, example: "Ivanov" })
   surname: string;
-
   @ApiProperty({ format: "email", maxLength: 128, example: "ivan.ivanov@example.com" })
   email: string;
-
   @ApiProperty({ example: false })
   emailConfirmed: boolean;
-
   @ApiProperty({ example: false })
   blocked: boolean;
-
   @ApiProperty({ format: "date-time", example: "2026-10-21T09:00:00.000Z" })
   createdAt: string;
-
   @ApiProperty({ format: "date-time", example: "2026-10-21T09:00:00.000Z" })
   updatedAt: string;
 

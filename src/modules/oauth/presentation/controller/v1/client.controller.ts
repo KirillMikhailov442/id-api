@@ -15,7 +15,6 @@ import {
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { RoleType } from "@modules/user/user.module";
 import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
 import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
 import { Roles } from "@shared/presentation/auth/roles.decorator";
@@ -71,6 +70,7 @@ import {
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
 } from "@modules/user/presentation/exception-response.decorator";
+import { RoleType } from "@modules/user/user.module";
 
 const toRequester = (authenticatedUser: AuthenticatedUser): Requester => ({
   userId: authenticatedUser.userId,
@@ -80,24 +80,28 @@ const toRequester = (authenticatedUser: AuthenticatedUser): Requester => ({
 @ApiTags("clients")
 @Controller({ path: "clients", version: "1" })
 export class ClientController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus
-  ) {}
+  private readonly commandBus: CommandBus;
+  private readonly queryBus: QueryBus;
+
+  constructor(commandBus: CommandBus, queryBus: QueryBus) {
+    this.commandBus = commandBus;
+    this.queryBus = queryBus;
+  }
 
   @Post()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiAuthenticatedResponse()
   @ApiCreatedResponse({ type: CreateClientResponse, description: "Client created with optional locations" })
   @ApiClientCreateValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
   async create(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Body() request: CreateClientRequest
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Body()
+    request: CreateClientRequest
   ): Promise<CreateClientResponse> {
     const command = new CreateClientCommand(toRequester(currentUser), request.name, request.secret, request.locations);
     const { client, locations } = await this.commandBus.execute<CreateClientCommand, CreateClientResult>(command);
-
     return new CreateClientResponse(
       ClientDto.fromDomain(client),
       locations.map((location) => ClientLocationDto.fromDomain(location))
@@ -110,13 +114,20 @@ export class ClientController {
   @ApiPaginationValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
   async list(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Query() pagination: PaginationQuery
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Query()
+    pagination: PaginationQuery
   ): Promise<PaginationResponse<ClientDto>> {
     const query = new ListClientsQuery(toRequester(currentUser), pagination.limit, pagination.offset);
-    const { items, total } = await this.queryBus.execute<ListClientsQuery, { items: Client[]; total: number }>(query);
+    const { items, total } = await this.queryBus.execute<
+      ListClientsQuery,
+      {
+        items: Client[];
+        total: number;
+      }
+    >(query);
     const clients = items.map((client) => ClientDto.fromDomain(client));
-
     return new PaginationResponse(clients, new PaginationMeta(total, pagination.limit, pagination.offset));
   }
 
@@ -128,13 +139,19 @@ export class ClientController {
   @ApiInsufficientRoleResponse()
   @ApiPaginationValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
-  async listAll(@Query() pagination: PaginationQuery): Promise<PaginationResponse<ClientDto>> {
+  async listAll(
+    @Query()
+    pagination: PaginationQuery
+  ): Promise<PaginationResponse<ClientDto>> {
     const query = new ListAllClientsQuery(pagination.limit, pagination.offset);
-    const { items, total } = await this.queryBus.execute<ListAllClientsQuery, { items: Client[]; total: number }>(
-      query
-    );
+    const { items, total } = await this.queryBus.execute<
+      ListAllClientsQuery,
+      {
+        items: Client[];
+        total: number;
+      }
+    >(query);
     const clients = items.map((client) => ClientDto.fromDomain(client));
-
     return new PaginationResponse(clients, new PaginationMeta(total, pagination.limit, pagination.offset));
   }
 
@@ -144,11 +161,15 @@ export class ClientController {
   @ApiInvalidClientIdResponse()
   @ApiClientNotFoundResponse()
   @ApiUnexpectedErrorResponse()
-  async get(@CurrentUser() currentUser: AuthenticatedUser, @Param("id", ParseUUIDPipe) id: string): Promise<ClientDto> {
+  async get(
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string
+  ): Promise<ClientDto> {
     const client = await this.queryBus.execute<GetClientQuery, Client>(
       new GetClientQuery(toRequester(currentUser), id)
     );
-
     return ClientDto.fromDomain(client);
   }
 
@@ -162,13 +183,15 @@ export class ClientController {
   @ApiClientUpdateValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
   async update(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() request: UpdateClientRequest
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string,
+    @Body()
+    request: UpdateClientRequest
   ): Promise<ClientDto> {
     const command = new UpdateClientCommand(toRequester(currentUser), id, request.name, request.isActive);
     const client = await this.commandBus.execute<UpdateClientCommand, Client>(command);
-
     return ClientDto.fromDomain(client);
   }
 
@@ -179,7 +202,12 @@ export class ClientController {
   @ApiInvalidClientIdResponse()
   @ApiClientNotFoundResponse()
   @ApiUnexpectedErrorResponse()
-  async delete(@CurrentUser() currentUser: AuthenticatedUser, @Param("id", ParseUUIDPipe) id: string): Promise<void> {
+  async delete(
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string
+  ): Promise<void> {
     await this.commandBus.execute<DeleteClientCommand, Client>(new DeleteClientCommand(toRequester(currentUser), id));
   }
 
@@ -190,13 +218,14 @@ export class ClientController {
   @ApiClientNotFoundResponse()
   @ApiUnexpectedErrorResponse()
   async listLocations(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe) id: string
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string
   ): Promise<ClientLocationDto[]> {
     const locations = await this.queryBus.execute<GetClientLocationsQuery, Location[]>(
       new GetClientLocationsQuery(toRequester(currentUser), id)
     );
-
     return locations.map((location) => ClientLocationDto.fromDomain(location));
   }
 
@@ -208,13 +237,15 @@ export class ClientController {
   @ApiLocationValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
   async addLocation(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() request: AddLocationRequest
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string,
+    @Body()
+    request: AddLocationRequest
   ): Promise<ClientLocationDto> {
     const command = new AddLocationCommand(toRequester(currentUser), id, request.href);
     const location = await this.commandBus.execute<AddLocationCommand, Location>(command);
-
     return ClientLocationDto.fromDomain(location);
   }
 
@@ -228,9 +259,12 @@ export class ClientController {
   @ApiLocationNotFoundResponse()
   @ApiUnexpectedErrorResponse()
   async removeLocation(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe) id: string,
-    @Param("locationId", ParseUUIDPipe) locationId: string
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string,
+    @Param("locationId", ParseUUIDPipe)
+    locationId: string
   ): Promise<void> {
     await this.commandBus.execute<RemoveLocationCommand, void>(
       new RemoveLocationCommand(toRequester(currentUser), id, locationId)
@@ -244,13 +278,14 @@ export class ClientController {
   @ApiClientNotFoundResponse()
   @ApiUnexpectedErrorResponse()
   async listScopes(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe) id: string
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string
   ): Promise<ScopeDto[]> {
     const scopes = await this.queryBus.execute<ListClientScopesQuery, Scope[]>(
       new ListClientScopesQuery(toRequester(currentUser), id)
     );
-
     return scopes.map((scope) => ScopeDto.fromDomain(scope));
   }
 
@@ -263,13 +298,15 @@ export class ClientController {
   @ApiScopesValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
   async assignScopes(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() request: AssignScopesRequest
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string,
+    @Body()
+    request: AssignScopesRequest
   ): Promise<ScopeDto[]> {
     const command = new AssignScopesCommand(toRequester(currentUser), id, request.scopes);
     const scopes = await this.commandBus.execute<AssignScopesCommand, Scope[]>(command);
-
     return scopes.map((scope) => ScopeDto.fromDomain(scope));
   }
 
@@ -283,9 +320,12 @@ export class ClientController {
   @ApiScopeNotAssignedResponse()
   @ApiUnexpectedErrorResponse()
   async unassignScope(
-    @CurrentUser() currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe) id: string,
-    @Param("name") name: string
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Param("id", ParseUUIDPipe)
+    id: string,
+    @Param("name")
+    name: string
   ): Promise<void> {
     await this.commandBus.execute<UnassignScopeCommand, void>(
       new UnassignScopeCommand(toRequester(currentUser), id, name)

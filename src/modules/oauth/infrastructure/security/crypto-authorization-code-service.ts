@@ -5,6 +5,7 @@ import type { IAuthorizationCodeService } from "@modules/oauth/application/port/
 import { CodeHash } from "@modules/oauth/domain/value-object/code-hash.value-object";
 
 const CODE_BYTES = 32;
+
 const SHA256_ALGORITHM = "sha256";
 
 @Injectable()

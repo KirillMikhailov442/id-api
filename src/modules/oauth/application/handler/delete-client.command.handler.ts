@@ -13,11 +13,22 @@ import { CLIENT_REPOSITORY, CLIENTS_TRANSACTION } from "@modules/oauth/oauth.tok
 @CommandHandler(DeleteClientCommand)
 @Injectable()
 export class DeleteClientCommandHandler implements ICommandHandler<DeleteClientCommand> {
+  private readonly clientRepository: IClientRepository;
+  private readonly transaction: IClientsTransaction;
+  private readonly eventBus: EventBus;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(CLIENTS_TRANSACTION) private readonly transaction: IClientsTransaction,
-    @Inject(EventBus) private readonly eventBus: EventBus
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(CLIENTS_TRANSACTION)
+    transaction: IClientsTransaction,
+    @Inject(EventBus)
+    eventBus: EventBus
+  ) {
+    this.clientRepository = clientRepository;
+    this.transaction = transaction;
+    this.eventBus = eventBus;
+  }
 
   async execute(command: DeleteClientCommand): Promise<Client> {
     const client = await this.clientRepository.findById(command.clientId);
@@ -25,17 +36,13 @@ export class DeleteClientCommandHandler implements ICommandHandler<DeleteClientC
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, command.requester);
-
     await this.transaction.run(async (context) => {
       await context.clientScopeRepository.deleteByClientId(client.getId());
       await context.locationRepository.deleteByClientId(client.getId());
       await context.clientRepository.delete(client.getId());
     });
-
     this.eventBus.publish(new ClientDeletedEvent(client.getId(), client.getUserId()));
-
     return client;
   }
 }

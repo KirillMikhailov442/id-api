@@ -8,7 +8,6 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { Roles } from "@shared/presentation/auth/roles.decorator";
 
 import {
@@ -22,6 +21,7 @@ import { UpdateRoleCommand } from "@modules/user/application/command/update-role
 import { GetRoleQuery } from "@modules/user/application/query/get-role.query";
 import { ListRolesQuery } from "@modules/user/application/query/list-roles.query";
 import type { Role } from "@modules/user/domain/entity/role";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { CreateRoleRequest } from "@modules/user/presentation/dto/v1/create-role.request";
 import { RoleDto } from "@modules/user/presentation/dto/v1/role.dto";
 import { UpdateRoleRequest } from "@modules/user/presentation/dto/v1/update-role.request";
@@ -42,10 +42,13 @@ import {
 @Roles(RoleType.Admin)
 @Controller({ path: "roles", version: "1" })
 export class RoleController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus
-  ) {}
+  private readonly commandBus: CommandBus;
+  private readonly queryBus: QueryBus;
+
+  constructor(commandBus: CommandBus, queryBus: QueryBus) {
+    this.commandBus = commandBus;
+    this.queryBus = queryBus;
+  }
 
   @Post()
   @ApiOperation({ description: "Requires admin role" })
@@ -53,9 +56,11 @@ export class RoleController {
   @ApiRoleAlreadyExistsResponse()
   @ApiRoleCreateValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
-  async create(@Body() request: CreateRoleRequest): Promise<RoleDto> {
+  async create(
+    @Body()
+    request: CreateRoleRequest
+  ): Promise<RoleDto> {
     const role = await this.commandBus.execute<CreateRoleCommand, Role>(new CreateRoleCommand(request.name));
-
     return RoleDto.fromDomain(role);
   }
 
@@ -65,7 +70,6 @@ export class RoleController {
   @ApiUnexpectedErrorResponse()
   async list(): Promise<RoleDto[]> {
     const roles = await this.queryBus.execute<ListRolesQuery, Role[]>(new ListRolesQuery());
-
     return roles.map((role) => RoleDto.fromDomain(role));
   }
 
@@ -75,9 +79,11 @@ export class RoleController {
   @ApiInvalidRoleIdResponse()
   @ApiRoleNotFoundResponse()
   @ApiUnexpectedErrorResponse()
-  async get(@Param("id", ParseUUIDPipe) id: string): Promise<RoleDto> {
+  async get(
+    @Param("id", ParseUUIDPipe)
+    id: string
+  ): Promise<RoleDto> {
     const role = await this.queryBus.execute<GetRoleQuery, Role>(new GetRoleQuery(id));
-
     return RoleDto.fromDomain(role);
   }
 
@@ -89,9 +95,13 @@ export class RoleController {
   @ApiRoleUpdateValidationFailedResponse()
   @ApiRoleNotFoundResponse()
   @ApiUnexpectedErrorResponse()
-  async update(@Param("id", ParseUUIDPipe) id: string, @Body() request: UpdateRoleRequest): Promise<RoleDto> {
+  async update(
+    @Param("id", ParseUUIDPipe)
+    id: string,
+    @Body()
+    request: UpdateRoleRequest
+  ): Promise<RoleDto> {
     const role = await this.commandBus.execute<UpdateRoleCommand, Role>(new UpdateRoleCommand(id, request.name));
-
     return RoleDto.fromDomain(role);
   }
 
@@ -102,7 +112,10 @@ export class RoleController {
   @ApiInvalidRoleIdResponse()
   @ApiRoleNotFoundResponse()
   @ApiUnexpectedErrorResponse()
-  async delete(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
+  async delete(
+    @Param("id", ParseUUIDPipe)
+    id: string
+  ): Promise<void> {
     await this.commandBus.execute<DeleteRoleCommand, void>(new DeleteRoleCommand(id));
   }
 }

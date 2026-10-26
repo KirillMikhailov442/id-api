@@ -7,9 +7,14 @@ import { ValidateAuthorizationQuery } from "@modules/oauth/application/query/val
 @QueryHandler(ValidateAuthorizationQuery)
 @Injectable()
 export class ValidateAuthorizationQueryHandler implements IQueryHandler<ValidateAuthorizationQuery> {
+  private readonly authorizationRequestValidator: AuthorizationRequestValidator;
+
   constructor(
-    @Inject(AuthorizationRequestValidator) private readonly authorizationRequestValidator: AuthorizationRequestValidator
-  ) {}
+    @Inject(AuthorizationRequestValidator)
+    authorizationRequestValidator: AuthorizationRequestValidator
+  ) {
+    this.authorizationRequestValidator = authorizationRequestValidator;
+  }
 
   async execute(query: ValidateAuthorizationQuery): Promise<void> {
     await this.authorizationRequestValidator.validate(query.clientId, query.redirectUri, query.scopes);

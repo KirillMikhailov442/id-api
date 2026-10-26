@@ -9,8 +9,11 @@ import type {
 import { InvalidEmailConfirmationTokenException } from "@modules/user/domain/exception/invalid-email-confirmation-token.exception";
 
 const AUDIENCE = "email-confirmation";
+
 const EMAIL_CONFIRM_TTL_KEY = "EMAIL_CONFIRM_TTL";
+
 const USER_ID_CLAIM = "sub";
+
 const EMAIL_CLAIM = "email";
 
 interface JwtClaims {
@@ -24,14 +27,21 @@ interface JwtClaims {
 
 @Injectable()
 export class JwtEmailConfirmationTokenService implements IEmailConfirmationTokenService {
+  private readonly jwtService: JwtService;
+  private readonly configService: ConfigService;
+
   constructor(
-    @Inject(JwtService) private readonly jwtService: JwtService,
-    @Inject(ConfigService) private readonly configService: ConfigService
-  ) {}
+    @Inject(JwtService)
+    jwtService: JwtService,
+    @Inject(ConfigService)
+    configService: ConfigService
+  ) {
+    this.jwtService = jwtService;
+    this.configService = configService;
+  }
 
   generate(payload: EmailConfirmationTokenPayload): Promise<string> {
     const expiresIn = this.configService.getOrThrow<number>(EMAIL_CONFIRM_TTL_KEY);
-
     return this.jwtService.signAsync(
       {
         [USER_ID_CLAIM]: payload.userId,
@@ -47,7 +57,6 @@ export class JwtEmailConfirmationTokenService implements IEmailConfirmationToken
       .catch((error: unknown) => {
         throw this.mapVerifyError(error);
       });
-
     return this.mapClaims(claims);
   }
 
@@ -58,6 +67,7 @@ export class JwtEmailConfirmationTokenService implements IEmailConfirmationToken
     if (typeof userId !== "string" || userId.length === 0) {
       throw new InvalidEmailConfirmationTokenException("Token payload has no user");
     }
+
     if (typeof email !== "string" || email.length === 0) {
       throw new InvalidEmailConfirmationTokenException("Token payload has no email");
     }
@@ -69,6 +79,7 @@ export class JwtEmailConfirmationTokenService implements IEmailConfirmationToken
     if (error instanceof TokenExpiredError) {
       return new InvalidEmailConfirmationTokenException("Email confirmation token is expired");
     }
+
     if (error instanceof JsonWebTokenError || error instanceof NotBeforeError) {
       return new InvalidEmailConfirmationTokenException();
     }

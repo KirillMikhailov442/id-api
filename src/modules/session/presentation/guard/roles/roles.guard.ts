@@ -8,7 +8,14 @@ import { InvalidAccessTokenException } from "@modules/session/domain/exception/i
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(@Inject(Reflector) private readonly reflector: Reflector) {}
+  private readonly reflector: Reflector;
+
+  constructor(
+    @Inject(Reflector)
+    reflector: Reflector
+  ) {
+    this.reflector = reflector;
+  }
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<string[] | undefined>(ROLES_KEY, [

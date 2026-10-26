@@ -24,20 +24,44 @@ import {
 } from "@modules/user/user.module";
 
 const REFRESH_TOKEN_TTL_KEY = "REFRESH_TOKEN_TTL";
+
 const MS_PER_SECOND = 1000;
 
 @CommandHandler(LoginCommand)
 @Injectable()
 export class LoginCommandHandler implements ICommandHandler<LoginCommand, LoginResult> {
+  private readonly userRepository: IUserRepository;
+  private readonly passwordHasher: IPasswordHasher;
+  private readonly roleRepository: IRoleRepository;
+  private readonly sessionRepository: ISessionRepository;
+  private readonly refreshTokenService: IRefreshTokenService;
+  private readonly tokenService: ITokenService;
+  private readonly configService: ConfigService;
+
   constructor(
-    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(PASSWORD_HASHER) private readonly passwordHasher: IPasswordHasher,
-    @Inject(ROLE_REPOSITORY) private readonly roleRepository: IRoleRepository,
-    @Inject(SESSION_REPOSITORY) private readonly sessionRepository: ISessionRepository,
-    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: IRefreshTokenService,
-    @Inject(TOKEN_SERVICE) private readonly tokenService: ITokenService,
-    @Inject(ConfigService) private readonly configService: ConfigService
-  ) {}
+    @Inject(USER_REPOSITORY)
+    userRepository: IUserRepository,
+    @Inject(PASSWORD_HASHER)
+    passwordHasher: IPasswordHasher,
+    @Inject(ROLE_REPOSITORY)
+    roleRepository: IRoleRepository,
+    @Inject(SESSION_REPOSITORY)
+    sessionRepository: ISessionRepository,
+    @Inject(REFRESH_TOKEN_SERVICE)
+    refreshTokenService: IRefreshTokenService,
+    @Inject(TOKEN_SERVICE)
+    tokenService: ITokenService,
+    @Inject(ConfigService)
+    configService: ConfigService
+  ) {
+    this.userRepository = userRepository;
+    this.passwordHasher = passwordHasher;
+    this.roleRepository = roleRepository;
+    this.sessionRepository = sessionRepository;
+    this.refreshTokenService = refreshTokenService;
+    this.tokenService = tokenService;
+    this.configService = configService;
+  }
 
   async execute(command: LoginCommand): Promise<LoginResult> {
     const email = new Email(command.email);
@@ -60,18 +84,14 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand, LoginR
       ip: new Ip(command.ip),
       expiresAt: new Date(Date.now() + ttlSeconds * MS_PER_SECOND),
     });
-
     await this.sessionRepository.save(session);
-
     const roleIds = user.getRoles().map((userRole) => userRole.getRoleId());
     const roles = await this.roleRepository.findByIds(roleIds);
-
     const accessToken = await this.tokenService.issueAccessToken({
       userId: user.getId(),
       sessionId: session.getId(),
       roles: roles.map((role) => role.getName().getValue()),
     });
-
     return { accessToken, refreshToken };
   }
 }

@@ -12,10 +12,18 @@ import { CLIENT_REPOSITORY, LOCATION_REPOSITORY } from "@modules/oauth/oauth.tok
 @QueryHandler(GetClientLocationsQuery)
 @Injectable()
 export class GetClientLocationsQueryHandler implements IQueryHandler<GetClientLocationsQuery> {
+  private readonly clientRepository: IClientRepository;
+  private readonly locationRepository: ILocationRepository;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(LOCATION_REPOSITORY) private readonly locationRepository: ILocationRepository
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(LOCATION_REPOSITORY)
+    locationRepository: ILocationRepository
+  ) {
+    this.clientRepository = clientRepository;
+    this.locationRepository = locationRepository;
+  }
 
   async execute(query: GetClientLocationsQuery): Promise<Location[]> {
     const client = await this.clientRepository.findById(query.clientId);
@@ -23,9 +31,7 @@ export class GetClientLocationsQueryHandler implements IQueryHandler<GetClientLo
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, query.requester);
-
     return this.locationRepository.findByClientId(client.getId());
   }
 }

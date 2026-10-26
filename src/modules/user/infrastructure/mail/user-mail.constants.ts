@@ -1,8 +1,11 @@
 export const EMAIL_CONFIRM_TTL_KEY = "EMAIL_CONFIRM_TTL";
+
 export const SECONDS_PER_HOUR = 3600;
 
 export const CONFIRMATION_TEMPLATE = "confirmation-email";
+
 export const WELCOME_TEMPLATE = "welcome-email";
+
 export const BLOCKED_ACCOUNT_TEMPLATE = "blocked-account-email";
 
 export const SUBJECTS = {

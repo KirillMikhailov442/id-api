@@ -12,10 +12,18 @@ import { CLIENT_REPOSITORY, LOCATION_REPOSITORY } from "@modules/oauth/oauth.tok
 @CommandHandler(RemoveLocationCommand)
 @Injectable()
 export class RemoveLocationCommandHandler implements ICommandHandler<RemoveLocationCommand> {
+  private readonly clientRepository: IClientRepository;
+  private readonly locationRepository: ILocationRepository;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(LOCATION_REPOSITORY) private readonly locationRepository: ILocationRepository
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(LOCATION_REPOSITORY)
+    locationRepository: ILocationRepository
+  ) {
+    this.clientRepository = clientRepository;
+    this.locationRepository = locationRepository;
+  }
 
   async execute(command: RemoveLocationCommand): Promise<void> {
     const client = await this.clientRepository.findById(command.clientId);
@@ -23,9 +31,7 @@ export class RemoveLocationCommandHandler implements ICommandHandler<RemoveLocat
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, command.requester);
-
     const location = await this.locationRepository.findById(command.locationId);
 
     if (location === null || location.getClientId() !== client.getId()) {

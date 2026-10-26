@@ -9,7 +9,14 @@ import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 @CommandHandler(DeleteRoleCommand)
 @Injectable()
 export class DeleteRoleCommandHandler implements ICommandHandler<DeleteRoleCommand> {
-  constructor(@Inject(ROLE_REPOSITORY) private readonly roleRepository: IRoleRepository) {}
+  private readonly roleRepository: IRoleRepository;
+
+  constructor(
+    @Inject(ROLE_REPOSITORY)
+    roleRepository: IRoleRepository
+  ) {
+    this.roleRepository = roleRepository;
+  }
 
   async execute(command: DeleteRoleCommand): Promise<void> {
     const role = await this.roleRepository.findById(command.roleId);

@@ -7,7 +7,14 @@ import { DbAuthorizationCode } from "@modules/oauth/infrastructure/entity/db-aut
 import { AuthorizationCodeMapper } from "@modules/oauth/infrastructure/mapper/authorization-code.mapper";
 
 export class DbAuthorizationCodeRepository implements IAuthorizationCodeRepository {
-  constructor(@InjectRepository(DbAuthorizationCode) private readonly repository: Repository<DbAuthorizationCode>) {}
+  private readonly repository: Repository<DbAuthorizationCode>;
+
+  constructor(
+    @InjectRepository(DbAuthorizationCode)
+    repository: Repository<DbAuthorizationCode>
+  ) {
+    this.repository = repository;
+  }
 
   async findById(id: string): Promise<AuthorizationCode | null> {
     const dbAuthorizationCode = await this.repository.findOneBy({ id });

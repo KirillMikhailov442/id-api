@@ -10,7 +10,14 @@ import { USER_REPOSITORY } from "@modules/user/user.tokens";
 @CommandHandler(UnblockUserCommand)
 @Injectable()
 export class UnblockUserCommandHandler implements ICommandHandler<UnblockUserCommand> {
-  constructor(@Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository) {}
+  private readonly userRepository: IUserRepository;
+
+  constructor(
+    @Inject(USER_REPOSITORY)
+    userRepository: IUserRepository
+  ) {
+    this.userRepository = userRepository;
+  }
 
   async execute(command: UnblockUserCommand): Promise<User> {
     const user = await this.userRepository.findById(command.userId);
@@ -21,7 +28,6 @@ export class UnblockUserCommandHandler implements ICommandHandler<UnblockUserCom
 
     user.unblock();
     await this.userRepository.save(user);
-
     return user;
   }
 }

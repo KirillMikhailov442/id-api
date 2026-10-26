@@ -22,12 +22,26 @@ import {
 @CommandHandler(AssignScopesCommand)
 @Injectable()
 export class AssignScopesCommandHandler implements ICommandHandler<AssignScopesCommand> {
+  private readonly clientRepository: IClientRepository;
+  private readonly clientScopeRepository: IClientScopeRepository;
+  private readonly scopeRepository: IScopeRepository;
+  private readonly transaction: IClientsTransaction;
+
   constructor(
-    @Inject(CLIENT_REPOSITORY) private readonly clientRepository: IClientRepository,
-    @Inject(CLIENT_SCOPE_REPOSITORY) private readonly clientScopeRepository: IClientScopeRepository,
-    @Inject(SCOPE_REPOSITORY) private readonly scopeRepository: IScopeRepository,
-    @Inject(CLIENTS_TRANSACTION) private readonly transaction: IClientsTransaction
-  ) {}
+    @Inject(CLIENT_REPOSITORY)
+    clientRepository: IClientRepository,
+    @Inject(CLIENT_SCOPE_REPOSITORY)
+    clientScopeRepository: IClientScopeRepository,
+    @Inject(SCOPE_REPOSITORY)
+    scopeRepository: IScopeRepository,
+    @Inject(CLIENTS_TRANSACTION)
+    transaction: IClientsTransaction
+  ) {
+    this.clientRepository = clientRepository;
+    this.clientScopeRepository = clientScopeRepository;
+    this.scopeRepository = scopeRepository;
+    this.transaction = transaction;
+  }
 
   async execute(command: AssignScopesCommand): Promise<Scope[]> {
     const client = await this.clientRepository.findById(command.clientId);
@@ -35,9 +49,7 @@ export class AssignScopesCommandHandler implements ICommandHandler<AssignScopesC
     if (client === null) {
       throw new ClientNotFoundException();
     }
-
     assertClientAccess(client, command.requester);
-
     const uniqueNames = [...new Set(command.scopeNames)];
     const scopes: Scope[] = [];
 
@@ -57,7 +69,6 @@ export class AssignScopesCommandHandler implements ICommandHandler<AssignScopesC
     const assignedScopeIds = new Set(assigned.map((assignment) => assignment.getScopeId()));
     const toAssign = scopes.filter((scope) => !assignedScopeIds.has(scope.getId()));
     const toUnassign = assigned.filter((assignment) => !targetScopeIds.has(assignment.getScopeId()));
-
     await this.transaction.run(async (context) => {
       for (const scope of toAssign) {
         await context.clientScopeRepository.save(new ClientScope(client.getId(), scope.getId(), new Date()));
@@ -67,7 +78,6 @@ export class AssignScopesCommandHandler implements ICommandHandler<AssignScopesC
         await context.clientScopeRepository.delete(assignment.getClientId(), assignment.getScopeId());
       }
     });
-
     return scopes;
   }
 }
