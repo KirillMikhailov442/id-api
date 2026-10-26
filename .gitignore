@@ -1,0 +1,10 @@
+node_modules
+.env
+.env.development
+.env.production
+dist
+*.tsbuildinfo
+.idea
+.DS_Store
+.oxlint/*
+!.oxlint/plugins/

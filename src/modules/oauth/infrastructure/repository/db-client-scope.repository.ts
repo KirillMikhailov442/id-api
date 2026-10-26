@@ -1,0 +1,73 @@
+import { InjectRepository } from "@nestjs/typeorm";
+import { QueryFailedError, type Repository } from "typeorm";
+
+import type { IClientScopeRepository } from "@modules/oauth/application/port/client-scope-repository.type";
+import type { ClientScope } from "@modules/oauth/domain/entity/client-scope";
+import { ScopeAlreadyAssignedException } from "@modules/oauth/domain/exception/scope-already-assigned.exception";
+import { DbClientScope } from "@modules/oauth/infrastructure/entity/db-client-scope.entity";
+import { ClientScopeMapper } from "@modules/oauth/infrastructure/mapper/client-scope.mapper";
+
+const CLIENT_SCOPES_UNIQUE_CONSTRAINT = "client_scopes_unique_0";
+
+export class DbClientScopeRepository implements IClientScopeRepository {
+  private readonly repository: Repository<DbClientScope>;
+
+  constructor(
+    @InjectRepository(DbClientScope)
+    repository: Repository<DbClientScope>
+  ) {
+    this.repository = repository;
+  }
+
+  async findByClientId(clientId: string): Promise<ClientScope[]> {
+    const dbClientScopes = await this.repository.find({
+      where: { clientId },
+      order: { assignedAt: "DESC" },
+    });
+    return dbClientScopes.map(ClientScopeMapper.toDomain);
+  }
+
+  async exists(clientId: string, scopeId: string): Promise<boolean> {
+    const count = await this.repository.count({ where: { clientId, scopeId } });
+    return count > 0;
+  }
+
+  async save(clientScope: ClientScope): Promise<void> {
+    try {
+      await this.repository.save(ClientScopeMapper.toPersistence(clientScope));
+    } catch (error) {
+      throw this.mapError(error);
+    }
+  }
+
+  async delete(clientId: string, scopeId: string): Promise<void> {
+    await this.repository.delete({ clientId, scopeId });
+  }
+
+  async deleteByClientId(clientId: string): Promise<void> {
+    await this.repository.delete({ clientId });
+  }
+
+  private mapError(error: unknown): Error {
+    if (
+      error instanceof QueryFailedError &&
+      (
+        error as QueryFailedError & {
+          code?: string;
+        }
+      ).code === "23505"
+    ) {
+      const constraint = (
+        error as QueryFailedError & {
+          constraint?: string;
+        }
+      ).constraint;
+
+      if (constraint === CLIENT_SCOPES_UNIQUE_CONSTRAINT) {
+        return new ScopeAlreadyAssignedException();
+      }
+    }
+
+    return error as Error;
+  }
+}

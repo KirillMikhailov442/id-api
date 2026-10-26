@@ -1,0 +1,30 @@
+import { Inject, Injectable } from "@nestjs/common";
+import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
+
+import { DeleteRoleCommand } from "@modules/user/application/command/delete-role.command";
+import type { IRoleRepository } from "@modules/user/application/port/role-repository";
+import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
+import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
+
+@CommandHandler(DeleteRoleCommand)
+@Injectable()
+export class DeleteRoleCommandHandler implements ICommandHandler<DeleteRoleCommand> {
+  private readonly roleRepository: IRoleRepository;
+
+  constructor(
+    @Inject(ROLE_REPOSITORY)
+    roleRepository: IRoleRepository
+  ) {
+    this.roleRepository = roleRepository;
+  }
+
+  async execute(command: DeleteRoleCommand): Promise<void> {
+    const role = await this.roleRepository.findById(command.roleId);
+
+    if (!role) {
+      throw new RoleNotFoundException();
+    }
+
+    await this.roleRepository.delete(command.roleId);
+  }
+}

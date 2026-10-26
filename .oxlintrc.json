@@ -1,0 +1,62 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": ["./.oxlint/plugins/member-ordering.js"],
+  "rules": {
+    "custom/member-ordering": "error",
+    "typescript/parameter-properties": [
+      "error",
+      {
+        "prefer": "class-property"
+      }
+    ],
+    "typescript/no-explicit-any": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/strict-boolean-expressions": "error",
+    "typescript/no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "no-inline-comments": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": ["./**", "../**"]
+      }
+    ]
+  },
+  "env": {
+    "node": true
+  },
+  "overrides": [
+    {
+      "files": ["**/*exception.response.ts"],
+      "rules": {
+        "typescript/consistent-type-imports": "off"
+      }
+    },
+    {
+      "files": [
+        "**/user.controller.ts",
+        "**/role.controller.ts",
+        "**/auth.controller.ts",
+        "**/client.controller.ts",
+        "**/scope.controller.ts",
+        "**/oauth.controller.ts",
+        "**/issue-code.command.handler.ts"
+      ],
+      "rules": {
+        "typescript/consistent-type-imports": "off"
+      }
+    },
+    {
+      "files": ["**/migrations/**"],
+      "rules": {
+        "typescript/consistent-type-imports": "off"
+      }
+    }
+  ]
+}
