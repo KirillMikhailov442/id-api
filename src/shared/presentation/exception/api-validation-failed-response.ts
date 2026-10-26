@@ -1,9 +1,9 @@
-import type { FieldError } from "@shared/presentation/exception/field-error";
-import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
-import { EXAMPLE_TIMESTAMP } from "@shared/presentation/exception/response-example";
-import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 import { applyDecorators } from "@nestjs/common";
 import { ApiResponse } from "@nestjs/swagger";
+import { HttpStatus } from "@shared/domain/http-status.enum";
+import type { FieldError } from "@shared/presentation/exception/field-error";
+import { EXAMPLE_TIMESTAMP } from "@shared/presentation/exception/response-example";
+import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 
 export const ApiValidationFailedResponse = (fieldErrors: FieldError[], path: string) =>
   applyDecorators(
@@ -13,6 +13,7 @@ export const ApiValidationFailedResponse = (fieldErrors: FieldError[], path: str
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Validation,
+        code: "VALIDATION_FAILED",
         message: "Validation failed",
         path,
         timestamp: EXAMPLE_TIMESTAMP,

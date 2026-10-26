@@ -6,8 +6,9 @@ import {
   type ArgumentsHost,
   type ExceptionFilter as NestExceptionFilter,
 } from "@nestjs/common";
+import { DomainException } from "@shared/domain/exception/domain.exception";
+import { HttpStatus } from "@shared/domain/http-status.enum";
 import { FieldError } from "@shared/presentation/exception/field-error";
-import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
 import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 import { ValidationExceptionResponse } from "@shared/presentation/exception/responses/validation-exception.response";
 import type { Request, Response } from "express";
@@ -19,42 +20,17 @@ interface HttpExceptionBody {
   errors?: FieldError[];
 }
 
-const DOMAIN_EXCEPTION_STATUSES: Record<string, number> = {
-  UserNotFoundException: HttpStatus.NotFound,
-  RoleNotFoundException: HttpStatus.NotFound,
-  RoleAlreadyExistsException: HttpStatus.Conflict,
-  EmailAlreadyRegisteredException: HttpStatus.Conflict,
-  EmailAlreadyConfirmedException: HttpStatus.Conflict,
-  InvalidEmailConfirmationTokenException: HttpStatus.BadRequest,
-  RoleAlreadyAssignedException: HttpStatus.Conflict,
-  UserAlreadyBlockedException: HttpStatus.Conflict,
-  UserAlreadyUnblockedException: HttpStatus.Conflict,
-  InvalidCredentialsException: HttpStatus.Unauthorized,
-  InvalidRefreshTokenException: HttpStatus.Unauthorized,
-  SessionNotFoundException: HttpStatus.Unauthorized,
-  InvalidAccessTokenException: HttpStatus.Unauthorized,
-  AccessTokenExpiredException: HttpStatus.Unauthorized,
-  UserBlockedException: HttpStatus.Forbidden,
-  InsufficientRoleException: HttpStatus.Forbidden,
-  InvalidValueObjectException: HttpStatus.Validation,
-  ClientNotFoundException: HttpStatus.NotFound,
-  ClientAccessDeniedException: HttpStatus.Forbidden,
-  ClientAlreadyActiveException: HttpStatus.Conflict,
-  ClientAlreadyInactiveException: HttpStatus.Conflict,
-  LocationNotFoundException: HttpStatus.NotFound,
-  ScopeNotFoundException: HttpStatus.NotFound,
-  ScopeAlreadyExistsException: HttpStatus.Conflict,
-  ScopeAlreadyAssignedException: HttpStatus.Conflict,
-  ScopeNotAssignedException: HttpStatus.Conflict,
-  ClientInactiveException: HttpStatus.Forbidden,
-  AuthorizationCodeNotFoundException: HttpStatus.NotFound,
-  InvalidAuthorizationCodeException: HttpStatus.BadRequest,
-  AuthorizationCodeExpiredException: HttpStatus.BadRequest,
-  AuthorizationCodeAlreadyUsedException: HttpStatus.Conflict,
-  AuthorizationScopesNotAllowedException: HttpStatus.Validation,
-  RedirectUriNotAllowedException: HttpStatus.BadRequest,
-  InvalidClientCredentialsException: HttpStatus.Unauthorized,
+const GENERIC_STATUS_CODES: Record<number, string> = {
+  [NestHttpStatus.BAD_REQUEST]: "BAD_REQUEST",
+  [NestHttpStatus.UNAUTHORIZED]: "UNAUTHORIZED",
+  [NestHttpStatus.FORBIDDEN]: "FORBIDDEN",
+  [NestHttpStatus.NOT_FOUND]: "NOT_FOUND",
+  [NestHttpStatus.CONFLICT]: "CONFLICT",
+  [HttpStatus.Validation]: "VALIDATION_FAILED",
+  [NestHttpStatus.INTERNAL_SERVER_ERROR]: "INTERNAL_SERVER_ERROR",
 };
+
+const genericStatusCode = (status: number): string => GENERIC_STATUS_CODES[status] ?? `HTTP_${status}`;
 
 @Catch()
 export class ExceptionFilter implements NestExceptionFilter {
@@ -85,24 +61,23 @@ export class ExceptionFilter implements NestExceptionFilter {
 
     const message = this.extractMessage(body) ?? exception.message;
 
-    return new ExceptionResponse(status, message, path, timestamp);
+    return new ExceptionResponse(status, genericStatusCode(status), message, path, timestamp);
   }
 
   private mapDomainException(exception: unknown, path: string, timestamp: string): ExceptionResponse | undefined {
-    if (!(exception instanceof Error)) {
+    if (!(exception instanceof DomainException)) {
       return undefined;
     }
 
-    const status = DOMAIN_EXCEPTION_STATUSES[exception.name];
-    if (status === undefined) {
-      return undefined;
+    if (exception.status === HttpStatus.Validation) {
+      return new ValidationExceptionResponse(
+        [new FieldError(exception.field ?? "value", exception.code, exception.message)],
+        path,
+        timestamp
+      );
     }
 
-    if (status === HttpStatus.Validation) {
-      return new ValidationExceptionResponse([new FieldError("value", exception.message)], path, timestamp);
-    }
-
-    return new ExceptionResponse(status, exception.message, path, timestamp);
+    return new ExceptionResponse(exception.status, exception.code, exception.message, path, timestamp);
   }
 
   private mapUnknownException(exception: unknown, path: string, timestamp: string): ExceptionResponse {
@@ -111,7 +86,13 @@ export class ExceptionFilter implements NestExceptionFilter {
       exception instanceof Error ? exception.stack : String(exception),
       ExceptionFilter.name
     );
-    return new ExceptionResponse(NestHttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", path, timestamp);
+    return new ExceptionResponse(
+      NestHttpStatus.INTERNAL_SERVER_ERROR,
+      "INTERNAL_SERVER_ERROR",
+      "Internal server error",
+      path,
+      timestamp
+    );
   }
 
   private isValidationBody(body: string | HttpExceptionBody): body is HttpExceptionBody & { errors: FieldError[] } {
@@ -122,9 +103,11 @@ export class ExceptionFilter implements NestExceptionFilter {
     if (typeof body === "string") {
       return body;
     }
+
     if (Array.isArray(body.message)) {
       return body.message.join("; ");
     }
+
     return body.message;
   }
 }

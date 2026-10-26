@@ -7,13 +7,14 @@ import {
   ApiResponse,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
+import { HttpStatus } from "@shared/domain/http-status.enum";
 import { ApiValidationFailedResponse as ApiValidationFailedResponseFactory } from "@shared/presentation/exception/api-validation-failed-response";
 import type { FieldError } from "@shared/presentation/exception/field-error";
-import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
 import { EXAMPLE_TIMESTAMP, responseExample } from "@shared/presentation/exception/response-example";
 import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 
 const EXAMPLE_CLIENT_ID = "00000000-0000-4000-8000-000000000000";
+
 const EXAMPLE_LOCATION_ID = "00000000-0000-4000-8000-000000000001";
 
 export const ApiClientNotFoundResponse = () =>
@@ -21,7 +22,12 @@ export const ApiClientNotFoundResponse = () =>
     ApiNotFoundResponse({
       description: "Client does not exist or belongs to another user",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.NotFound, "Client not found", `/clients/${EXAMPLE_CLIENT_ID}`),
+      example: responseExample(
+        HttpStatus.NotFound,
+        "CLIENT_NOT_FOUND",
+        "Client not found",
+        `/clients/${EXAMPLE_CLIENT_ID}`
+      ),
     })
   );
 
@@ -30,7 +36,7 @@ export const ApiClientAccessDeniedResponse = () =>
     ApiForbiddenResponse({
       description: "Only admins may create clients on behalf of another user",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.Forbidden, "Access to the client is denied", "/clients"),
+      example: responseExample(HttpStatus.Forbidden, "access_denied", "Access to the client is denied", "/clients"),
     })
   );
 
@@ -39,7 +45,12 @@ export const ApiClientAlreadyActiveResponse = () =>
     ApiConflictResponse({
       description: "Client is already active",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.Conflict, "Client is already active", `/clients/${EXAMPLE_CLIENT_ID}`),
+      example: responseExample(
+        HttpStatus.Conflict,
+        "CLIENT_ALREADY_ACTIVE",
+        "Client is already active",
+        `/clients/${EXAMPLE_CLIENT_ID}`
+      ),
     })
   );
 
@@ -48,7 +59,12 @@ export const ApiClientAlreadyInactiveResponse = () =>
     ApiConflictResponse({
       description: "Client is already inactive",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.Conflict, "Client is already inactive", `/clients/${EXAMPLE_CLIENT_ID}`),
+      example: responseExample(
+        HttpStatus.Conflict,
+        "CLIENT_ALREADY_INACTIVE",
+        "Client is already inactive",
+        `/clients/${EXAMPLE_CLIENT_ID}`
+      ),
     })
   );
 
@@ -59,6 +75,7 @@ export const ApiLocationNotFoundResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.NotFound,
+        "LOCATION_NOT_FOUND",
         "Location not found",
         `/clients/${EXAMPLE_CLIENT_ID}/locations/${EXAMPLE_LOCATION_ID}`
       ),
@@ -72,6 +89,7 @@ export const ApiScopeNotFoundResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.NotFound,
+        "SCOPE_NOT_FOUND",
         'Scope "profile" not found',
         `/clients/${EXAMPLE_CLIENT_ID}/scopes`
       ),
@@ -83,7 +101,7 @@ export const ApiScopeAlreadyExistsResponse = () =>
     ApiConflictResponse({
       description: "Scope name is already taken by another scope",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.Conflict, "Scope already exists", "/scopes"),
+      example: responseExample(HttpStatus.Conflict, "SCOPE_ALREADY_EXISTS", "Scope already exists", "/scopes"),
     })
   );
 
@@ -94,6 +112,7 @@ export const ApiScopeAlreadyAssignedResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.Conflict,
+        "SCOPE_ALREADY_ASSIGNED",
         "Scope is already assigned to the client",
         `/clients/${EXAMPLE_CLIENT_ID}/scopes`
       ),
@@ -107,6 +126,7 @@ export const ApiScopeNotAssignedResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.Conflict,
+        "SCOPE_NOT_ASSIGNED",
         "Scope is not assigned to the client",
         `/clients/${EXAMPLE_CLIENT_ID}/scopes`
       ),
@@ -115,33 +135,50 @@ export const ApiScopeNotAssignedResponse = () =>
 
 export const ApiClientCreateValidationFailedResponse = () =>
   ApiValidationFailedResponse([
-    { field: "name", message: "name must be longer than or equal to 2 characters" },
-    { field: "secret", message: "secret must be longer than or equal to 12 characters" },
-    { field: "locations", message: "locations must contain no more than 3 elements" },
+    { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
+    { field: "secret", code: "TOO_SHORT", message: "secret must be longer than or equal to 12 characters" },
+    { field: "locations", code: "TOO_MANY_ITEMS", message: "locations must contain no more than 3 elements" },
   ]);
 
 export const ApiClientUpdateValidationFailedResponse = () =>
-  ApiValidationFailedResponse([{ field: "name", message: "name must be longer than or equal to 2 characters" }]);
+  ApiValidationFailedResponse([
+    { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
+  ]);
 
 export const ApiLocationValidationFailedResponse = () =>
   ApiValidationFailedResponse([
-    { field: "href", message: "href must match /^[a-zA-Z][a-zA-Z0-9+.-]*:\\S+$/ regular expression" },
+    {
+      field: "href",
+      code: "INVALID_FORMAT",
+      message: "href must match /^[a-zA-Z][a-zA-Z0-9+.-]*:\\S+$/ regular expression",
+    },
   ]);
 
 export const ApiScopesValidationFailedResponse = () =>
   ApiValidationFailedResponse([
-    { field: "scopes", message: "each value in scopes must match /^[a-zA-Z0-9:_.-]+$/ regular expression" },
+    {
+      field: "scopes",
+      code: "INVALID_FORMAT",
+      message: "each value in scopes must match /^[a-zA-Z0-9:_.-]+$/ regular expression",
+    },
   ]);
 
 export const ApiScopeCreateValidationFailedResponse = () =>
-  ApiValidationFailedResponse([{ field: "name", message: "name must match /^[a-zA-Z0-9:_.-]+$/ regular expression" }]);
+  ApiValidationFailedResponse([
+    { field: "name", code: "INVALID_FORMAT", message: "name must match /^[a-zA-Z0-9:_.-]+$/ regular expression" },
+  ]);
 
 export const ApiClientInactiveResponse = () =>
   applyDecorators(
     ApiForbiddenResponse({
       description: "Client is inactive",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.Forbidden, "Client is inactive", `/clients/${EXAMPLE_CLIENT_ID}/codes`),
+      example: responseExample(
+        HttpStatus.Forbidden,
+        "unauthorized_client",
+        "Client is inactive",
+        `/clients/${EXAMPLE_CLIENT_ID}/codes`
+      ),
     })
   );
 
@@ -152,6 +189,7 @@ export const ApiInvalidAuthorizationCodeResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.BadRequest,
+        "invalid_grant",
         "Authorization code is invalid",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
@@ -165,6 +203,7 @@ export const ApiAuthorizationCodeExpiredResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.BadRequest,
+        "invalid_grant",
         "Authorization code is expired",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
@@ -178,6 +217,7 @@ export const ApiAuthorizationCodeAlreadyUsedResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.Conflict,
+        "invalid_grant",
         "Authorization code has already been used",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
@@ -192,10 +232,13 @@ export const ApiAuthorizationScopesNotAllowedResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Validation,
-        message: "Requested scopes are not assigned to the client",
+        code: "VALIDATION_FAILED",
+        message: "Validation failed",
         path: `/clients/${EXAMPLE_CLIENT_ID}/codes`,
         timestamp: EXAMPLE_TIMESTAMP,
-        errors: [{ field: "scopes", message: "Requested scopes are not assigned to the client" }],
+        errors: [
+          { field: "scopes", code: "invalid_scope", message: "Requested scopes are not assigned to the client" },
+        ],
       },
     })
   );
@@ -207,6 +250,7 @@ export const ApiRedirectUriNotAllowedResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.BadRequest,
+        "invalid_request",
         "Redirect uri is not registered for the client",
         `/clients/${EXAMPLE_CLIENT_ID}/codes`
       ),
@@ -220,6 +264,7 @@ export const ApiInvalidClientCredentialsResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.Unauthorized,
+        "invalid_client",
         "Client credentials are invalid",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
@@ -234,7 +279,12 @@ export const ApiInvalidClientIdResponse = () =>
     ApiBadRequestResponse({
       description: "Client identifier is not a valid uuid",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.BadRequest, "Validation failed (uuid is expected)", "/clients/not-a-uuid"),
+      example: responseExample(
+        HttpStatus.BadRequest,
+        "BAD_REQUEST",
+        "Validation failed (uuid is expected)",
+        "/clients/not-a-uuid"
+      ),
     })
   );
 
@@ -245,6 +295,7 @@ export const ApiInvalidLocationIdResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.BadRequest,
+        "BAD_REQUEST",
         "Validation failed (uuid is expected)",
         `/clients/${EXAMPLE_CLIENT_ID}/locations/not-a-uuid`
       ),

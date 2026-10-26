@@ -5,28 +5,36 @@ import {
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
 } from "@nestjs/swagger";
+import { HttpStatus } from "@shared/domain/http-status.enum";
 import { ApiValidationFailedResponse as ApiValidationFailedResponseFactory } from "@shared/presentation/exception/api-validation-failed-response";
 import type { FieldError } from "@shared/presentation/exception/field-error";
-import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
 import { EXAMPLE_TIMESTAMP } from "@shared/presentation/exception/response-example";
 import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 
 const EXAMPLE_USER_ID = "00000000-0000-4000-8000-000000000000";
 
 const CREATE_FIELD_ERRORS: FieldError[] = [
-  { field: "name", message: "name must be longer than or equal to 2 characters" },
-  { field: "email", message: "email must match /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/ regular expression" },
-  { field: "password", message: "password must be shorter than or equal to 72 characters" },
+  { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
+  {
+    field: "email",
+    code: "INVALID_EMAIL",
+    message: "email must match /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/ regular expression",
+  },
+  { field: "password", code: "TOO_LONG", message: "password must be shorter than or equal to 72 characters" },
 ];
 
 const UPDATE_FIELD_ERRORS: FieldError[] = [
-  { field: "name", message: "name must be longer than or equal to 2 characters" },
-  { field: "email", message: "email must match /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/ regular expression" },
+  { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
+  {
+    field: "email",
+    code: "INVALID_EMAIL",
+    message: "email must match /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/ regular expression",
+  },
 ];
 
 const PAGINATION_FIELD_ERRORS: FieldError[] = [
-  { field: "limit", message: "limit must not be greater than 100" },
-  { field: "offset", message: "offset must not be less than 0" },
+  { field: "limit", code: "TOO_LARGE", message: "limit must not be greater than 100" },
+  { field: "offset", code: "TOO_SMALL", message: "offset must not be less than 0" },
 ];
 
 export const ApiUserNotFoundResponse = () =>
@@ -36,6 +44,7 @@ export const ApiUserNotFoundResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.NotFound,
+        code: "USER_NOT_FOUND",
         message: "User not found",
         path: `/users/${EXAMPLE_USER_ID}`,
         timestamp: EXAMPLE_TIMESTAMP,
@@ -50,6 +59,7 @@ export const ApiInvalidUserIdResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.BadRequest,
+        code: "BAD_REQUEST",
         message: "Validation failed (uuid is expected)",
         path: "/users/not-a-uuid",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -64,6 +74,7 @@ export const ApiEmailAlreadyRegisteredResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Conflict,
+        code: "EMAIL_ALREADY_REGISTERED",
         message: "Email already registered",
         path: "/users",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -78,6 +89,7 @@ export const ApiEmailAlreadyConfirmedResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Conflict,
+        code: "EMAIL_ALREADY_CONFIRMED",
         message: "Email is already confirmed",
         path: "/users/confirm-email",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -92,6 +104,7 @@ export const ApiInvalidEmailConfirmationTokenResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.BadRequest,
+        code: "INVALID_EMAIL_CONFIRMATION_TOKEN",
         message: "Email confirmation token is invalid or expired",
         path: "/users/confirm-email",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -106,6 +119,7 @@ export const ApiUserAlreadyBlockedResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Conflict,
+        code: "USER_ALREADY_BLOCKED",
         message: "User already blocked",
         path: `/users/${EXAMPLE_USER_ID}/block`,
         timestamp: EXAMPLE_TIMESTAMP,
@@ -120,6 +134,7 @@ export const ApiUserAlreadyUnblockedResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Conflict,
+        code: "USER_ALREADY_UNBLOCKED",
         message: "User already unblocked",
         path: `/users/${EXAMPLE_USER_ID}/unblock`,
         timestamp: EXAMPLE_TIMESTAMP,
@@ -137,6 +152,7 @@ export const ApiUnexpectedErrorResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.InternalServerError,
+        code: "INTERNAL_SERVER_ERROR",
         message: "Internal server error",
         path: "/users",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -151,6 +167,7 @@ export const ApiInvalidRoleIdResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.BadRequest,
+        code: "BAD_REQUEST",
         message: "Validation failed (uuid is expected)",
         path: "/roles/not-a-uuid",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -165,6 +182,7 @@ export const ApiRoleNotFoundResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.NotFound,
+        code: "ROLE_NOT_FOUND",
         message: "Role not found",
         path: `/roles/${EXAMPLE_USER_ID}`,
         timestamp: EXAMPLE_TIMESTAMP,
@@ -179,6 +197,7 @@ export const ApiRoleAlreadyExistsResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Conflict,
+        code: "ROLE_ALREADY_EXISTS",
         message: "Role already exists",
         path: "/roles",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -187,11 +206,16 @@ export const ApiRoleAlreadyExistsResponse = () =>
   );
 
 export const ApiRoleValidationFailedResponse = () =>
-  ApiValidationFailedResponse([{ field: "name", message: "name must be one of the following values: USER, ADMIN" }]);
+  ApiValidationFailedResponse([
+    { field: "name", code: "INVALID_VALUE", message: "name must be one of the following values: USER, ADMIN" },
+  ]);
 
 export const ApiRoleCreateValidationFailedResponse = () => ApiRoleValidationFailedResponse();
+
 export const ApiRoleUpdateValidationFailedResponse = () => ApiRoleValidationFailedResponse();
 
 export const ApiCreateValidationFailedResponse = () => ApiValidationFailedResponse(CREATE_FIELD_ERRORS);
+
 export const ApiUpdateValidationFailedResponse = () => ApiValidationFailedResponse(UPDATE_FIELD_ERRORS);
+
 export const ApiPaginationValidationFailedResponse = () => ApiValidationFailedResponse(PAGINATION_FIELD_ERRORS);

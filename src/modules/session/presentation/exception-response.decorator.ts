@@ -1,6 +1,6 @@
 import { applyDecorators } from "@nestjs/common";
 import { ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse } from "@nestjs/swagger";
-import { HttpStatus } from "@shared/presentation/exception/http-status.enum";
+import { HttpStatus } from "@shared/domain/http-status.enum";
 import { EXAMPLE_TIMESTAMP } from "@shared/presentation/exception/response-example";
 import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
 
@@ -11,6 +11,7 @@ export const ApiInvalidCredentialsResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Unauthorized,
+        code: "INVALID_CREDENTIALS",
         message: "Invalid credentials",
         path: "/v1/auth/login",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -25,6 +26,7 @@ export const ApiUserBlockedResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Forbidden,
+        code: "USER_BLOCKED",
         message: "User is blocked",
         path: "/v1/auth/login",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -39,6 +41,7 @@ export const ApiInvalidRefreshTokenResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Unauthorized,
+        code: "INVALID_REFRESH_TOKEN",
         message: "Invalid refresh token",
         path: "/v1/auth/logout",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -56,6 +59,7 @@ export const ApiInvalidAccessTokenResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Unauthorized,
+        code: "INVALID_ACCESS_TOKEN",
         message: "Invalid access token",
         path: "/v1/users",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -70,6 +74,7 @@ export const ApiAccessTokenExpiredResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Unauthorized,
+        code: "ACCESS_TOKEN_EXPIRED",
         message: "Access token expired",
         path: "/v1/users",
         timestamp: EXAMPLE_TIMESTAMP,
@@ -84,6 +89,7 @@ export const ApiInsufficientRoleResponse = () =>
       type: ExceptionResponse,
       example: {
         status: HttpStatus.Forbidden,
+        code: "INSUFFICIENT_ROLE",
         message: "Insufficient role",
         path: "/v1/roles",
         timestamp: EXAMPLE_TIMESTAMP,
