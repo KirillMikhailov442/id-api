@@ -6,3 +6,5 @@ dist
 *.tsbuildinfo
 .idea
 .DS_Store
+.oxlint/*
+!.oxlint/plugins/

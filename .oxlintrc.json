@@ -1,6 +1,14 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": ["./.oxlint/plugins/member-ordering.js"],
   "rules": {
+    "custom/member-ordering": "error",
+    "typescript/parameter-properties": [
+      "error",
+      {
+        "prefer": "class-property"
+      }
+    ],
     "typescript/no-explicit-any": "error",
     "typescript/no-floating-promises": "error",
     "typescript/consistent-type-imports": "error",
