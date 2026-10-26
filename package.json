@@ -1,6 +1,7 @@
 {
   "name": "id-api",
   "version": "0.0.1",
+  "packageManager": "pnpm@12.3.4",
   "description": "Identity provider API with OAuth 2.0 / OpenID Connect support (users, roles, sessions, clients, scopes)",
   "author": "Kirill Mikhailov <mikhailovkirill342@gmail.com>",
   "repository": {
