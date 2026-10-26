@@ -203,6 +203,33 @@ Rule of thumb: **do not wrap a single entity in a `Response` container** — ret
 
 - TypeScript `strict` mode is on — no `any`, no `!` non-null assertions unless justified.
 - **No comments in code — strictly forbidden.** Do not write `//`, `/* */`, JSDoc, or explanatory comments anywhere in `src/`. Code must be self-explanatory: descriptive names, small functions, explicit types. If code needs a comment to be understood, it must be refactored instead of commented.
+- **Blank lines between declarations.** Every top-level `class`, `function`, and arrow-function constant is separated from the surrounding code by exactly one blank line above and one blank line below. Inside classes, consecutive field declarations are written **without** blank lines between them; all other members (constructor, getters/setters, methods) are separated from each other and from the field block by exactly one blank line. Never glue anything other than a run of fields together. Decorators stay attached to the declaration they decorate — no blank line between a decorator and its class/member.
+
+  ```ts
+  // ❌ FORBIDDEN — declarations glued to each other (except consecutive fields)
+  import { Injectable } from "@nestjs/common";
+  @Injectable()
+  export class UserService {
+    private readonly logger = new Logger(UserService.name);
+    constructor() {}
+    find(): void {}
+  }
+
+  // ✅ CORRECT — blank line above and below the class, fields grouped together,
+  // blank line between the field block, constructor, and methods
+  import { Injectable } from "@nestjs/common";
+
+  @Injectable()
+  export class UserService {
+    private readonly logger = new Logger(UserService.name);
+    private readonly repository: UserRepository;
+
+    constructor() {}
+
+    find(): void {}
+  }
+  ```
+- Blank lines around control-flow blocks. Every `if` / `for` / `while` block — including single-line guard clauses — and every array traversal callback (`.map`, `.filter`, `.forEach`, `.reduce`, `.find`, `.some`, `.every`, `.flatMap`, `.sort`, ...) is separated from the surrounding statements by exactly one blank line above and below. Exceptions: `else` / `else if` stay attached to the closing brace of the previous branch, and a block is not padded directly against its parent block's `{` or `}`.
 - File naming: kebab-case (`create-user-command.handler.ts`). Class naming: PascalCase with kind suffixes as defined above.
 - File-name suffixes reflect the artifact kind:
 
@@ -233,7 +260,8 @@ Rule of thumb: **do not wrap a single entity in a `Response` container** — ret
 8. **No schema changes without a migration.**
 9. **No committing secrets** — everything sensitive goes to env.
 10. **No comments in code** — no `//`, `/* */`, or JSDoc anywhere in `src/` (§9).
-11. **Do not delete or rewrite existing conventions** in this file without explicit user instruction.
+11. **No glued declarations** — one blank line between class members (constructor, getters/setters, methods) and around top-level classes/functions; consecutive field declarations stay grouped without blank lines; decorators stay attached (§9).
+12. **Do not delete or rewrite existing conventions** in this file without explicit user instruction.
 
 ## 11. Definition of Done
 
