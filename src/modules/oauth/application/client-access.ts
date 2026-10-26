@@ -1,4 +1,4 @@
-import { RoleType } from "@shared/domain/role-type.enum";
+import { RoleType } from "@modules/user/user.module";
 
 import type { Requester } from "@modules/oauth/application/requester.type";
 import type { Client } from "@modules/oauth/domain/entity/client";

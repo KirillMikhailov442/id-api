@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { RoleType } from "@shared/domain/role-type.enum";
+import { RoleType } from "@modules/user/user.module";
 import { Roles } from "@shared/presentation/auth/roles.decorator";
 import { PaginationQuery } from "@shared/presentation/query/pagination.query";
 import { PaginationMeta } from "@shared/presentation/response/pagination-meta";

@@ -8,7 +8,7 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { RoleType } from "@shared/domain/role-type.enum";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { Roles } from "@shared/presentation/auth/roles.decorator";
 
 import {

@@ -30,7 +30,7 @@ All source code lives in `src/` with exactly three top-level directories. **Neve
 ```
 src/
 ├── shared/                        # PUBLIC shared kernel — usable by every module
-│   ├── domain/                    # Base domain contracts: IValueObject, IRepository, RoleType, InvalidValueObjectException
+│   ├── domain/                    # Base domain contracts: IValueObject, IRepository, InvalidValueObjectException
 │   ├── infrastructure/            # Reusable infrastructure: mail/, transaction/
 │   └── presentation/              # Shared presentation contracts, split by purpose:
 │       ├── auth/                  #   Public/Roles/CurrentUser decorators, authenticated request types

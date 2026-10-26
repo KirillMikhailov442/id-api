@@ -15,7 +15,7 @@ import {
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { RoleType } from "@shared/domain/role-type.enum";
+import { RoleType } from "@modules/user/user.module";
 import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
 import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
 import { Roles } from "@shared/presentation/auth/roles.decorator";

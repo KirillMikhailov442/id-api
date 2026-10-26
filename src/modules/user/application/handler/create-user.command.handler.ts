@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CommandHandler, EventBus, type ICommandHandler } from "@nestjs/cqrs";
-import { RoleType } from "@shared/domain/role-type.enum";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 
 import { CreateUserCommand } from "@modules/user/application/command/create-user.command";
 import type { IPasswordHasher } from "@modules/user/application/port/password-hasher";

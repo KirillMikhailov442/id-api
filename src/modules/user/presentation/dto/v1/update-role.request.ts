@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { RoleType } from "@shared/domain/role-type.enum";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { IsEnum } from "class-validator";
 
 export class UpdateRoleRequest {
