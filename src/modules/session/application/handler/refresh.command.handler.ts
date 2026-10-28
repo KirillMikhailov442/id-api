@@ -6,7 +6,6 @@ import { RefreshCommand, type RefreshResult } from "@modules/session/application
 import type { IRefreshTokenService } from "@modules/session/application/port/refresh-token-service";
 import type { ISessionRepository } from "@modules/session/application/port/session-repository";
 import type { ITokenService } from "@modules/session/application/port/token-service";
-import { Session } from "@modules/session/domain/entity/session";
 import { InvalidRefreshTokenException } from "@modules/session/domain/exception/invalid-refresh-token.exception";
 import { UserBlockedException } from "@modules/session/domain/exception/user-blocked.exception";
 import { Ip } from "@modules/session/domain/value-object/ip.value-object";
@@ -56,7 +55,8 @@ export class RefreshCommandHandler implements ICommandHandler<RefreshCommand, Re
   }
 
   async execute(command: RefreshCommand): Promise<RefreshResult> {
-    const session = await this.sessionRepository.findByRefreshHash(this.refreshTokenService.hash(command.refreshToken));
+    const expectedRefreshHash = this.refreshTokenService.hash(command.refreshToken);
+    const session = await this.sessionRepository.findByRefreshHash(expectedRefreshHash);
 
     if (session === null || !session.isActive()) {
       throw new InvalidRefreshTokenException();
@@ -72,26 +72,29 @@ export class RefreshCommandHandler implements ICommandHandler<RefreshCommand, Re
       throw new UserBlockedException();
     }
 
-    session.revoke();
-    await this.sessionRepository.save(session);
+    const roleIds = user.getRoles().map((userRole) => userRole.getRoleId());
+    const roles = await this.roleRepository.findByIds(roleIds);
     const refreshToken = this.refreshTokenService.generate();
     const ttlSeconds = this.configService.getOrThrow<number>(REFRESH_TOKEN_TTL_KEY);
-    const rotatedSession = Session.create({
-      userId: user.getId(),
+    const now = new Date();
+    session.rotate({
       refreshHash: this.refreshTokenService.hash(refreshToken),
       deviceInfo: command.deviceInfo,
       ip: new Ip(command.ip),
-      expiresAt: new Date(Date.now() + ttlSeconds * MS_PER_SECOND),
-      familyId: session.getFamilyId(),
+      expiresAt: new Date(now.getTime() + ttlSeconds * MS_PER_SECOND),
+      now,
     });
-    await this.sessionRepository.save(rotatedSession);
-    const roleIds = user.getRoles().map((userRole) => userRole.getRoleId());
-    const roles = await this.roleRepository.findByIds(roleIds);
     const accessToken = await this.tokenService.issueAccessToken({
       userId: user.getId(),
-      sessionId: rotatedSession.getId(),
+      sessionId: session.getId(),
       roles: roles.map((role) => role.getName().getValue()),
     });
+    const rotated = await this.sessionRepository.rotate(session, expectedRefreshHash);
+
+    if (!rotated) {
+      throw new InvalidRefreshTokenException();
+    }
+
     return { accessToken, refreshToken };
   }
 }

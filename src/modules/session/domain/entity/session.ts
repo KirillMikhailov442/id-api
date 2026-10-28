@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { DeviceInfo } from "@shared/domain/device-info";
 
+import { InvalidRefreshTokenException } from "@modules/session/domain/exception/invalid-refresh-token.exception";
 import { SessionAlreadyRevokedException } from "@modules/session/domain/exception/session-already-revoked.exception";
 import type { Ip } from "@modules/session/domain/value-object/ip.value-object";
 import type { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
@@ -8,12 +9,12 @@ import type { RefreshHash } from "@modules/session/domain/value-object/refresh-h
 export class Session {
   private readonly id: string;
   private readonly userId: string;
-  private readonly refreshHash: RefreshHash;
-  private readonly deviceInfo: DeviceInfo;
-  private readonly ip: Ip;
+  private refreshHash: RefreshHash;
+  private deviceInfo: DeviceInfo;
+  private ip: Ip;
   private readonly createdAt: Date;
-  private readonly expiresAt: Date;
-  private readonly familyId: string;
+  private expiresAt: Date;
+  private lastUsedAt: Date;
   private revokedAt: Date | null;
 
   constructor(
@@ -24,7 +25,7 @@ export class Session {
     ip: Ip,
     createdAt: Date,
     expiresAt: Date,
-    familyId: string,
+    lastUsedAt: Date,
     revokedAt: Date | null
   ) {
     this.id = id;
@@ -34,7 +35,7 @@ export class Session {
     this.ip = ip;
     this.createdAt = createdAt;
     this.expiresAt = expiresAt;
-    this.familyId = familyId;
+    this.lastUsedAt = new Date(lastUsedAt);
     this.revokedAt = revokedAt;
   }
 
@@ -44,17 +45,17 @@ export class Session {
     deviceInfo: DeviceInfo;
     ip: Ip;
     expiresAt: Date;
-    familyId?: string;
   }): Session {
+    const now = new Date();
     return new Session(
       randomUUID(),
       params.userId,
       params.refreshHash,
       params.deviceInfo,
       params.ip,
-      new Date(),
+      now,
       params.expiresAt,
-      params.familyId ?? randomUUID(),
+      now,
       null
     );
   }
@@ -87,12 +88,24 @@ export class Session {
     return new Date(this.expiresAt);
   }
 
-  getFamilyId(): string {
-    return this.familyId;
+  getLastUsedAt(): Date {
+    return new Date(this.lastUsedAt);
   }
 
   getRevokedAt(): Date | null {
     return this.revokedAt === null ? null : new Date(this.revokedAt);
+  }
+
+  rotate(params: { refreshHash: RefreshHash; deviceInfo: DeviceInfo; ip: Ip; expiresAt: Date; now: Date }): void {
+    if (!this.isActive(params.now)) {
+      throw new InvalidRefreshTokenException();
+    }
+
+    this.refreshHash = params.refreshHash;
+    this.deviceInfo = params.deviceInfo;
+    this.ip = params.ip;
+    this.expiresAt = new Date(params.expiresAt);
+    this.lastUsedAt = new Date(params.now);
   }
 
   revoke(): void {

@@ -6,7 +6,7 @@ import type { RefreshHash } from "@modules/session/domain/value-object/refresh-h
 export interface ISessionRepository extends IRepository<Session, string> {
   findByRefreshHash(refreshHash: RefreshHash): Promise<Session | null>;
   findByUserId(userId: string): Promise<Session[]>;
-  findByFamilyId(familyId: string): Promise<Session[]>;
-  revokeAllInFamily(familyId: string, revokedAt: Date): Promise<void>;
+  rotate(session: Session, expectedRefreshHash: RefreshHash): Promise<boolean>;
+  revokeById(id: string, revokedAt: Date): Promise<void>;
   revokeAllByUserId(userId: string, revokedAt: Date): Promise<void>;
 }

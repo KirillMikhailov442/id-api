@@ -30,7 +30,6 @@ export class LogoutCommandHandler implements ICommandHandler<LogoutCommand> {
       throw new InvalidRefreshTokenException();
     }
 
-    session.revoke();
-    await this.sessionRepository.save(session);
+    await this.sessionRepository.revokeById(session.getId(), new Date());
   }
 }

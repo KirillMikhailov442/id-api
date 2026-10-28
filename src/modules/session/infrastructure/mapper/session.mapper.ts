@@ -15,7 +15,7 @@ export class SessionMapper {
       new Ip(dbSession.ip),
       dbSession.createdAt,
       dbSession.expiresAt,
-      dbSession.familyId,
+      dbSession.lastUsedAt,
       dbSession.revokedAt
     );
   }
@@ -33,7 +33,7 @@ export class SessionMapper {
     dbSession.ip = session.getIp().getValue();
     dbSession.createdAt = session.getCreatedAt();
     dbSession.expiresAt = session.getExpiresAt();
-    dbSession.familyId = session.getFamilyId();
+    dbSession.lastUsedAt = session.getLastUsedAt();
     dbSession.revokedAt = session.getRevokedAt();
 
     return dbSession;

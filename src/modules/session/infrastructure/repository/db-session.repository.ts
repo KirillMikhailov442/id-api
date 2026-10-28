@@ -37,12 +37,26 @@ export class DbSessionRepository implements ISessionRepository {
     return dbSessions.map(SessionMapper.toDomain);
   }
 
-  async findByFamilyId(familyId: string): Promise<Session[]> {
-    const dbSessions = await this.sessionRepository.find({
-      where: { familyId },
-      order: { createdAt: "DESC" },
-    });
-    return dbSessions.map(SessionMapper.toDomain);
+  async rotate(session: Session, expectedRefreshHash: RefreshHash): Promise<boolean> {
+    const dbSession = SessionMapper.toPersistence(session);
+    const result = await this.sessionRepository
+      .createQueryBuilder()
+      .update(DbSession)
+      .set({
+        refreshHash: dbSession.refreshHash,
+        browser: dbSession.browser,
+        os: dbSession.os,
+        deviceType: dbSession.deviceType,
+        ip: dbSession.ip,
+        expiresAt: dbSession.expiresAt,
+        lastUsedAt: dbSession.lastUsedAt,
+      })
+      .where("id = :id", { id: dbSession.id })
+      .andWhere("refresh_hash = :expectedRefreshHash", { expectedRefreshHash: expectedRefreshHash.getValue() })
+      .andWhere("revoked_at IS NULL")
+      .andWhere("expires_at > CURRENT_TIMESTAMP")
+      .execute();
+    return result.affected === 1;
   }
 
   async save(session: Session): Promise<void> {
@@ -54,8 +68,8 @@ export class DbSessionRepository implements ISessionRepository {
     await this.sessionRepository.delete(id);
   }
 
-  async revokeAllInFamily(familyId: string, revokedAt: Date): Promise<void> {
-    await this.sessionRepository.update({ familyId, revokedAt: IsNull() }, { revokedAt });
+  async revokeById(id: string, revokedAt: Date): Promise<void> {
+    await this.sessionRepository.update({ id, revokedAt: IsNull() }, { revokedAt });
   }
 
   async revokeAllByUserId(userId: string, revokedAt: Date): Promise<void> {
