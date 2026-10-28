@@ -10,6 +10,7 @@ import { LoginCommandHandler } from "@modules/session/application/handler/login.
 import { LogoutAllCommandHandler } from "@modules/session/application/handler/logout-all.command.handler";
 import { LogoutCommandHandler } from "@modules/session/application/handler/logout.command.handler";
 import { RefreshCommandHandler } from "@modules/session/application/handler/refresh.command.handler";
+import { RevokeSessionCommandHandler } from "@modules/session/application/handler/revoke-session.command.handler";
 import { DbSession } from "@modules/session/infrastructure/entity/db-session.entity";
 import { DbSessionRepository } from "@modules/session/infrastructure/repository/db-session.repository";
 import { CryptoRefreshTokenService } from "@modules/session/infrastructure/security/crypto-refresh-token-service";
@@ -48,6 +49,7 @@ export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modul
     LogoutCommandHandler,
     LogoutAllCommandHandler,
     RefreshCommandHandler,
+    RevokeSessionCommandHandler,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

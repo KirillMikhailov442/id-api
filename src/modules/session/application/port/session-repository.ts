@@ -9,5 +9,6 @@ export interface ISessionRepository extends IRepository<Session, string> {
   findActiveByUserId(userId: string): Promise<Session[]>;
   rotate(session: Session, expectedRefreshHash: RefreshHash): Promise<boolean>;
   revokeById(id: string, revokedAt: Date): Promise<void>;
+  revokeByIdAndUserId(id: string, userId: string, revokedAt: Date): Promise<boolean>;
   revokeAllByUserId(userId: string, revokedAt: Date): Promise<void>;
 }

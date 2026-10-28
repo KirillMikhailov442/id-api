@@ -3,7 +3,7 @@ import { HttpStatus } from "@shared/domain/http-status.enum";
 
 export class SessionNotFoundException extends DomainException {
   readonly code = "SESSION_NOT_FOUND";
-  readonly status = HttpStatus.Unauthorized;
+  readonly status = HttpStatus.NotFound;
 
   constructor(message = "Session not found") {
     super(message);

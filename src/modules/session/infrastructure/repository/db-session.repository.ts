@@ -81,6 +81,17 @@ export class DbSessionRepository implements ISessionRepository {
     await this.sessionRepository.update({ id, revokedAt: IsNull() }, { revokedAt });
   }
 
+  async revokeByIdAndUserId(id: string, userId: string, revokedAt: Date): Promise<boolean> {
+    const result = await this.sessionRepository
+      .createQueryBuilder()
+      .update(DbSession)
+      .set({ revokedAt: () => "COALESCE(revoked_at, :revokedAt)" })
+      .where({ id, userId })
+      .setParameter("revokedAt", revokedAt)
+      .execute();
+    return result.affected === 1;
+  }
+
   async revokeAllByUserId(userId: string, revokedAt: Date): Promise<void> {
     await this.sessionRepository.update({ userId, revokedAt: IsNull() }, { revokedAt });
   }

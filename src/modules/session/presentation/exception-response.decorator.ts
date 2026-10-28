@@ -1,5 +1,11 @@
 import { applyDecorators } from "@nestjs/common";
-import { ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+} from "@nestjs/swagger";
 import { HttpStatus } from "@shared/domain/http-status.enum";
 import { EXAMPLE_TIMESTAMP } from "@shared/presentation/exception/response-example";
 import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
@@ -92,6 +98,36 @@ export const ApiInsufficientRoleResponse = () =>
         code: "INSUFFICIENT_ROLE",
         message: "Insufficient role",
         path: "/v1/roles",
+        timestamp: EXAMPLE_TIMESTAMP,
+      },
+    })
+  );
+
+export const ApiInvalidSessionIdResponse = () =>
+  applyDecorators(
+    ApiBadRequestResponse({
+      description: "Session identifier is not a valid UUID",
+      type: ExceptionResponse,
+      example: {
+        status: HttpStatus.BadRequest,
+        code: "BAD_REQUEST",
+        message: "Validation failed (uuid is expected)",
+        path: "/v1/users/me/sessions/invalid-id",
+        timestamp: EXAMPLE_TIMESTAMP,
+      },
+    })
+  );
+
+export const ApiSessionNotFoundResponse = () =>
+  applyDecorators(
+    ApiNotFoundResponse({
+      description: "Session does not exist or belongs to another user",
+      type: ExceptionResponse,
+      example: {
+        status: HttpStatus.NotFound,
+        code: "SESSION_NOT_FOUND",
+        message: "Session not found",
+        path: "/v1/users/me/sessions/9e20f958-86cb-4a71-a53a-dab1b026c739",
         timestamp: EXAMPLE_TIMESTAMP,
       },
     })
