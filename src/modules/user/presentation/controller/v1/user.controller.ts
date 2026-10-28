@@ -36,6 +36,7 @@ import {
   ApiInsufficientRoleResponse,
 } from "@modules/session/presentation/exception-response.decorator";
 import { BlockUserCommand } from "@modules/user/application/command/block-user.command";
+import { ChangePasswordCommand } from "@modules/user/application/command/change-password.command";
 import { ConfirmEmailCommand } from "@modules/user/application/command/confirm-email.command";
 import { CreateUserCommand } from "@modules/user/application/command/create-user.command";
 import { DeleteUserCommand } from "@modules/user/application/command/delete-user.command";
@@ -46,16 +47,19 @@ import { ListUsersQuery } from "@modules/user/application/query/list-users.query
 import type { User } from "@modules/user/domain/entity/user";
 import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { BlockUserRequest } from "@modules/user/presentation/dto/v1/block-user.request";
+import { ChangePasswordRequest } from "@modules/user/presentation/dto/v1/change-password.request";
 import { ConfirmEmailQuery } from "@modules/user/presentation/dto/v1/confirm-email.query";
 import { CreateUserRequest } from "@modules/user/presentation/dto/v1/create-user.request";
 import { CreateUserResponse } from "@modules/user/presentation/dto/v1/create-user.response";
 import { UpdateUserRequest } from "@modules/user/presentation/dto/v1/update-user.request";
 import { UserDto } from "@modules/user/presentation/dto/v1/user.dto";
 import {
+  ApiChangePasswordValidationFailedResponse,
   ApiCreateValidationFailedResponse,
   ApiEmailAlreadyConfirmedResponse,
   ApiEmailAlreadyRegisteredResponse,
   ApiInvalidEmailConfirmationTokenResponse,
+  ApiInvalidOldPasswordResponse,
   ApiInvalidUserIdResponse,
   ApiPaginationValidationFailedResponse,
   ApiUnexpectedErrorResponse,
@@ -168,6 +172,26 @@ export class UserController {
     const command = new UpdateUserCommand(currentUser.userId, request.name, request.surname, request.email);
     const user = await this.commandBus.execute<UpdateUserCommand, User>(command);
     return UserDto.fromDomain(user);
+  }
+
+  @Patch("me/password")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiAuthenticatedResponse()
+  @ApiOperation({ summary: "Change current user password", description: "Requires the correct old password" })
+  @ApiNoContentResponse({ description: "Password changed" })
+  @ApiInvalidOldPasswordResponse()
+  @ApiChangePasswordValidationFailedResponse()
+  @ApiUserNotFoundResponse()
+  @ApiUnexpectedErrorResponse()
+  async changePassword(
+    @CurrentUser()
+    currentUser: AuthenticatedUser,
+    @Body()
+    request: ChangePasswordRequest
+  ): Promise<void> {
+    const command = new ChangePasswordCommand(currentUser.userId, request.oldPassword, request.newPassword);
+    await this.commandBus.execute<ChangePasswordCommand, void>(command);
   }
 
   @Public()

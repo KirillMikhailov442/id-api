@@ -19,7 +19,7 @@ export class User {
   private name: Name;
   private surname: Surname;
   private email: Email;
-  private readonly passwordHash: string;
+  private passwordHash: string;
   private isConfirmed: UserEmailConfirmedStatus;
   private isBlocked: UserBlockedStatus;
   private readonly createdAt: Date;
@@ -83,6 +83,11 @@ export class User {
 
   getPasswordHash(): string {
     return this.passwordHash;
+  }
+
+  changePassword(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+    this.updatedAt = new Date();
   }
 
   getIsConfirmed(): UserEmailConfirmedStatus {

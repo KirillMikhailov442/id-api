@@ -9,4 +9,5 @@ export interface IUserRepository extends IRepository<User, string> {
   count(): Promise<number>;
   findByEmail(email: Email): Promise<User | null>;
   existsByEmail(email: Email): Promise<boolean>;
+  updatePassword(user: User, previousPasswordHash: string): Promise<boolean>;
 }

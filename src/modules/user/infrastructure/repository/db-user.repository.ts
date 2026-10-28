@@ -94,6 +94,14 @@ export class DbUserRepository implements IUserRepository {
     }
   }
 
+  async updatePassword(user: User, previousPasswordHash: string): Promise<boolean> {
+    const result = await this.userRepository.update(
+      { id: user.getId(), passwordHash: previousPasswordHash },
+      { passwordHash: user.getPasswordHash(), updatedAt: user.getUpdatedAt() }
+    );
+    return result.affected === 1;
+  }
+
   async delete(id: string): Promise<void> {
     const user = await this.findById(id);
 

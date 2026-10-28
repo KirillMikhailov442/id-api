@@ -7,6 +7,7 @@ import { MailService } from "@shared/infrastructure/mail/mail.service";
 import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
 
 import { BlockUserCommandHandler } from "@modules/user/application/handler/block-user.command.handler";
+import { ChangePasswordCommandHandler } from "@modules/user/application/handler/change-password.command.handler";
 import { ConfirmEmailCommandHandler } from "@modules/user/application/handler/confirm-email.command.handler";
 import { CreateRoleCommandHandler } from "@modules/user/application/handler/create-role.command.handler";
 import { CreateUserCommandHandler } from "@modules/user/application/handler/create-user.command.handler";
@@ -90,6 +91,7 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
     { provide: TRANSACTION, useExisting: DbTransaction },
     { provide: EMAIL_CONFIRMATION_TOKEN_SERVICE, useExisting: JwtEmailConfirmationTokenService },
     CreateUserCommandHandler,
+    ChangePasswordCommandHandler,
     ConfirmEmailCommandHandler,
     UserBlockedEventHandler,
     UserCreatedEventHandler,

@@ -13,6 +13,30 @@ import { ExceptionResponse } from "@shared/presentation/exception/responses/exce
 
 const EXAMPLE_USER_ID = "00000000-0000-4000-8000-000000000000";
 
+export const ApiInvalidOldPasswordResponse = () =>
+  applyDecorators(
+    ApiBadRequestResponse({
+      description: "Old password is incorrect",
+      type: ExceptionResponse,
+      example: {
+        status: HttpStatus.BadRequest,
+        code: "INVALID_OLD_PASSWORD",
+        message: "Old password is incorrect",
+        path: "/users/me/password",
+        timestamp: EXAMPLE_TIMESTAMP,
+      },
+    })
+  );
+
+export const ApiChangePasswordValidationFailedResponse = () =>
+  ApiValidationFailedResponseFactory(
+    [
+      { field: "oldPassword", code: "TOO_SHORT", message: "oldPassword must be longer than or equal to 1 characters" },
+      { field: "newPassword", code: "TOO_LONG", message: "newPassword must be shorter than or equal to 72 characters" },
+    ],
+    "/users/me/password"
+  );
+
 const CREATE_FIELD_ERRORS: FieldError[] = [
   { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
   {
