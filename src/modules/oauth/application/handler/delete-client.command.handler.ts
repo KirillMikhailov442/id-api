@@ -39,7 +39,6 @@ export class DeleteClientCommandHandler implements ICommandHandler<DeleteClientC
     assertClientAccess(client, command.requester);
     await this.transaction.run(async (context) => {
       await context.clientScopeRepository.deleteByClientId(client.getId());
-      await context.locationRepository.deleteByClientId(client.getId());
       await context.clientRepository.delete(client.getId());
     });
     this.eventBus.publish(new ClientDeletedEvent(client.getId(), client.getUserId()));

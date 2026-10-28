@@ -23,29 +23,21 @@ import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
 import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
 import { PaginationResponse } from "@shared/presentation/response/pagination.response";
 
-import { AddLocationCommand } from "@modules/oauth/application/command/add-location.command";
 import { AssignScopesCommand } from "@modules/oauth/application/command/assign-scopes.command";
 import { CreateClientCommand } from "@modules/oauth/application/command/create-client.command";
 import { DeleteClientCommand } from "@modules/oauth/application/command/delete-client.command";
-import { RemoveLocationCommand } from "@modules/oauth/application/command/remove-location.command";
 import { UnassignScopeCommand } from "@modules/oauth/application/command/unassign-scope.command";
 import { UpdateClientCommand } from "@modules/oauth/application/command/update-client.command";
-import type { CreateClientResult } from "@modules/oauth/application/handler/create-client.command.handler";
-import { GetClientLocationsQuery } from "@modules/oauth/application/query/get-client-locations.query";
 import { GetClientQuery } from "@modules/oauth/application/query/get-client.query";
 import { ListAllClientsQuery } from "@modules/oauth/application/query/list-all-clients.query";
 import { ListClientScopesQuery } from "@modules/oauth/application/query/list-client-scopes.query";
 import { ListClientsQuery } from "@modules/oauth/application/query/list-clients.query";
 import type { Requester } from "@modules/oauth/application/requester.type";
 import type { Client } from "@modules/oauth/domain/entity/client";
-import type { Location } from "@modules/oauth/domain/entity/location";
 import type { Scope } from "@modules/oauth/domain/entity/scope";
-import { AddLocationRequest } from "@modules/oauth/presentation/dto/v1/add-location.request";
 import { AssignScopesRequest } from "@modules/oauth/presentation/dto/v1/assign-scopes.request";
-import { ClientLocationDto } from "@modules/oauth/presentation/dto/v1/client-location.dto";
 import { ClientDto } from "@modules/oauth/presentation/dto/v1/client.dto";
 import { CreateClientRequest } from "@modules/oauth/presentation/dto/v1/create-client.request";
-import { CreateClientResponse } from "@modules/oauth/presentation/dto/v1/create-client.response";
 import { ScopeDto } from "@modules/oauth/presentation/dto/v1/scope.dto";
 import { UpdateClientRequest } from "@modules/oauth/presentation/dto/v1/update-client.request";
 import {
@@ -55,9 +47,6 @@ import {
   ApiClientNotFoundResponse,
   ApiClientUpdateValidationFailedResponse,
   ApiInvalidClientIdResponse,
-  ApiInvalidLocationIdResponse,
-  ApiLocationNotFoundResponse,
-  ApiLocationValidationFailedResponse,
   ApiScopeNotAssignedResponse,
   ApiScopeNotFoundResponse,
   ApiScopesValidationFailedResponse,
@@ -91,7 +80,7 @@ export class ClientController {
   @Post()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiAuthenticatedResponse()
-  @ApiCreatedResponse({ type: CreateClientResponse, description: "Client created with optional locations" })
+  @ApiCreatedResponse({ type: ClientDto, description: "Client created" })
   @ApiClientCreateValidationFailedResponse()
   @ApiUnexpectedErrorResponse()
   async create(
@@ -99,13 +88,10 @@ export class ClientController {
     currentUser: AuthenticatedUser,
     @Body()
     request: CreateClientRequest
-  ): Promise<CreateClientResponse> {
-    const command = new CreateClientCommand(toRequester(currentUser), request.name, request.secret, request.locations);
-    const { client, locations } = await this.commandBus.execute<CreateClientCommand, CreateClientResult>(command);
-    return new CreateClientResponse(
-      ClientDto.fromDomain(client),
-      locations.map((location) => ClientLocationDto.fromDomain(location))
-    );
+  ): Promise<ClientDto> {
+    const command = new CreateClientCommand(toRequester(currentUser), request.name, request.secret, request.location);
+    const client = await this.commandBus.execute<CreateClientCommand, Client>(command);
+    return ClientDto.fromDomain(client);
   }
 
   @Get()
@@ -190,7 +176,13 @@ export class ClientController {
     @Body()
     request: UpdateClientRequest
   ): Promise<ClientDto> {
-    const command = new UpdateClientCommand(toRequester(currentUser), id, request.name, request.isActive);
+    const command = new UpdateClientCommand(
+      toRequester(currentUser),
+      id,
+      request.name,
+      request.isActive,
+      request.location
+    );
     const client = await this.commandBus.execute<UpdateClientCommand, Client>(command);
     return ClientDto.fromDomain(client);
   }
@@ -209,66 +201,6 @@ export class ClientController {
     id: string
   ): Promise<void> {
     await this.commandBus.execute<DeleteClientCommand, Client>(new DeleteClientCommand(toRequester(currentUser), id));
-  }
-
-  @Get(":id/locations")
-  @ApiAuthenticatedResponse()
-  @ApiOkResponse({ type: [ClientLocationDto], description: "Client locations" })
-  @ApiInvalidClientIdResponse()
-  @ApiClientNotFoundResponse()
-  @ApiUnexpectedErrorResponse()
-  async listLocations(
-    @CurrentUser()
-    currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe)
-    id: string
-  ): Promise<ClientLocationDto[]> {
-    const locations = await this.queryBus.execute<GetClientLocationsQuery, Location[]>(
-      new GetClientLocationsQuery(toRequester(currentUser), id)
-    );
-    return locations.map((location) => ClientLocationDto.fromDomain(location));
-  }
-
-  @Post(":id/locations")
-  @ApiAuthenticatedResponse()
-  @ApiCreatedResponse({ type: ClientLocationDto, description: "Location added" })
-  @ApiInvalidClientIdResponse()
-  @ApiClientNotFoundResponse()
-  @ApiLocationValidationFailedResponse()
-  @ApiUnexpectedErrorResponse()
-  async addLocation(
-    @CurrentUser()
-    currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe)
-    id: string,
-    @Body()
-    request: AddLocationRequest
-  ): Promise<ClientLocationDto> {
-    const command = new AddLocationCommand(toRequester(currentUser), id, request.href);
-    const location = await this.commandBus.execute<AddLocationCommand, Location>(command);
-    return ClientLocationDto.fromDomain(location);
-  }
-
-  @Delete(":id/locations/:locationId")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiAuthenticatedResponse()
-  @ApiNoContentResponse({ description: "Location removed" })
-  @ApiInvalidClientIdResponse()
-  @ApiInvalidLocationIdResponse()
-  @ApiClientNotFoundResponse()
-  @ApiLocationNotFoundResponse()
-  @ApiUnexpectedErrorResponse()
-  async removeLocation(
-    @CurrentUser()
-    currentUser: AuthenticatedUser,
-    @Param("id", ParseUUIDPipe)
-    id: string,
-    @Param("locationId", ParseUUIDPipe)
-    locationId: string
-  ): Promise<void> {
-    await this.commandBus.execute<RemoveLocationCommand, void>(
-      new RemoveLocationCommand(toRequester(currentUser), id, locationId)
-    );
   }
 
   @Get(":id/scopes")

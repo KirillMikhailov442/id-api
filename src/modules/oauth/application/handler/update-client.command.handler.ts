@@ -7,6 +7,7 @@ import type { IClientRepository } from "@modules/oauth/application/port/client-r
 import type { Client } from "@modules/oauth/domain/entity/client";
 import { ClientNotFoundException } from "@modules/oauth/domain/exception/client-not-found.exception";
 import { ClientName } from "@modules/oauth/domain/value-object/client-name.value-object";
+import { LocationHref } from "@modules/oauth/domain/value-object/location-href.value-object";
 import { CLIENT_REPOSITORY } from "@modules/oauth/oauth.tokens";
 
 @CommandHandler(UpdateClientCommand)
@@ -31,6 +32,10 @@ export class UpdateClientCommandHandler implements ICommandHandler<UpdateClientC
 
     if (command.name !== undefined) {
       client.updateName(new ClientName(command.name));
+    }
+
+    if (command.location !== undefined) {
+      client.updateLocation(new LocationHref(command.location));
     }
 
     if (command.isActive === true) {

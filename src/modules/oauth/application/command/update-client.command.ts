@@ -5,11 +5,13 @@ export class UpdateClientCommand {
   public readonly clientId: string;
   public readonly name?: string;
   public readonly isActive?: boolean;
+  public readonly location?: string;
 
-  constructor(requester: Requester, clientId: string, name?: string, isActive?: boolean) {
+  constructor(requester: Requester, clientId: string, name?: string, isActive?: boolean, location?: string) {
     this.requester = requester;
     this.clientId = clientId;
     this.name = name;
     this.isActive = isActive;
+    this.location = location;
   }
 }

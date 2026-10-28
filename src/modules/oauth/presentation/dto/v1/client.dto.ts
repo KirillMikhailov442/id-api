@@ -11,6 +11,8 @@ export class ClientDto {
   userId: string;
   @ApiProperty({ minLength: 2, maxLength: 64, example: "pet-dashboard" })
   name: string;
+  @ApiProperty({ type: String, nullable: true, example: "https://pet-dashboard.example.com/auth/callback" })
+  location: string | null;
   @ApiProperty({ example: true })
   isActive: boolean;
   @ApiProperty({ format: "date-time", example: "2026-10-21T09:00:00.000Z" })
@@ -22,6 +24,7 @@ export class ClientDto {
     dto.id = client.getId();
     dto.userId = client.getUserId();
     dto.name = client.getName().getValue();
+    dto.location = client.getLocation()?.getValue() ?? null;
     dto.isActive = client.getIsActive();
     dto.createdAt = client.getCreatedAt().toISOString();
 

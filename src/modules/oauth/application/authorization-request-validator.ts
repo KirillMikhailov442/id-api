@@ -2,7 +2,6 @@ import { Inject, Injectable } from "@nestjs/common";
 
 import type { IClientRepository } from "@modules/oauth/application/port/client-repository.type";
 import type { IClientScopeRepository } from "@modules/oauth/application/port/client-scope-repository.type";
-import type { ILocationRepository } from "@modules/oauth/application/port/location-repository.type";
 import type { IScopeRepository } from "@modules/oauth/application/port/scope-repository.type";
 import type { Client } from "@modules/oauth/domain/entity/client";
 import { AuthorizationScopesNotAllowedException } from "@modules/oauth/domain/exception/authorization-scopes-not-allowed.exception";
@@ -11,32 +10,23 @@ import { ClientNotFoundException } from "@modules/oauth/domain/exception/client-
 import { RedirectUriNotAllowedException } from "@modules/oauth/domain/exception/redirect-uri-not-allowed.exception";
 import { CodeScopes } from "@modules/oauth/domain/value-object/code-scopes.value-object";
 import { RedirectUri } from "@modules/oauth/domain/value-object/redirect-uri.value-object";
-import {
-  CLIENT_REPOSITORY,
-  CLIENT_SCOPE_REPOSITORY,
-  LOCATION_REPOSITORY,
-  SCOPE_REPOSITORY,
-} from "@modules/oauth/oauth.tokens";
+import { CLIENT_REPOSITORY, CLIENT_SCOPE_REPOSITORY, SCOPE_REPOSITORY } from "@modules/oauth/oauth.tokens";
 
 @Injectable()
 export class AuthorizationRequestValidator {
   private readonly clientRepository: IClientRepository;
-  private readonly locationRepository: ILocationRepository;
   private readonly clientScopeRepository: IClientScopeRepository;
   private readonly scopeRepository: IScopeRepository;
 
   constructor(
     @Inject(CLIENT_REPOSITORY)
     clientRepository: IClientRepository,
-    @Inject(LOCATION_REPOSITORY)
-    locationRepository: ILocationRepository,
     @Inject(CLIENT_SCOPE_REPOSITORY)
     clientScopeRepository: IClientScopeRepository,
     @Inject(SCOPE_REPOSITORY)
     scopeRepository: IScopeRepository
   ) {
     this.clientRepository = clientRepository;
-    this.locationRepository = locationRepository;
     this.clientScopeRepository = clientScopeRepository;
     this.scopeRepository = scopeRepository;
   }
@@ -53,9 +43,8 @@ export class AuthorizationRequestValidator {
     }
 
     const redirectUriValue = new RedirectUri(redirectUri).getValue();
-    const locations = await this.locationRepository.findByClientId(client.getId());
 
-    if (!locations.some((location) => location.getHref().getValue() === redirectUriValue)) {
+    if (client.getLocation()?.getValue() !== redirectUriValue) {
       throw new RedirectUriNotAllowedException();
     }
 

@@ -15,8 +15,6 @@ import { ExceptionResponse } from "@shared/presentation/exception/responses/exce
 
 const EXAMPLE_CLIENT_ID = "00000000-0000-4000-8000-000000000000";
 
-const EXAMPLE_LOCATION_ID = "00000000-0000-4000-8000-000000000001";
-
 export const ApiClientNotFoundResponse = () =>
   applyDecorators(
     ApiNotFoundResponse({
@@ -64,20 +62,6 @@ export const ApiClientAlreadyInactiveResponse = () =>
         "CLIENT_ALREADY_INACTIVE",
         "Client is already inactive",
         `/clients/${EXAMPLE_CLIENT_ID}`
-      ),
-    })
-  );
-
-export const ApiLocationNotFoundResponse = () =>
-  applyDecorators(
-    ApiNotFoundResponse({
-      description: "Location does not exist or belongs to another client",
-      type: ExceptionResponse,
-      example: responseExample(
-        HttpStatus.NotFound,
-        "LOCATION_NOT_FOUND",
-        "Location not found",
-        `/clients/${EXAMPLE_CLIENT_ID}/locations/${EXAMPLE_LOCATION_ID}`
       ),
     })
   );
@@ -137,21 +121,13 @@ export const ApiClientCreateValidationFailedResponse = () =>
   ApiValidationFailedResponse([
     { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
     { field: "secret", code: "TOO_SHORT", message: "secret must be longer than or equal to 12 characters" },
-    { field: "locations", code: "TOO_MANY_ITEMS", message: "locations must contain no more than 3 elements" },
+    { field: "location", code: "INVALID_FORMAT", message: "location must be a valid absolute URI" },
   ]);
 
 export const ApiClientUpdateValidationFailedResponse = () =>
   ApiValidationFailedResponse([
+    { field: "location", code: "INVALID_FORMAT", message: "location must be a valid absolute URI" },
     { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
-  ]);
-
-export const ApiLocationValidationFailedResponse = () =>
-  ApiValidationFailedResponse([
-    {
-      field: "href",
-      code: "INVALID_FORMAT",
-      message: "href must match /^[a-zA-Z][a-zA-Z0-9+.-]*:\\S+$/ regular expression",
-    },
   ]);
 
 export const ApiScopesValidationFailedResponse = () =>
@@ -284,20 +260,6 @@ export const ApiInvalidClientIdResponse = () =>
         "BAD_REQUEST",
         "Validation failed (uuid is expected)",
         "/clients/not-a-uuid"
-      ),
-    })
-  );
-
-export const ApiInvalidLocationIdResponse = () =>
-  applyDecorators(
-    ApiBadRequestResponse({
-      description: "Location identifier is not a valid uuid",
-      type: ExceptionResponse,
-      example: responseExample(
-        HttpStatus.BadRequest,
-        "BAD_REQUEST",
-        "Validation failed (uuid is expected)",
-        `/clients/${EXAMPLE_CLIENT_ID}/locations/not-a-uuid`
       ),
     })
   );

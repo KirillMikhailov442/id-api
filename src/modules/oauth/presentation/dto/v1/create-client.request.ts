@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ArrayMaxSize, IsArray, IsOptional, IsString, Length, Matches, MaxLength, MinLength } from "class-validator";
+import { IsString, Matches, MaxLength, MinLength, ValidateIf } from "class-validator";
 
 import {
   MAX_LENGTH as NAME_MAX_LENGTH,
@@ -14,8 +14,6 @@ import {
   LOCATION_HREF_PATTERN,
 } from "@modules/oauth/domain/value-object/location-href.value-object";
 
-const MAX_LOCATIONS_PER_CLIENT = 3;
-
 export class CreateClientRequest {
   @ApiProperty({ minLength: NAME_MIN_LENGTH, maxLength: NAME_MAX_LENGTH, example: "pet-dashboard" })
   @IsString()
@@ -28,17 +26,14 @@ export class CreateClientRequest {
   @MaxLength(SECRET_MAX_LENGTH)
   secret: string;
   @ApiPropertyOptional({
-    type: [String],
-    maxItems: MAX_LOCATIONS_PER_CLIENT,
-    items: { maxLength: LOCATION_HREF_MAX_LENGTH },
-    example: ["https://pet-dashboard.example.com/auth/callback"],
-    description: "Optional client locations, up to 3",
+    type: String,
+    maxLength: LOCATION_HREF_MAX_LENGTH,
+    example: "https://pet-dashboard.example.com/auth/callback",
+    description: "Client callback URI",
   })
-  @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(MAX_LOCATIONS_PER_CLIENT)
-  @IsString({ each: true })
-  @Length(1, LOCATION_HREF_MAX_LENGTH, { each: true })
-  @Matches(LOCATION_HREF_PATTERN, { each: true })
-  locations?: string[];
+  @ValidateIf((_request: unknown, value: unknown) => value !== undefined)
+  @IsString()
+  @MaxLength(LOCATION_HREF_MAX_LENGTH)
+  @Matches(LOCATION_HREF_PATTERN)
+  location?: string;
 }

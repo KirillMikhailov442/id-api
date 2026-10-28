@@ -1,5 +1,6 @@
 import { Client } from "@modules/oauth/domain/entity/client";
 import { ClientName } from "@modules/oauth/domain/value-object/client-name.value-object";
+import { LocationHref } from "@modules/oauth/domain/value-object/location-href.value-object";
 import { DbClient } from "@modules/oauth/infrastructure/entity/db-client.entity";
 
 export class ClientMapper {
@@ -10,7 +11,8 @@ export class ClientMapper {
       new ClientName(dbClient.name),
       dbClient.secretHash,
       dbClient.isActive,
-      dbClient.createdAt
+      dbClient.createdAt,
+      dbClient.location === null ? null : new LocationHref(dbClient.location)
     );
   }
 
@@ -20,6 +22,7 @@ export class ClientMapper {
     dbClient.id = client.getId();
     dbClient.userId = client.getUserId();
     dbClient.name = client.getName().getValue();
+    dbClient.location = client.getLocation()?.getValue() ?? null;
     dbClient.secretHash = client.getSecretHash();
     dbClient.isActive = client.getIsActive();
     dbClient.createdAt = client.getCreatedAt();

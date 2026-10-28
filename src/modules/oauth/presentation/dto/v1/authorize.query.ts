@@ -21,7 +21,7 @@ export class AuthorizeQuery {
     maxLength: REDIRECT_URI_MAX_LENGTH,
     example: "https://pet-dashboard.example.com/auth/callback",
     pattern: REDIRECT_URI_PATTERN.source,
-    description: "Must match one of the client locations",
+    description: "Must match the client location",
   })
   @IsString()
   @Length(1, REDIRECT_URI_MAX_LENGTH)
