@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { CommandBus } from "@nestjs/cqrs";
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import { DeviceInfoParser } from "@shared/infrastructure/device/device-info-parser";
 import { Public } from "@shared/presentation/auth/public.decorator";
 import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/presentation/auth/refresh-cookie.options";
 import type { Request, Response } from "express";
@@ -28,10 +29,12 @@ const UNKNOWN_VALUE = "unknown";
 export class AuthController {
   private readonly commandBus: CommandBus;
   private readonly configService: ConfigService;
+  private readonly deviceInfoParser: DeviceInfoParser;
 
-  constructor(commandBus: CommandBus, configService: ConfigService) {
+  constructor(commandBus: CommandBus, configService: ConfigService, deviceInfoParser: DeviceInfoParser) {
     this.commandBus = commandBus;
     this.configService = configService;
+    this.deviceInfoParser = deviceInfoParser;
   }
 
   @Public()
@@ -55,7 +58,7 @@ export class AuthController {
     const command = new LoginCommand(
       request.email,
       request.password,
-      httpRequest.headers["user-agent"] ?? UNKNOWN_VALUE,
+      this.deviceInfoParser.parse(httpRequest.headers),
       httpRequest.ip ?? UNKNOWN_VALUE
     );
     const result = await this.commandBus.execute<LoginCommand, LoginResult>(command);
@@ -87,7 +90,7 @@ export class AuthController {
     const result = await this.commandBus.execute<RefreshCommand, RefreshResult>(
       new RefreshCommand(
         refreshToken,
-        httpRequest.headers["user-agent"] ?? UNKNOWN_VALUE,
+        this.deviceInfoParser.parse(httpRequest.headers),
         httpRequest.ip ?? UNKNOWN_VALUE
       )
     );

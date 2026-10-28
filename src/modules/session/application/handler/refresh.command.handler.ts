@@ -10,7 +10,6 @@ import { Session } from "@modules/session/domain/entity/session";
 import { InvalidRefreshTokenException } from "@modules/session/domain/exception/invalid-refresh-token.exception";
 import { UserBlockedException } from "@modules/session/domain/exception/user-blocked.exception";
 import { Ip } from "@modules/session/domain/value-object/ip.value-object";
-import { UserAgent } from "@modules/session/domain/value-object/user-agent.value-object";
 import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
 import { UserBlockedStatus } from "@modules/user/domain/enum/user-blocked-status.enum";
 import {
@@ -80,7 +79,7 @@ export class RefreshCommandHandler implements ICommandHandler<RefreshCommand, Re
     const rotatedSession = Session.create({
       userId: user.getId(),
       refreshHash: this.refreshTokenService.hash(refreshToken),
-      userAgent: new UserAgent(command.userAgent),
+      deviceInfo: command.deviceInfo,
       ip: new Ip(command.ip),
       expiresAt: new Date(Date.now() + ttlSeconds * MS_PER_SECOND),
       familyId: session.getFamilyId(),

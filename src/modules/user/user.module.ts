@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { DeviceInfoModule } from "@shared/infrastructure/device/device-info.module";
 import { MailService } from "@shared/infrastructure/mail/mail.service";
 import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
 
@@ -62,6 +63,7 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
 
 @Module({
   imports: [
+    DeviceInfoModule,
     TypeOrmModule.forFeature([DbUser, DbRole, DbUserRole]),
     JwtModule.registerAsync({
       inject: [ConfigService],

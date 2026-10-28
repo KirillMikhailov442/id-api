@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { DeviceInfoModule } from "@shared/infrastructure/device/device-info.module";
 
 import { LoginCommandHandler } from "@modules/session/application/handler/login.command.handler";
 import { LogoutAllCommandHandler } from "@modules/session/application/handler/logout-all.command.handler";
@@ -22,6 +23,7 @@ export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modul
 
 @Module({
   imports: [
+    DeviceInfoModule,
     UserModule,
     TypeOrmModule.forFeature([DbSession]),
     JwtModule.registerAsync({

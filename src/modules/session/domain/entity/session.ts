@@ -1,15 +1,15 @@
 import { randomUUID } from "node:crypto";
+import type { DeviceInfo } from "@shared/domain/device-info";
 
 import { SessionAlreadyRevokedException } from "@modules/session/domain/exception/session-already-revoked.exception";
 import type { Ip } from "@modules/session/domain/value-object/ip.value-object";
 import type { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
-import type { UserAgent } from "@modules/session/domain/value-object/user-agent.value-object";
 
 export class Session {
   private readonly id: string;
   private readonly userId: string;
   private readonly refreshHash: RefreshHash;
-  private readonly userAgent: UserAgent;
+  private readonly deviceInfo: DeviceInfo;
   private readonly ip: Ip;
   private readonly createdAt: Date;
   private readonly expiresAt: Date;
@@ -20,7 +20,7 @@ export class Session {
     id: string,
     userId: string,
     refreshHash: RefreshHash,
-    userAgent: UserAgent,
+    deviceInfo: DeviceInfo,
     ip: Ip,
     createdAt: Date,
     expiresAt: Date,
@@ -30,7 +30,7 @@ export class Session {
     this.id = id;
     this.userId = userId;
     this.refreshHash = refreshHash;
-    this.userAgent = userAgent;
+    this.deviceInfo = deviceInfo;
     this.ip = ip;
     this.createdAt = createdAt;
     this.expiresAt = expiresAt;
@@ -41,7 +41,7 @@ export class Session {
   static create(params: {
     userId: string;
     refreshHash: RefreshHash;
-    userAgent: UserAgent;
+    deviceInfo: DeviceInfo;
     ip: Ip;
     expiresAt: Date;
     familyId?: string;
@@ -50,7 +50,7 @@ export class Session {
       randomUUID(),
       params.userId,
       params.refreshHash,
-      params.userAgent,
+      params.deviceInfo,
       params.ip,
       new Date(),
       params.expiresAt,
@@ -71,8 +71,8 @@ export class Session {
     return this.refreshHash;
   }
 
-  getUserAgent(): UserAgent {
-    return this.userAgent;
+  getDeviceInfo(): DeviceInfo {
+    return this.deviceInfo;
   }
 
   getIp(): Ip {

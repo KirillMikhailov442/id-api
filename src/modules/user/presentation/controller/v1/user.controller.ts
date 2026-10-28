@@ -18,6 +18,7 @@ import { ConfigService } from "@nestjs/config";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import { DeviceInfoParser } from "@shared/infrastructure/device/device-info-parser";
 import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
 import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
 import { Public } from "@shared/presentation/auth/public.decorator";
@@ -72,11 +73,18 @@ export class UserController {
   private readonly commandBus: CommandBus;
   private readonly queryBus: QueryBus;
   private readonly configService: ConfigService;
+  private readonly deviceInfoParser: DeviceInfoParser;
 
-  constructor(commandBus: CommandBus, queryBus: QueryBus, configService: ConfigService) {
+  constructor(
+    commandBus: CommandBus,
+    queryBus: QueryBus,
+    configService: ConfigService,
+    deviceInfoParser: DeviceInfoParser
+  ) {
     this.commandBus = commandBus;
     this.queryBus = queryBus;
     this.configService = configService;
+    this.deviceInfoParser = deviceInfoParser;
   }
 
   @Public()
@@ -102,7 +110,7 @@ export class UserController {
     const loginCommand = new LoginCommand(
       request.email,
       request.password,
-      httpRequest.headers["user-agent"] ?? UNKNOWN_VALUE,
+      this.deviceInfoParser.parse(httpRequest.headers),
       httpRequest.ip ?? UNKNOWN_VALUE
     );
     const result = await this.commandBus.execute<LoginCommand, LoginResult>(loginCommand);

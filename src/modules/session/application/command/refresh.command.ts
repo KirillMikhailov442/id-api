@@ -1,11 +1,13 @@
+import type { DeviceInfo } from "@shared/domain/device-info";
+
 export class RefreshCommand {
   readonly refreshToken: string;
-  readonly userAgent: string;
+  readonly deviceInfo: DeviceInfo;
   readonly ip: string;
 
-  constructor(refreshToken: string, userAgent: string, ip: string) {
+  constructor(refreshToken: string, deviceInfo: DeviceInfo, ip: string) {
     this.refreshToken = refreshToken;
-    this.userAgent = userAgent;
+    this.deviceInfo = deviceInfo;
     this.ip = ip;
   }
 }
