@@ -5,6 +5,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { DeviceInfoModule } from "@shared/infrastructure/device/device-info.module";
 
+import { ListActiveSessionsQueryHandler } from "@modules/session/application/handler/list-active-sessions.query.handler";
 import { LoginCommandHandler } from "@modules/session/application/handler/login.command.handler";
 import { LogoutAllCommandHandler } from "@modules/session/application/handler/logout-all.command.handler";
 import { LogoutCommandHandler } from "@modules/session/application/handler/logout.command.handler";
@@ -14,6 +15,7 @@ import { DbSessionRepository } from "@modules/session/infrastructure/repository/
 import { CryptoRefreshTokenService } from "@modules/session/infrastructure/security/crypto-refresh-token-service";
 import { JwtTokenService } from "@modules/session/infrastructure/security/jwt-token-service";
 import { AuthController } from "@modules/session/presentation/controller/v1/auth.controller";
+import { SessionController } from "@modules/session/presentation/controller/v1/session.controller";
 import { JwtAuthGuard } from "@modules/session/presentation/guard/jwt-auth/jwt-auth.guard";
 import { RolesGuard } from "@modules/session/presentation/guard/roles/roles.guard";
 import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
@@ -33,7 +35,7 @@ export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modul
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, SessionController],
   providers: [
     DbSessionRepository,
     JwtTokenService,
@@ -41,6 +43,7 @@ export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modul
     { provide: SESSION_REPOSITORY, useExisting: DbSessionRepository },
     { provide: TOKEN_SERVICE, useExisting: JwtTokenService },
     { provide: REFRESH_TOKEN_SERVICE, useExisting: CryptoRefreshTokenService },
+    ListActiveSessionsQueryHandler,
     LoginCommandHandler,
     LogoutCommandHandler,
     LogoutAllCommandHandler,

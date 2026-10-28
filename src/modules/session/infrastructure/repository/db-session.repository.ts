@@ -1,5 +1,5 @@
 import { InjectRepository } from "@nestjs/typeorm";
-import { IsNull, type Repository } from "typeorm";
+import { IsNull, MoreThan, type Repository } from "typeorm";
 
 import type { ISessionRepository } from "@modules/session/application/port/session-repository";
 import type { Session } from "@modules/session/domain/entity/session";
@@ -35,6 +35,15 @@ export class DbSessionRepository implements ISessionRepository {
       order: { createdAt: "DESC" },
     });
     return dbSessions.map(SessionMapper.toDomain);
+  }
+
+  async findActiveByUserId(userId: string): Promise<Session[]> {
+    const dbSessions = await this.sessionRepository.find({
+      where: { userId, revokedAt: IsNull(), expiresAt: MoreThan(new Date()) },
+      order: { lastUsedAt: "DESC", createdAt: "DESC", id: "DESC" },
+    });
+
+    return dbSessions.map((dbSession) => SessionMapper.toDomain(dbSession));
   }
 
   async rotate(session: Session, expectedRefreshHash: RefreshHash): Promise<boolean> {
