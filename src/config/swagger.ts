@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { INestApplication } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import { DocumentBuilder, SwaggerModule, type SwaggerCustomOptions } from "@nestjs/swagger";
@@ -8,7 +10,7 @@ export function setupSwagger(app: INestApplication, configService: ConfigService
   const path = configService.get<string>("SWAGGER_PATH") ?? SWAGGER_DEFAULT_PATH;
 
   const documentConfig = new DocumentBuilder()
-    .setTitle("id-api")
+    .setTitle("Mikh SSO API")
     .setDescription("SSO service for centralized user registration, authentication and account management")
     .setVersion("1.0")
     .addBearerAuth()
@@ -17,7 +19,8 @@ export function setupSwagger(app: INestApplication, configService: ConfigService
   const document = SwaggerModule.createDocument(app, documentConfig);
 
   const customOptions: SwaggerCustomOptions = {
-    customSiteTitle: "id-api — API Docs",
+    customSiteTitle: "Mikh SSO API — API Docs",
+    customfavIcon: `data:image/svg+xml;base64,${readFileSync(join(__dirname, "assets/favicon.svg")).toString("base64")}`,
   };
 
   SwaggerModule.setup(path, app, document, customOptions);
