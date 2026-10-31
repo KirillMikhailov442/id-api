@@ -18,8 +18,7 @@
     "start:dev": "cross-env NODE_ENV=development concurrently \"nest start --watch\" \"tsc-alias --watch -p tsconfig.build.json\"",
     "start:debug": "cross-env NODE_ENV=development concurrently \"nest start --debug --watch\" \"tsc-alias --watch -p tsconfig.build.json\"",
     "start:prod": "mkdir -p logs && cross-env NODE_ENV=production NO_COLOR=1 node dist/main >> logs/app.log 2>&1",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint . --fix",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
     "test:cov": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage",
@@ -28,8 +27,7 @@
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
     "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate src/migrations/AutoMigration -p -d src/config/database.ts",
     "migration:run": "tsx node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
-    "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d src/config/database.ts",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" eslint.config.mjs \"scripts/**/*.mjs\" --no-error-on-unmatched-pattern"
+    "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d src/config/database.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
