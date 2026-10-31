@@ -2,20 +2,17 @@ import { Inject, Injectable, type CanActivate, type ExecutionContext } from "@ne
 import { Reflector } from "@nestjs/core";
 import type { AuthenticatedRequest } from "@shared/auth/contract/authenticated-request.type";
 import { ROLES_KEY } from "@shared/auth/decorator/roles.decorator";
+import { AccessTokenType } from "@shared/auth/enum/access-token-type.enum";
+import { InvalidAccessTokenException } from "@shared/exception/auth/invalid-access-token.exception";
 
 import { InsufficientRoleException } from "@modules/session/domain/exception/insufficient-role.exception";
-import { InvalidAccessTokenException } from "@modules/session/domain/exception/invalid-access-token.exception";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  private readonly reflector: Reflector;
-
   constructor(
     @Inject(Reflector)
-    reflector: Reflector
-  ) {
-    this.reflector = reflector;
-  }
+    private readonly reflector: Reflector
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<string[] | undefined>(ROLES_KEY, [
@@ -27,13 +24,13 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const user = context.switchToHttp().getRequest<AuthenticatedRequest>().user;
+    const auth = context.switchToHttp().getRequest<AuthenticatedRequest>().auth;
 
-    if (user === undefined) {
+    if (auth === undefined) {
       throw new InvalidAccessTokenException();
     }
 
-    if (!requiredRoles.some((role) => user.roles.includes(role))) {
+    if (auth.type !== AccessTokenType.Session || !requiredRoles.some((role) => auth.roles.includes(role))) {
       throw new InsufficientRoleException();
     }
 

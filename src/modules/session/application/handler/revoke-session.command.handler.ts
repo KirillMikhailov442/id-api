@@ -4,25 +4,28 @@ import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 import { RevokeSessionCommand } from "@modules/session/application/command/revoke-session.command";
 import type { ISessionRepository } from "@modules/session/application/port/session-repository";
 import { SessionNotFoundException } from "@modules/session/domain/exception/session-not-found.exception";
+import { SessionId } from "@modules/session/session.ids";
 import { SESSION_REPOSITORY } from "@modules/session/session.tokens";
+import { UserId } from "@modules/user/user.ids";
 
 @CommandHandler(RevokeSessionCommand)
 @Injectable()
 export class RevokeSessionCommandHandler implements ICommandHandler<RevokeSessionCommand> {
-  private readonly sessionRepository: ISessionRepository;
-
   constructor(
     @Inject(SESSION_REPOSITORY)
-    sessionRepository: ISessionRepository
-  ) {
-    this.sessionRepository = sessionRepository;
-  }
+    private readonly sessionRepository: ISessionRepository
+  ) {}
 
   async execute(command: RevokeSessionCommand): Promise<void> {
-    const revoked = await this.sessionRepository.revokeByIdAndUserId(command.sessionId, command.userId, new Date());
+    const userId = UserId.from(command.userId);
+    const sessionId = SessionId.from(command.sessionId);
 
-    if (!revoked) {
-      throw new SessionNotFoundException();
-    }
+    await this.sessionRepository.withUserLock(userId, async (repository) => {
+      const revoked = await repository.revokeByIdAndUserId(sessionId, userId, new Date());
+
+      if (!revoked) {
+        throw new SessionNotFoundException();
+      }
+    });
   }
 }

@@ -1,17 +1,12 @@
-import type { DeviceInfo } from "@shared/domain/device-info";
+import type { DeviceInfo } from "@modules/session/application/device-info.type";
 
 export class LoginCommand {
-  public readonly email: string;
-  public readonly password: string;
-  public readonly deviceInfo: DeviceInfo;
-  public readonly ip: string;
-
-  constructor(email: string, password: string, deviceInfo: DeviceInfo, ip: string) {
-    this.email = email;
-    this.password = password;
-    this.deviceInfo = deviceInfo;
-    this.ip = ip;
-  }
+  constructor(
+    public readonly email: string,
+    public readonly password: string,
+    public readonly deviceInfo: DeviceInfo,
+    public readonly ip: string
+  ) {}
 }
 
 export interface LoginResult {

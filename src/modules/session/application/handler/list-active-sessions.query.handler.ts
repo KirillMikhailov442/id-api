@@ -5,20 +5,19 @@ import type { ISessionRepository } from "@modules/session/application/port/sessi
 import { ListActiveSessionsQuery } from "@modules/session/application/query/list-active-sessions.query";
 import type { Session } from "@modules/session/domain/entity/session";
 import { SESSION_REPOSITORY } from "@modules/session/session.tokens";
+import { UserId } from "@modules/user/user.ids";
 
 @QueryHandler(ListActiveSessionsQuery)
 @Injectable()
 export class ListActiveSessionsQueryHandler implements IQueryHandler<ListActiveSessionsQuery> {
-  private readonly sessionRepository: ISessionRepository;
-
   constructor(
     @Inject(SESSION_REPOSITORY)
-    sessionRepository: ISessionRepository
-  ) {
-    this.sessionRepository = sessionRepository;
-  }
+    private readonly sessionRepository: ISessionRepository
+  ) {}
 
   execute(query: ListActiveSessionsQuery): Promise<Session[]> {
-    return this.sessionRepository.findActiveByUserId(query.userId);
+    const userId = UserId.from(query.userId);
+
+    return this.sessionRepository.findActiveByUserId(userId);
   }
 }

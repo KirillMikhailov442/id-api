@@ -1,6 +1,6 @@
 import { ConfigModule } from "@nestjs/config";
 import { plainToInstance } from "class-transformer";
-import { IsIn, IsInt, IsString, Min, validateSync } from "class-validator";
+import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Min, validateSync } from "class-validator";
 
 class EnvironmentVariables {
   @IsInt()
@@ -65,6 +65,14 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   ID_TOKEN_TTL: number = 3600;
+  @IsString()
+  REDIS_URL: string = "redis://127.0.0.1:6379";
+  @IsInt()
+  @Min(1)
+  REDIS_CONNECT_TIMEOUT: number = 5000;
+  @IsInt()
+  @Min(1)
+  REDIS_COMMAND_TIMEOUT: number = 5000;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {

@@ -10,26 +10,37 @@ import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY } from "@modules/session/sess
 @CommandHandler(LogoutAllCommand)
 @Injectable()
 export class LogoutAllCommandHandler implements ICommandHandler<LogoutAllCommand> {
-  private readonly sessionRepository: ISessionRepository;
-  private readonly refreshTokenService: IRefreshTokenService;
-
   constructor(
     @Inject(SESSION_REPOSITORY)
-    sessionRepository: ISessionRepository,
+    private readonly sessionRepository: ISessionRepository,
     @Inject(REFRESH_TOKEN_SERVICE)
-    refreshTokenService: IRefreshTokenService
-  ) {
-    this.sessionRepository = sessionRepository;
-    this.refreshTokenService = refreshTokenService;
-  }
+    private readonly refreshTokenService: IRefreshTokenService
+  ) {}
 
   async execute(command: LogoutAllCommand): Promise<void> {
-    const session = await this.sessionRepository.findByRefreshHash(this.refreshTokenService.hash(command.refreshToken));
+    const refreshHash = this.refreshTokenService.hash(command.refreshToken);
+    const candidate = await this.sessionRepository.findByRefreshHash(refreshHash);
 
-    if (session === null || !session.isActive()) {
+    if (candidate === null) {
       throw new InvalidRefreshTokenException();
     }
 
-    await this.sessionRepository.revokeAllByUserId(session.getUserId(), new Date());
+    await this.sessionRepository.withUserLock(candidate.getUserId(), async (repository) => {
+      const session = await repository.findByRefreshHash(refreshHash);
+      const token = await repository.findRefreshToken(refreshHash);
+
+      if (
+        session === null ||
+        !session.isActive() ||
+        token === null ||
+        token.usedAt !== null ||
+        token.revokedAt !== null ||
+        token.expiresAt.getTime() <= Date.now()
+      ) {
+        throw new InvalidRefreshTokenException();
+      }
+
+      await repository.revokeAllByUserId(session.getUserId(), new Date());
+    });
   }
 }
