@@ -1,7 +1,3 @@
 export class ConfirmEmailCommand {
-  public readonly token: string;
-
-  constructor(token: string) {
-    this.token = token;
-  }
+  constructor(public readonly token: string) {}
 }

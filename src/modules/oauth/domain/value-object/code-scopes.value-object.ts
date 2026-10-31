@@ -1,21 +1,20 @@
-import { InvalidValueObjectException } from "@shared/domain/exception/invalid-value-object.exception";
-import type { IValueObject } from "@shared/domain/value-object.type";
+import { InvalidValueObjectException } from "@shared/exception/base/invalid-value-object.exception";
+import type { IValueObject } from "@shared/value-object/value-object.type";
 
-import {
-  MAX_LENGTH as SCOPE_NAME_MAX_LENGTH,
-  SCOPE_NAME_PATTERN,
-} from "@modules/oauth/domain/value-object/scope-name.value-object";
+import { SCOPE_NAME_MAX_LENGTH, SCOPE_NAME_PATTERN } from "@modules/oauth/domain/value-object/scope-name.value-object";
 
-export const MAX_LENGTH = 255;
-
+export const CODE_SCOPES_MAX_LENGTH = 255;
 export const SCOPE_SEPARATOR = " ";
-
 export const MIN_SCOPES_COUNT = 1;
 
 export class CodeScopes implements IValueObject<string> {
   readonly value: string;
 
   constructor(items: string[]) {
+    if (!Array.isArray(items) || items.some((item) => typeof item !== "string")) {
+      throw new InvalidValueObjectException("Scopes must be an array of strings");
+    }
+
     if (items.length < MIN_SCOPES_COUNT) {
       throw new InvalidValueObjectException(`Scopes must contain at least ${MIN_SCOPES_COUNT} scope`);
     }
@@ -32,8 +31,8 @@ export class CodeScopes implements IValueObject<string> {
 
     const joined = items.join(SCOPE_SEPARATOR);
 
-    if (joined.length > MAX_LENGTH) {
-      throw new InvalidValueObjectException(`Scopes must be at most ${MAX_LENGTH} characters`);
+    if (joined.length > CODE_SCOPES_MAX_LENGTH) {
+      throw new InvalidValueObjectException(`Scopes must be at most ${CODE_SCOPES_MAX_LENGTH} characters`);
     }
 
     this.value = joined;

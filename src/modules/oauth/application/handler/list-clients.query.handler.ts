@@ -5,27 +5,27 @@ import type { IClientRepository } from "@modules/oauth/application/port/client-r
 import { ListClientsQuery } from "@modules/oauth/application/query/list-clients.query";
 import type { Client } from "@modules/oauth/domain/entity/client";
 import { CLIENT_REPOSITORY } from "@modules/oauth/oauth.tokens";
+import { UserId } from "@modules/user/user.ids";
 
 @QueryHandler(ListClientsQuery)
 @Injectable()
 export class ListClientsQueryHandler implements IQueryHandler<ListClientsQuery> {
-  private readonly clientRepository: IClientRepository;
-
   constructor(
     @Inject(CLIENT_REPOSITORY)
-    clientRepository: IClientRepository
-  ) {
-    this.clientRepository = clientRepository;
-  }
+    private readonly clientRepository: IClientRepository
+  ) {}
 
   async execute(query: ListClientsQuery): Promise<{
     items: Client[];
     total: number;
   }> {
+    const requesterUserId = UserId.from(query.requester.userId);
+
     const [items, total] = await Promise.all([
-      this.clientRepository.findByUserId(query.requester.userId, { limit: query.limit, offset: query.offset }),
-      this.clientRepository.countByUserId(query.requester.userId),
+      this.clientRepository.findByUserId(requesterUserId, { limit: query.limit, offset: query.offset }),
+      this.clientRepository.countByUserId(requesterUserId),
     ]);
+
     return { items, total };
   }
 }

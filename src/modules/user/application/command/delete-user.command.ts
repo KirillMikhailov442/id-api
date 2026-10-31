@@ -1,7 +1,3 @@
 export class DeleteUserCommand {
-  public readonly userId: string;
-
-  constructor(userId: string) {
-    this.userId = userId;
-  }
+  constructor(public readonly userId: string) {}
 }

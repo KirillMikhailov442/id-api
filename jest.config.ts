@@ -22,6 +22,7 @@ const config: Config = {
     'src/**/*.(t|j)s',
     'libs/**/*.(t|j)s',
     'apps/**/*.(t|j)s',
+    '!src/**/*.spec-support.ts',
   ],
   coverageDirectory: './coverage',
   testEnvironment: 'node',

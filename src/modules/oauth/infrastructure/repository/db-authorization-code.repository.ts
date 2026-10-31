@@ -5,19 +5,16 @@ import type { IAuthorizationCodeRepository } from "@modules/oauth/application/po
 import type { AuthorizationCode } from "@modules/oauth/domain/entity/authorization-code";
 import { DbAuthorizationCode } from "@modules/oauth/infrastructure/entity/db-authorization-code.entity";
 import { AuthorizationCodeMapper } from "@modules/oauth/infrastructure/mapper/authorization-code.mapper";
+import { AuthorizationCodeId } from "@modules/oauth/oauth.ids";
 
 export class DbAuthorizationCodeRepository implements IAuthorizationCodeRepository {
-  private readonly repository: Repository<DbAuthorizationCode>;
-
   constructor(
     @InjectRepository(DbAuthorizationCode)
-    repository: Repository<DbAuthorizationCode>
-  ) {
-    this.repository = repository;
-  }
+    private readonly repository: Repository<DbAuthorizationCode>
+  ) {}
 
-  async findById(id: string): Promise<AuthorizationCode | null> {
-    const dbAuthorizationCode = await this.repository.findOneBy({ id });
+  async findById(id: AuthorizationCodeId): Promise<AuthorizationCode | null> {
+    const dbAuthorizationCode = await this.repository.findOneBy({ id: id.getValue() });
 
     if (dbAuthorizationCode === null) {
       return null;
@@ -40,7 +37,7 @@ export class DbAuthorizationCodeRepository implements IAuthorizationCodeReposito
     await this.repository.save(AuthorizationCodeMapper.toPersistence(authorizationCode));
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async delete(id: AuthorizationCodeId): Promise<void> {
+    await this.repository.delete(id.getValue());
   }
 }

@@ -1,54 +1,43 @@
-import { Logger, ValidationPipe, VersioningType } from "@nestjs/common";
+import { Logger, VersioningType } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
-import { validationExceptionFactory } from "@shared/presentation/exception/factories/validation-exception.factory";
-import { ExceptionFilter } from "@shared/presentation/exception/filters/exception.filter";
+import type { NestExpressApplication } from "@nestjs/platform-express";
+import { validationExceptionFactory } from "@shared/exception/factory/validation-exception.factory";
+import { ExceptionFilter } from "@shared/exception/filter/exception.filter";
 import cookieParser from "cookie-parser";
 
-import { setupSwagger } from "@config/swagger";
+import { setupCors } from "@config/cors";
+import { setupStaticAssets } from "@config/static";
+import { logSwaggerUrl, registerSwaggerControllers, setupSwagger } from "@config/swagger";
+import { setupGlobalPipes } from "@config/validation";
 
 import { AppModule } from "@app/app.module";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
-
-  app.enableVersioning({ type: VersioningType.URI });
-
   const globalPrefix = configService.getOrThrow<string>("API_GLOBAL_PREFIX");
-
-  if (globalPrefix.length > 0) {
-    app.setGlobalPrefix(globalPrefix);
-  }
-
+  const port = configService.getOrThrow<number>("PORT");
   const httpInstance = app.getHttpAdapter().getInstance() as { set: (setting: string, value: unknown) => void };
   httpInstance.set("trust proxy", 1);
 
+  app.setGlobalPrefix(globalPrefix);
+  app.enableVersioning({ type: VersioningType.URI });
+  app.useGlobalFilters(new ExceptionFilter());
   app.use(cookieParser());
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      exceptionFactory: validationExceptionFactory,
-    })
-  );
-
-  app.useGlobalFilters(new ExceptionFilter());
-
+  setupStaticAssets(app);
+  setupCors(app, configService);
+  registerSwaggerControllers();
   setupSwagger(app, configService);
+  setupGlobalPipes(app, validationExceptionFactory);
 
-  const port = configService.getOrThrow<number>("PORT");
-  await app.listen(port);
+  await app.listen(port, () => {
+    const logger = new Logger("Bootstrap");
+    logger.log(`Application started and is available at http://localhost:${port}`);
 
-  const logger = new Logger("Bootstrap");
-  logger.log(`Application started and is available at http://localhost:${port}`);
-  const swaggerPath = configService.get<string>("SWAGGER_PATH");
-
-  if (swaggerPath !== undefined && swaggerPath !== "") {
-    logger.log(`Swagger UI is available at http://localhost:${port}/${swaggerPath}`);
-  }
+    logSwaggerUrl(configService, logger);
+  });
 }
 
 void bootstrap();

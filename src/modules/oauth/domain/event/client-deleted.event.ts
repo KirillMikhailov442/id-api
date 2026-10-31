@@ -1,9 +1,9 @@
-export class ClientDeletedEvent {
-  public readonly clientId: string;
-  public readonly userId: string;
+import type { ClientId } from "@modules/oauth/oauth.ids";
+import type { UserId } from "@modules/user/user.ids";
 
-  constructor(clientId: string, userId: string) {
-    this.clientId = clientId;
-    this.userId = userId;
-  }
+export class ClientDeletedEvent {
+  constructor(
+    public readonly clientId: ClientId,
+    public readonly userId: UserId
+  ) {}
 }

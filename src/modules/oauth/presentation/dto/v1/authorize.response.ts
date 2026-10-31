@@ -1,24 +1,14 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-
-const EXAMPLE_CODE = "3Nc9XpQaB7vFk2mZr8Tq1wLd5yHn0JcVe6SbA2RfUiM";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class AuthorizeResponse {
   @ApiProperty({
-    description: "Redirect uri bound to the issued code, the web client must redirect the browser here",
-    example: "https://pet-dashboard.example.com/auth/callback",
+    description:
+      "Validated client callback URL with the authorization code and optional state; navigate the browser here",
+    example: "https://pet-dashboard.example.com/auth/callback?code=authorization-code&state=xyz",
   })
-  redirectUri: string;
-  @ApiProperty({ description: "Raw one-time authorization code, shown only once", example: EXAMPLE_CODE })
-  code: string;
-  @ApiPropertyOptional({ type: String, nullable: true, example: "xyz" })
-  state?: string | null;
-  @ApiProperty({ format: "date-time", example: "2026-10-21T09:10:00.000Z" })
-  expiresAt: string;
+  redirectUrl: string;
 
-  constructor(redirectUri: string, code: string, state: string | null | undefined, expiresAt: Date) {
-    this.redirectUri = redirectUri;
-    this.code = code;
-    this.state = state ?? null;
-    this.expiresAt = expiresAt.toISOString();
+  constructor(redirectUrl: string) {
+    this.redirectUrl = redirectUrl;
   }
 }

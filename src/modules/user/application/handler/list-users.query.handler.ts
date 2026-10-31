@@ -9,14 +9,10 @@ import { USER_REPOSITORY } from "@modules/user/user.tokens";
 @QueryHandler(ListUsersQuery)
 @Injectable()
 export class ListUsersQueryHandler implements IQueryHandler<ListUsersQuery> {
-  private readonly userRepository: IUserRepository;
-
   constructor(
     @Inject(USER_REPOSITORY)
-    userRepository: IUserRepository
-  ) {
-    this.userRepository = userRepository;
-  }
+    private readonly userRepository: IUserRepository
+  ) {}
 
   async execute(query: ListUsersQuery): Promise<{
     items: User[];
@@ -26,6 +22,7 @@ export class ListUsersQueryHandler implements IQueryHandler<ListUsersQuery> {
       this.userRepository.findAll({ limit: query.limit, offset: query.offset }),
       this.userRepository.count(),
     ]);
+
     return { items, total };
   }
 }

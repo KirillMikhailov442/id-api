@@ -1,13 +1,11 @@
-export class UserBlockedEvent {
-  public readonly userId: string;
-  public readonly email: string;
-  public readonly reason: string | undefined;
-  public readonly blockedAt: Date;
+import type { Email } from "@modules/user/domain/value-object/email.value-object";
+import type { UserId } from "@modules/user/user.ids";
 
-  constructor(userId: string, email: string, reason: string | undefined, blockedAt: Date) {
-    this.userId = userId;
-    this.email = email;
-    this.reason = reason;
-    this.blockedAt = blockedAt;
-  }
+export class UserBlockedEvent {
+  constructor(
+    public readonly userId: UserId,
+    public readonly email: Email,
+    public readonly reason: string | undefined,
+    public readonly blockedAt: Date
+  ) {}
 }

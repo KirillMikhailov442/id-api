@@ -9,14 +9,10 @@ import { CLIENT_REPOSITORY } from "@modules/oauth/oauth.tokens";
 @QueryHandler(ListAllClientsQuery)
 @Injectable()
 export class ListAllClientsQueryHandler implements IQueryHandler<ListAllClientsQuery> {
-  private readonly clientRepository: IClientRepository;
-
   constructor(
     @Inject(CLIENT_REPOSITORY)
-    clientRepository: IClientRepository
-  ) {
-    this.clientRepository = clientRepository;
-  }
+    private readonly clientRepository: IClientRepository
+  ) {}
 
   async execute(query: ListAllClientsQuery): Promise<{
     items: Client[];
@@ -26,6 +22,7 @@ export class ListAllClientsQueryHandler implements IQueryHandler<ListAllClientsQ
       this.clientRepository.findAll({ limit: query.limit, offset: query.offset }),
       this.clientRepository.count(),
     ]);
+
     return { items, total };
   }
 }

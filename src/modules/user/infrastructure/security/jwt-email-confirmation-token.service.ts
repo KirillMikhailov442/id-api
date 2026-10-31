@@ -1,6 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JsonWebTokenError, JwtService, NotBeforeError, TokenExpiredError } from "@nestjs/jwt";
+import {
+  JsonWebTokenError,
+  JwtService,
+  NotBeforeError,
+  TokenExpiredError,
+  type JwtSignOptions,
+  type JwtVerifyOptions,
+} from "@nestjs/jwt";
+import { AbstractJwtTokenService } from "@shared/security/abstract-jwt-token.service";
 
 import type {
   EmailConfirmationTokenPayload,
@@ -8,59 +16,44 @@ import type {
 } from "@modules/user/application/port/email-confirmation-token.port";
 import { InvalidEmailConfirmationTokenException } from "@modules/user/domain/exception/invalid-email-confirmation-token.exception";
 
-const AUDIENCE = "email-confirmation";
-
-const EMAIL_CONFIRM_TTL_KEY = "EMAIL_CONFIRM_TTL";
-
-const USER_ID_CLAIM = "sub";
-
-const EMAIL_CLAIM = "email";
-
-interface JwtClaims {
-  sub?: unknown;
-  email?: unknown;
-  exp?: number;
-  iat?: number;
-  iss?: string;
-  aud?: string | string[];
-}
-
 @Injectable()
-export class JwtEmailConfirmationTokenService implements IEmailConfirmationTokenService {
-  private readonly jwtService: JwtService;
-  private readonly configService: ConfigService;
+export class JwtEmailConfirmationTokenService
+  extends AbstractJwtTokenService<EmailConfirmationTokenPayload>
+  implements IEmailConfirmationTokenService
+{
+  readonly algorithm = "HS256" as const;
+  readonly audience = "email-confirmation";
 
   constructor(
     @Inject(JwtService)
     jwtService: JwtService,
     @Inject(ConfigService)
-    configService: ConfigService
+    private readonly configService: ConfigService
   ) {
-    this.jwtService = jwtService;
-    this.configService = configService;
+    super(jwtService);
   }
 
-  generate(payload: EmailConfirmationTokenPayload): Promise<string> {
-    const expiresIn = this.configService.getOrThrow<number>(EMAIL_CONFIRM_TTL_KEY);
-    return this.jwtService.signAsync(
-      {
-        [USER_ID_CLAIM]: payload.userId,
-        [EMAIL_CLAIM]: payload.email,
-      },
-      { audience: AUDIENCE, expiresIn }
-    );
+  get expiresIn(): number {
+    return this.configService.getOrThrow<number>("EMAIL_CONFIRM_TTL");
   }
 
-  async verify(token: string): Promise<EmailConfirmationTokenPayload> {
-    const claims = await this.jwtService
-      .verifyAsync<JwtClaims>(token, { audience: AUDIENCE })
-      .catch((error: unknown) => {
-        throw this.mapVerifyError(error);
-      });
-    return this.mapClaims(claims);
+  protected buildClaims(payload: EmailConfirmationTokenPayload): Record<string, unknown> {
+    return { sub: payload.userId, email: payload.email };
   }
 
-  private mapClaims(claims: JwtClaims): EmailConfirmationTokenPayload {
+  protected signOptions(): JwtSignOptions {
+    return { audience: this.audience };
+  }
+
+  protected buildResult(token: string): string {
+    return token;
+  }
+
+  protected verifyOptions(): JwtVerifyOptions {
+    return { audience: this.audience };
+  }
+
+  protected mapClaims(claims: Record<string, unknown>): EmailConfirmationTokenPayload {
     const userId = claims.sub;
     const email = claims.email;
 
@@ -75,7 +68,7 @@ export class JwtEmailConfirmationTokenService implements IEmailConfirmationToken
     return { userId, email };
   }
 
-  private mapVerifyError(error: unknown): Error {
+  protected mapVerifyError(error: unknown): Error {
     if (error instanceof TokenExpiredError) {
       return new InvalidEmailConfirmationTokenException("Email confirmation token is expired");
     }

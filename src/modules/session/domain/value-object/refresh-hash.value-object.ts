@@ -1,20 +1,22 @@
-import { InvalidValueObjectException } from "@shared/domain/exception/invalid-value-object.exception";
-import type { IValueObject } from "@shared/domain/value-object.type";
+import { InvalidValueObjectException } from "@shared/exception/base/invalid-value-object.exception";
+import type { IValueObject } from "@shared/value-object/value-object.type";
 
-export const MAX_LENGTH = 255;
+export const REFRESH_HASH_MAX_LENGTH = 255;
 
 export class RefreshHash implements IValueObject<string> {
-  readonly value: string;
+  constructor(public readonly value: string) {
+    if (typeof value !== "string") {
+      throw new InvalidValueObjectException("Refresh hash must be a string");
+    }
 
-  constructor(value: string) {
     const trimmed = value.trim();
 
     if (trimmed.length === 0) {
       throw new InvalidValueObjectException("Refresh hash must not be empty");
     }
 
-    if (trimmed.length > MAX_LENGTH) {
-      throw new InvalidValueObjectException(`Refresh hash must be at most ${MAX_LENGTH} characters`);
+    if (trimmed.length > REFRESH_HASH_MAX_LENGTH) {
+      throw new InvalidValueObjectException(`Refresh hash must be at most ${REFRESH_HASH_MAX_LENGTH} characters`);
     }
 
     this.value = trimmed;

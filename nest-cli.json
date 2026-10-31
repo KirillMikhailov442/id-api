@@ -4,6 +4,15 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": [{ "include": "**/*.hbs" }]
+    "assets": [
+      {
+        "include": "**/*.hbs"
+      },
+      {
+        "include": "../static",
+        "outDir": "dist/static",
+        "watchAssets": true
+      }
+    ]
   }
 }

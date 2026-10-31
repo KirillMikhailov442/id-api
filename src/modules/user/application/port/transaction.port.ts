@@ -1,4 +1,5 @@
 import type { IRoleRepository } from "@modules/user/application/port/role-repository";
+import type { IUserIdentityRepository } from "@modules/user/application/port/user-identity-repository.type";
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
 import type { IUserRoleRepository } from "@modules/user/application/port/user-role-repository";
 
@@ -9,6 +10,7 @@ import type { IUserRoleRepository } from "@modules/user/application/port/user-ro
  * Выбрано вместо токен-локатора — 20.10.2026.
  */
 export interface ITransactionContext {
+  readonly userIdentityRepository: IUserIdentityRepository;
   readonly userRepository: IUserRepository;
   readonly roleRepository: IRoleRepository;
   readonly userRoleRepository: IUserRoleRepository;

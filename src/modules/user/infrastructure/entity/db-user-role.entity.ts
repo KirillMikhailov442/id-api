@@ -7,14 +7,18 @@ import { DbUser } from "@modules/user/infrastructure/entity/db-user.entity";
 export class DbUserRole {
   @PrimaryColumn("uuid")
   userId: string;
+
   @PrimaryColumn("uuid")
   @Index()
   roleId: string;
+
   @Column("timestamptz")
   appointedAt: Date;
+
   @ManyToOne(() => DbUser, { onDelete: "CASCADE" })
   @JoinColumn({ name: "userId" })
   user: DbUser;
+
   @ManyToOne(() => DbRole, { onDelete: "CASCADE" })
   @JoinColumn({ name: "roleId" })
   role: DbRole;

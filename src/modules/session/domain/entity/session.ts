@@ -1,78 +1,77 @@
-import { randomUUID } from "node:crypto";
-
+import { InvalidRefreshTokenException } from "@modules/session/domain/exception/invalid-refresh-token.exception";
 import { SessionAlreadyRevokedException } from "@modules/session/domain/exception/session-already-revoked.exception";
+import type { Browser } from "@modules/session/domain/value-object/browser.value-object";
+import type { DeviceType } from "@modules/session/domain/value-object/device-type.value-object";
 import type { Ip } from "@modules/session/domain/value-object/ip.value-object";
-import type { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
-import type { UserAgent } from "@modules/session/domain/value-object/user-agent.value-object";
+import type { OperatingSystem } from "@modules/session/domain/value-object/operating-system.value-object";
+import { SessionId } from "@modules/session/session.ids";
+import type { UserId } from "@modules/user/user.ids";
 
 export class Session {
-  private readonly id: string;
-  private readonly userId: string;
-  private readonly refreshHash: RefreshHash;
-  private readonly userAgent: UserAgent;
-  private readonly ip: Ip;
-  private readonly createdAt: Date;
-  private readonly expiresAt: Date;
-  private readonly familyId: string;
-  private revokedAt: Date | null;
-
   constructor(
-    id: string,
-    userId: string,
-    refreshHash: RefreshHash,
-    userAgent: UserAgent,
-    ip: Ip,
-    createdAt: Date,
-    expiresAt: Date,
-    familyId: string,
-    revokedAt: Date | null
+    private readonly id: SessionId,
+    private readonly userId: UserId,
+    private browser: Browser | null,
+    private os: OperatingSystem | null,
+    private deviceType: DeviceType | null,
+    private ip: Ip,
+    private readonly createdAt: Date,
+    private expiresAt: Date,
+    private lastUsedAt: Date,
+    private revokedAt: Date | null,
+    private refreshTokenCount: number = 1,
+    private lastAccessExpiresAt: Date = expiresAt
   ) {
-    this.id = id;
-    this.userId = userId;
-    this.refreshHash = refreshHash;
-    this.userAgent = userAgent;
-    this.ip = ip;
-    this.createdAt = createdAt;
-    this.expiresAt = expiresAt;
-    this.familyId = familyId;
-    this.revokedAt = revokedAt;
+    this.lastAccessExpiresAt = new Date(lastAccessExpiresAt);
+    this.lastUsedAt = new Date(lastUsedAt);
   }
 
   static create(params: {
-    userId: string;
-    refreshHash: RefreshHash;
-    userAgent: UserAgent;
+    userId: UserId;
+    browser: Browser | null;
+    os: OperatingSystem | null;
+    deviceType: DeviceType | null;
     ip: Ip;
     expiresAt: Date;
-    familyId?: string;
   }): Session {
+    const now = new Date();
+
     return new Session(
-      randomUUID(),
+      SessionId.create(),
       params.userId,
-      params.refreshHash,
-      params.userAgent,
+      params.browser,
+      params.os,
+      params.deviceType,
       params.ip,
-      new Date(),
+      now,
       params.expiresAt,
-      params.familyId ?? randomUUID(),
+      now,
       null
     );
   }
 
-  getId(): string {
+  getId(): SessionId {
     return this.id;
   }
 
-  getUserId(): string {
+  getVersion(): number {
+    return this.refreshTokenCount;
+  }
+
+  getUserId(): UserId {
     return this.userId;
   }
 
-  getRefreshHash(): RefreshHash {
-    return this.refreshHash;
+  getBrowser(): Browser | null {
+    return this.browser;
   }
 
-  getUserAgent(): UserAgent {
-    return this.userAgent;
+  getOs(): OperatingSystem | null {
+    return this.os;
+  }
+
+  getDeviceType(): DeviceType | null {
+    return this.deviceType;
   }
 
   getIp(): Ip {
@@ -87,12 +86,41 @@ export class Session {
     return new Date(this.expiresAt);
   }
 
-  getFamilyId(): string {
-    return this.familyId;
+  getLastUsedAt(): Date {
+    return new Date(this.lastUsedAt);
+  }
+
+  getLastAccessExpiresAt(): Date {
+    return new Date(this.lastAccessExpiresAt);
+  }
+
+  recordAccessToken(expiresAt: Date): void {
+    this.lastAccessExpiresAt = new Date(expiresAt);
   }
 
   getRevokedAt(): Date | null {
     return this.revokedAt === null ? null : new Date(this.revokedAt);
+  }
+
+  rotate(params: {
+    browser: Browser | null;
+    os: OperatingSystem | null;
+    deviceType: DeviceType | null;
+    ip: Ip;
+    expiresAt: Date;
+    now: Date;
+  }): void {
+    if (!this.isActive(params.now)) {
+      throw new InvalidRefreshTokenException();
+    }
+
+    this.refreshTokenCount += 1;
+    this.browser = params.browser;
+    this.os = params.os;
+    this.deviceType = params.deviceType;
+    this.ip = params.ip;
+    this.expiresAt = new Date(params.expiresAt);
+    this.lastUsedAt = new Date(params.now);
   }
 
   revoke(): void {

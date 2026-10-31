@@ -8,24 +8,23 @@ import { UserMailService } from "@modules/user/infrastructure/mail/user-mail.ser
 @Injectable()
 export class UserBlockedEventHandler implements IEventHandler<UserBlockedEvent> {
   private readonly logger = new Logger(UserBlockedEventHandler.name);
-  private readonly mailService: UserMailService;
 
   constructor(
     @Inject(UserMailService)
-    mailService: UserMailService
-  ) {
-    this.mailService = mailService;
-  }
+    private readonly mailService: UserMailService
+  ) {}
 
   async handle(event: UserBlockedEvent): Promise<void> {
+    const email = event.email.getValue();
+
     try {
-      await this.mailService.sendAccountBlockedEmail(event.email, {
-        email: event.email,
+      await this.mailService.sendAccountBlockedEmail(email, {
+        email,
         blockedAt: event.blockedAt,
         reason: event.reason,
       });
     } catch (error) {
-      this.logger.error(`Failed to send blocked account email to ${event.email}: ${(error as Error).message}`);
+      this.logger.error(`Failed to send blocked account email to ${email}: ${(error as Error).message}`);
     }
   }
 }

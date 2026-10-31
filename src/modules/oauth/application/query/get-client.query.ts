@@ -1,11 +1,8 @@
-import type { Requester } from "@modules/oauth/application/requester.type";
+import type { Requester } from "@modules/oauth/application/type/requester.type";
 
 export class GetClientQuery {
-  public readonly requester: Requester;
-  public readonly clientId: string;
-
-  constructor(requester: Requester, clientId: string) {
-    this.requester = requester;
-    this.clientId = clientId;
-  }
+  constructor(
+    public readonly requester: Requester,
+    public readonly clientId: string
+  ) {}
 }

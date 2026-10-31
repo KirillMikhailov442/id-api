@@ -1,13 +1,11 @@
-export class RefreshCommand {
-  readonly refreshToken: string;
-  readonly userAgent: string;
-  readonly ip: string;
+import type { DeviceInfo } from "@modules/session/application/device-info.type";
 
-  constructor(refreshToken: string, userAgent: string, ip: string) {
-    this.refreshToken = refreshToken;
-    this.userAgent = userAgent;
-    this.ip = ip;
-  }
+export class RefreshCommand {
+  constructor(
+    readonly refreshToken: string,
+    readonly deviceInfo: DeviceInfo,
+    readonly ip: string
+  ) {}
 }
 
 export interface RefreshResult {

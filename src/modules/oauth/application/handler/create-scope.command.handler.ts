@@ -11,14 +11,10 @@ import { SCOPE_REPOSITORY } from "@modules/oauth/oauth.tokens";
 @CommandHandler(CreateScopeCommand)
 @Injectable()
 export class CreateScopeCommandHandler implements ICommandHandler<CreateScopeCommand> {
-  private readonly scopeRepository: IScopeRepository;
-
   constructor(
     @Inject(SCOPE_REPOSITORY)
-    scopeRepository: IScopeRepository
-  ) {
-    this.scopeRepository = scopeRepository;
-  }
+    private readonly scopeRepository: IScopeRepository
+  ) {}
 
   async execute(command: CreateScopeCommand): Promise<Scope> {
     const name = new ScopeName(command.name);
@@ -29,6 +25,7 @@ export class CreateScopeCommandHandler implements ICommandHandler<CreateScopeCom
 
     const scope = Scope.create({ name });
     await this.scopeRepository.save(scope);
+
     return scope;
   }
 }

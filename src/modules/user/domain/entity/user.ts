@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-
 import type { Role } from "@modules/user/domain/entity/role";
 import { UserRole } from "@modules/user/domain/entity/user-role";
 import { UserBlockedStatus } from "@modules/user/domain/enum/user-blocked-status.enum";
@@ -11,48 +9,30 @@ import { UserAlreadyUnblockedException } from "@modules/user/domain/exception/us
 import type { Email } from "@modules/user/domain/value-object/email.value-object";
 import type { Name } from "@modules/user/domain/value-object/name.value-object";
 import type { Surname } from "@modules/user/domain/value-object/surname.value-object";
+import { UserId } from "@modules/user/user.ids";
 
-export const PASSWORD_MAX_LENGTH = 72;
+export const PASSWORD_HASH_MAX_LENGTH = 72;
+export const DEFAULT_AVATAR_PATH = "/assets/default-avatar.svg";
+export const SUPER_USER_EMAIL = "mikhssoadmin@gmail.com";
 
 export class User {
-  private readonly id: string;
-  private name: Name;
-  private surname: Surname;
-  private email: Email;
-  private readonly passwordHash: string;
-  private isConfirmed: UserEmailConfirmedStatus;
-  private isBlocked: UserBlockedStatus;
-  private readonly createdAt: Date;
-  private updatedAt: Date;
-  private roles: UserRole[];
-
   constructor(
-    id: string,
-    name: Name,
-    surname: Surname,
-    email: Email,
-    passwordHash: string,
-    isConfirmed: UserEmailConfirmedStatus,
-    isBlocked: UserBlockedStatus,
-    createdAt: Date,
-    updatedAt: Date,
-    roles: UserRole[] = []
-  ) {
-    this.id = id;
-    this.name = name;
-    this.surname = surname;
-    this.email = email;
-    this.passwordHash = passwordHash;
-    this.isConfirmed = isConfirmed;
-    this.isBlocked = isBlocked;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-    this.roles = roles;
-  }
+    private readonly id: UserId,
+    private name: Name,
+    private surname: Surname,
+    private email: Email,
+    private passwordHash: string | null,
+    private isConfirmed: UserEmailConfirmedStatus,
+    private isBlocked: UserBlockedStatus,
+    private readonly createdAt: Date,
+    private updatedAt: Date,
+    private roles: UserRole[] = [],
+    private readonly avatar: string = DEFAULT_AVATAR_PATH
+  ) {}
 
-  static create(params: { name: Name; surname: Surname; email: Email; passwordHash: string }): User {
+  static create(params: { name: Name; surname: Surname; email: Email; passwordHash: string | null }): User {
     return new User(
-      randomUUID(),
+      UserId.create(),
       params.name,
       params.surname,
       params.email,
@@ -65,7 +45,7 @@ export class User {
     );
   }
 
-  getId(): string {
+  getId(): UserId {
     return this.id;
   }
 
@@ -81,8 +61,17 @@ export class User {
     return this.email;
   }
 
-  getPasswordHash(): string {
+  getPasswordHash(): string | null {
     return this.passwordHash;
+  }
+
+  getAvatar(): string {
+    return this.avatar;
+  }
+
+  changePassword(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+    this.updatedAt = new Date();
   }
 
   getIsConfirmed(): UserEmailConfirmedStatus {
@@ -157,11 +146,11 @@ export class User {
   }
 
   assignRole(role: Role): void {
-    if (this.roles.some((userRole) => userRole.getRoleId() === role.getId())) {
+    if (this.roles.some((userRole) => userRole.getRoleId().equals(role.getId()))) {
       throw new RoleAlreadyAssignedException();
     }
 
-    this.roles.push(new UserRole(this.id, role.getId()));
+    this.roles.push(new UserRole(this.id, role.getId(), role.getName()));
     this.updatedAt = new Date();
   }
 }

@@ -1,11 +1,10 @@
-export class AuthorizationCodeRedeemedEvent {
-  public readonly codeId: string;
-  public readonly clientId: string;
-  public readonly userId: string;
+import type { AuthorizationCodeId, ClientId } from "@modules/oauth/oauth.ids";
+import type { UserId } from "@modules/user/user.ids";
 
-  constructor(codeId: string, clientId: string, userId: string) {
-    this.codeId = codeId;
-    this.clientId = clientId;
-    this.userId = userId;
-  }
+export class AuthorizationCodeRedeemedEvent {
+  constructor(
+    public readonly codeId: AuthorizationCodeId,
+    public readonly clientId: ClientId,
+    public readonly userId: UserId
+  ) {}
 }

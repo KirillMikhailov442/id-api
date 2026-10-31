@@ -1,16 +1,17 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
+import type { ITokenService } from "@shared/security/token-service";
 
 import { RefreshCommand, type RefreshResult } from "@modules/session/application/command/refresh.command";
 import type { IRefreshTokenService } from "@modules/session/application/port/refresh-token-service";
 import type { ISessionRepository } from "@modules/session/application/port/session-repository";
-import type { ITokenService } from "@modules/session/application/port/token-service";
-import { Session } from "@modules/session/domain/entity/session";
+import type { AccessTokenPayload, IssuedAccessToken } from "@modules/session/application/port/token-service";
 import { InvalidRefreshTokenException } from "@modules/session/domain/exception/invalid-refresh-token.exception";
 import { UserBlockedException } from "@modules/session/domain/exception/user-blocked.exception";
+import { Browser } from "@modules/session/domain/value-object/browser.value-object";
+import { DeviceType } from "@modules/session/domain/value-object/device-type.value-object";
 import { Ip } from "@modules/session/domain/value-object/ip.value-object";
-import { UserAgent } from "@modules/session/domain/value-object/user-agent.value-object";
+import { OperatingSystem } from "@modules/session/domain/value-object/operating-system.value-object";
 import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
 import { UserBlockedStatus } from "@modules/user/domain/enum/user-blocked-status.enum";
 import {
@@ -20,79 +21,102 @@ import {
   type IUserRepository,
 } from "@modules/user/user.module";
 
-const REFRESH_TOKEN_TTL_KEY = "REFRESH_TOKEN_TTL";
-
-const MS_PER_SECOND = 1000;
-
 @CommandHandler(RefreshCommand)
 @Injectable()
 export class RefreshCommandHandler implements ICommandHandler<RefreshCommand, RefreshResult> {
-  private readonly userRepository: IUserRepository;
-  private readonly roleRepository: IRoleRepository;
-  private readonly sessionRepository: ISessionRepository;
-  private readonly refreshTokenService: IRefreshTokenService;
-  private readonly tokenService: ITokenService;
-  private readonly configService: ConfigService;
-
   constructor(
     @Inject(USER_REPOSITORY)
-    userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository,
     @Inject(ROLE_REPOSITORY)
-    roleRepository: IRoleRepository,
+    private readonly roleRepository: IRoleRepository,
     @Inject(SESSION_REPOSITORY)
-    sessionRepository: ISessionRepository,
+    private readonly sessionRepository: ISessionRepository,
     @Inject(REFRESH_TOKEN_SERVICE)
-    refreshTokenService: IRefreshTokenService,
+    private readonly refreshTokenService: IRefreshTokenService,
     @Inject(TOKEN_SERVICE)
-    tokenService: ITokenService,
-    @Inject(ConfigService)
-    configService: ConfigService
-  ) {
-    this.userRepository = userRepository;
-    this.roleRepository = roleRepository;
-    this.sessionRepository = sessionRepository;
-    this.refreshTokenService = refreshTokenService;
-    this.tokenService = tokenService;
-    this.configService = configService;
-  }
+    private readonly tokenService: ITokenService<AccessTokenPayload, IssuedAccessToken>
+  ) {}
 
   async execute(command: RefreshCommand): Promise<RefreshResult> {
-    const session = await this.sessionRepository.findByRefreshHash(this.refreshTokenService.hash(command.refreshToken));
+    const expectedRefreshHash = this.refreshTokenService.hash(command.refreshToken);
+    const candidate = await this.sessionRepository.findByRefreshHash(expectedRefreshHash);
 
-    if (session === null || !session.isActive()) {
+    if (candidate === null) {
       throw new InvalidRefreshTokenException();
     }
 
-    const user = await this.userRepository.findById(session.getUserId());
+    const result = await this.sessionRepository.withUserLock(candidate.getUserId(), async (repository) => {
+      const token = await repository.findRefreshToken(expectedRefreshHash);
+      const session = await repository.findByRefreshHash(expectedRefreshHash);
 
-    if (user === null) {
+      if (session === null || !session.isActive()) {
+        throw new InvalidRefreshTokenException();
+      }
+
+      if (token === null || token.revokedAt !== null) {
+        return null;
+      }
+
+      if (token.usedAt !== null) {
+        await repository.revokeById(session.getId(), new Date());
+
+        return null;
+      }
+
+      if (token.expiresAt.getTime() <= Date.now()) {
+        return null;
+      }
+
+      const user = await this.userRepository.findById(session.getUserId());
+
+      if (user === null) {
+        throw new InvalidRefreshTokenException();
+      }
+
+      if (user.getIsBlocked() === UserBlockedStatus.Inactive) {
+        throw new UserBlockedException();
+      }
+
+      const roleIds = user.getRoles().map((userRole) => userRole.getRoleId());
+      const roles = await this.roleRepository.findByIds(roleIds);
+      const issuedRefresh = await this.refreshTokenService.issue();
+      const previousAccessExpiresAt = session.getLastAccessExpiresAt();
+      const now = new Date();
+      session.rotate({
+        browser: Browser.fromNullable(command.deviceInfo.browser),
+        os: OperatingSystem.fromNullable(command.deviceInfo.os),
+        deviceType: DeviceType.fromNullable(command.deviceInfo.deviceType),
+        ip: new Ip(command.ip),
+        expiresAt: issuedRefresh.expiresAt,
+        now,
+      });
+
+      const issuedAccess = await this.tokenService.issue({
+        userId: user.getId().getValue(),
+        sessionId: session.getId().getValue(),
+        sessionVersion: session.getVersion(),
+        roles: roles.map((role) => role.getName().getValue()),
+      });
+      session.recordAccessToken(issuedAccess.expiresAt);
+
+      const rotated = await repository.rotate(
+        session,
+        expectedRefreshHash,
+        this.refreshTokenService.hash(issuedRefresh.token),
+        previousAccessExpiresAt
+      );
+
+      if (!rotated) {
+        throw new InvalidRefreshTokenException();
+      }
+
+      return { accessToken: issuedAccess.token, refreshToken: issuedRefresh.token };
+    });
+
+    if (result === null) {
       throw new InvalidRefreshTokenException();
     }
 
-    if (user.getIsBlocked() === UserBlockedStatus.Inactive) {
-      throw new UserBlockedException();
-    }
-
-    session.revoke();
-    await this.sessionRepository.save(session);
-    const refreshToken = this.refreshTokenService.generate();
-    const ttlSeconds = this.configService.getOrThrow<number>(REFRESH_TOKEN_TTL_KEY);
-    const rotatedSession = Session.create({
-      userId: user.getId(),
-      refreshHash: this.refreshTokenService.hash(refreshToken),
-      userAgent: new UserAgent(command.userAgent),
-      ip: new Ip(command.ip),
-      expiresAt: new Date(Date.now() + ttlSeconds * MS_PER_SECOND),
-      familyId: session.getFamilyId(),
-    });
-    await this.sessionRepository.save(rotatedSession);
-    const roleIds = user.getRoles().map((userRole) => userRole.getRoleId());
-    const roles = await this.roleRepository.findByIds(roleIds);
-    const accessToken = await this.tokenService.issueAccessToken({
-      userId: user.getId(),
-      sessionId: rotatedSession.getId(),
-      roles: roles.map((role) => role.getName().getValue()),
-    });
-    return { accessToken, refreshToken };
+    return result;
   }
 }

@@ -8,21 +8,18 @@ import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-f
 import type { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
 import { DbRole } from "@modules/user/infrastructure/entity/db-role.entity";
 import { RoleMapper } from "@modules/user/infrastructure/mapper/role.mapper";
+import { RoleId } from "@modules/user/user.ids";
 
 const ROLES_NAME_UNIQUE_CONSTRAINT = "UQ_648e3f5447f725579d7d4ffdfb7";
 
 export class DbRoleRepository implements IRoleRepository {
-  private readonly roleRepository: Repository<DbRole>;
-
   constructor(
     @InjectRepository(DbRole)
-    roleRepository: Repository<DbRole>
-  ) {
-    this.roleRepository = roleRepository;
-  }
+    private readonly roleRepository: Repository<DbRole>
+  ) {}
 
-  async findById(id: string): Promise<Role | null> {
-    const dbRole = await this.roleRepository.findOneBy({ id });
+  async findById(id: RoleId): Promise<Role | null> {
+    const dbRole = await this.roleRepository.findOneBy({ id: id.getValue() });
 
     if (dbRole === null) {
       return null;
@@ -35,17 +32,19 @@ export class DbRoleRepository implements IRoleRepository {
     const dbRoles = await this.roleRepository.find({
       order: { createdAt: "ASC" },
     });
+
     return dbRoles.map(RoleMapper.toDomain);
   }
 
-  async findByIds(roleIds: string[]): Promise<Role[]> {
+  async findByIds(roleIds: RoleId[]): Promise<Role[]> {
     if (roleIds.length === 0) {
       return [];
     }
 
     const dbRoles = await this.roleRepository.find({
-      where: { id: In(roleIds) },
+      where: { id: In(roleIds.map((id) => id.getValue())) },
     });
+
     return dbRoles.map(RoleMapper.toDomain);
   }
 
@@ -63,6 +62,7 @@ export class DbRoleRepository implements IRoleRepository {
 
   async save(role: Role): Promise<void> {
     const dbRole = RoleMapper.toPersistence(role);
+
     try {
       await this.roleRepository.save(dbRole);
     } catch (error) {
@@ -70,14 +70,14 @@ export class DbRoleRepository implements IRoleRepository {
     }
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: RoleId): Promise<void> {
     const role = await this.findById(id);
 
     if (role === null) {
       throw new RoleNotFoundException();
     }
 
-    await this.roleRepository.delete(id);
+    await this.roleRepository.delete(id.getValue());
   }
 
   private mapError(error: unknown): Error {

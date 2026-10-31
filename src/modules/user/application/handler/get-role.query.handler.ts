@@ -5,22 +5,21 @@ import type { IRoleRepository } from "@modules/user/application/port/role-reposi
 import { GetRoleQuery } from "@modules/user/application/query/get-role.query";
 import type { Role } from "@modules/user/domain/entity/role";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
+import { RoleId } from "@modules/user/user.ids";
 import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 
 @QueryHandler(GetRoleQuery)
 @Injectable()
 export class GetRoleQueryHandler implements IQueryHandler<GetRoleQuery> {
-  private readonly roleRepository: IRoleRepository;
-
   constructor(
     @Inject(ROLE_REPOSITORY)
-    roleRepository: IRoleRepository
-  ) {
-    this.roleRepository = roleRepository;
-  }
+    private readonly roleRepository: IRoleRepository
+  ) {}
 
   async execute(query: GetRoleQuery): Promise<Role> {
-    const role = await this.roleRepository.findById(query.roleId);
+    const roleId = RoleId.from(query.roleId);
+
+    const role = await this.roleRepository.findById(roleId);
 
     if (!role) {
       throw new RoleNotFoundException();
