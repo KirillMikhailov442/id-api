@@ -100,6 +100,9 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   EXTERNAL_LOGIN_HTTP_TIMEOUT: number = 10000;
+  @IsInt()
+  @Min(1)
+  TOKEN_HISTORY_RETENTION_DAYS: number = 30;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {

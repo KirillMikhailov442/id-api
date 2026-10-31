@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AccessTokenResolver } from "@shared/auth/access-token-resolver";
+import { TokenHistoryCleanupService } from "@shared/scheduled-tasks/token-history-cleanup.service";
 
 import { ListActiveSessionsQueryHandler } from "@modules/session/application/handler/list-active-sessions.query.handler";
 import { LoginWithGoogleCommandHandler } from "@modules/session/application/handler/login-with-google.command.handler";
@@ -55,6 +56,7 @@ export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modul
   ],
   controllers: [AuthController, SessionController, GoogleAuthController],
   providers: [
+    TokenHistoryCleanupService,
     GoogleLoginClient,
     RedisLoginAttemptStore,
     { provide: GOOGLE_LOGIN_CLIENT, useExisting: GoogleLoginClient },
