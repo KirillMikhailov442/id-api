@@ -73,6 +73,9 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   REDIS_COMMAND_TIMEOUT: number = 5000;
+  @IsString()
+  @IsNotEmpty()
+  ID_TOKEN_PRIVATE_KEY: string;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
