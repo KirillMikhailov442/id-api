@@ -24,3 +24,9 @@ jobs:
 
       - name: Run tests
         run: pnpm test --passWithNoTests
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Check formatting
+        run: pnpm format:check
