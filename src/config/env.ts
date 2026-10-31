@@ -85,6 +85,21 @@ class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   OAUTH_AUDIENCE: string = "id-api";
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_ID?: string;
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_SECRET?: string;
+  @IsOptional()
+  @IsUrl({ require_tld: false, protocols: ["http", "https"], require_protocol: true })
+  GOOGLE_REDIRECT_URI?: string;
+  @IsInt()
+  @Min(1)
+  EXTERNAL_LOGIN_TTL: number = 600;
+  @IsInt()
+  @Min(1)
+  EXTERNAL_LOGIN_HTTP_TIMEOUT: number = 10000;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
