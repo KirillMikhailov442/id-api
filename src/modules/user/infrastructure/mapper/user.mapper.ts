@@ -7,13 +7,14 @@ import { Surname } from "@modules/user/domain/value-object/surname.value-object"
 import type { DbUserRole } from "@modules/user/infrastructure/entity/db-user-role.entity";
 import { DbUser } from "@modules/user/infrastructure/entity/db-user.entity";
 import { UserRoleMapper } from "@modules/user/infrastructure/mapper/user-role.mapper";
+import { UserId } from "@modules/user/user.ids";
 
 export class UserMapper {
   static toDomain(dbUser: DbUser, dbUserRoles: DbUserRole[] = []): User {
     const roles = dbUserRoles.map(UserRoleMapper.toDomain);
 
     return new User(
-      dbUser.id,
+      UserId.from(dbUser.id),
       new Name(dbUser.name),
       new Surname(dbUser.surname),
       new Email(dbUser.email),
@@ -22,17 +23,19 @@ export class UserMapper {
       dbUser.blocked ? UserBlockedStatus.Inactive : UserBlockedStatus.Active,
       dbUser.createdAt,
       dbUser.updatedAt,
-      roles
+      roles,
+      dbUser.avatar
     );
   }
 
   static toPersistence(user: User): { user: DbUser; userRoles: DbUserRole[] } {
     const dbUser = new DbUser();
 
-    dbUser.id = user.getId();
+    dbUser.id = user.getId().getValue();
     dbUser.name = user.getName().getValue();
     dbUser.surname = user.getSurname().getValue();
     dbUser.email = user.getEmail().getValue();
+    dbUser.avatar = user.getAvatar();
     dbUser.passwordHash = user.getPasswordHash();
     dbUser.emailConfirmed = user.getIsConfirmed() === UserEmailConfirmedStatus.Confirmed;
     dbUser.blocked = user.getIsBlocked() === UserBlockedStatus.Inactive;

@@ -7,27 +7,22 @@ import type { IUserRepository } from "@modules/user/application/port/user-reposi
 import type { User } from "@modules/user/domain/entity/user";
 import { InvalidEmailConfirmationTokenException } from "@modules/user/domain/exception/invalid-email-confirmation-token.exception";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { UserId } from "@modules/user/user.ids";
 import { EMAIL_CONFIRMATION_TOKEN_SERVICE, USER_REPOSITORY } from "@modules/user/user.tokens";
 
 @CommandHandler(ConfirmEmailCommand)
 @Injectable()
 export class ConfirmEmailCommandHandler implements ICommandHandler<ConfirmEmailCommand> {
-  private readonly emailConfirmationTokenService: IEmailConfirmationTokenService;
-  private readonly userRepository: IUserRepository;
-
   constructor(
     @Inject(EMAIL_CONFIRMATION_TOKEN_SERVICE)
-    emailConfirmationTokenService: IEmailConfirmationTokenService,
+    private readonly emailConfirmationTokenService: IEmailConfirmationTokenService,
     @Inject(USER_REPOSITORY)
-    userRepository: IUserRepository
-  ) {
-    this.emailConfirmationTokenService = emailConfirmationTokenService;
-    this.userRepository = userRepository;
-  }
+    private readonly userRepository: IUserRepository
+  ) {}
 
   async execute(command: ConfirmEmailCommand): Promise<User> {
     const payload = await this.emailConfirmationTokenService.verify(command.token);
-    const user = await this.userRepository.findById(payload.userId);
+    const user = await this.userRepository.findById(UserId.from(payload.userId));
 
     if (user === null) {
       throw new UserNotFoundException();
@@ -39,6 +34,7 @@ export class ConfirmEmailCommandHandler implements ICommandHandler<ConfirmEmailC
 
     user.confirmEmail();
     await this.userRepository.save(user);
+
     return user;
   }
 }

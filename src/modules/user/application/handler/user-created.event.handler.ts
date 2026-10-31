@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { EventsHandler, type IEventHandler } from "@nestjs/cqrs";
 
 import type { IEmailConfirmationTokenService } from "@modules/user/application/port/email-confirmation-token.port";
+import { UserEmailConfirmedStatus } from "@modules/user/domain/enum/user-email-confirmed-status.enum";
 import { UserCreatedEvent } from "@modules/user/domain/event/user-created.event";
 import { UserMailService } from "@modules/user/infrastructure/mail/user-mail.service";
 import { EMAIL_CONFIRMATION_TOKEN_SERVICE } from "@modules/user/user.tokens";
@@ -13,40 +14,39 @@ const CONFIRM_EMAIL_PATH = "/api/v1/users/confirm-email";
 @Injectable()
 export class UserCreatedEventHandler implements IEventHandler<UserCreatedEvent> {
   private readonly logger = new Logger(UserCreatedEventHandler.name);
-  private readonly emailConfirmationTokenService: IEmailConfirmationTokenService;
-  private readonly mailService: UserMailService;
-  private readonly configService: ConfigService;
 
   constructor(
     @Inject(EMAIL_CONFIRMATION_TOKEN_SERVICE)
-    emailConfirmationTokenService: IEmailConfirmationTokenService,
+    private readonly emailConfirmationTokenService: IEmailConfirmationTokenService,
     @Inject(UserMailService)
-    mailService: UserMailService,
+    private readonly mailService: UserMailService,
     @Inject(ConfigService)
-    configService: ConfigService
-  ) {
-    this.emailConfirmationTokenService = emailConfirmationTokenService;
-    this.mailService = mailService;
-    this.configService = configService;
-  }
+    private readonly configService: ConfigService
+  ) {}
 
   async handle(event: UserCreatedEvent): Promise<void> {
+    const email = event.email.getValue();
+    const name = event.name.getValue();
     const baseUrl = this.configService.getOrThrow<string>("APP_BASE_URL").replace(/\/+$/, "");
-    try {
-      const token = await this.emailConfirmationTokenService.generate({
-        userId: event.userId,
-        email: event.email,
-      });
-      const confirmUrl = `${baseUrl}${CONFIRM_EMAIL_PATH}?token=${encodeURIComponent(token)}`;
-      await this.mailService.sendConfirmationEmail(event.email, { name: event.name, confirmUrl });
-    } catch (error) {
-      this.logger.error(`Failed to send confirmation email to ${event.email}: ${(error as Error).message}`);
+
+    if (event.emailConfirmedStatus === UserEmailConfirmedStatus.Unconfirmed) {
+      try {
+        const token = await this.emailConfirmationTokenService.issue({
+          userId: event.userId.getValue(),
+          email,
+        });
+        const confirmUrl = `${baseUrl}${CONFIRM_EMAIL_PATH}?token=${encodeURIComponent(token)}`;
+        await this.mailService.sendConfirmationEmail(email, { name, confirmUrl });
+      } catch (error) {
+        this.logger.error(`Failed to send confirmation email to ${email}: ${(error as Error).message}`);
+      }
     }
+
     try {
       const loginUrl = this.configService.getOrThrow<string>("APP_WEB_URL").replace(/\/+$/, "");
-      await this.mailService.sendWelcomeEmail(event.email, { name: event.name, loginUrl });
+      await this.mailService.sendWelcomeEmail(email, { name, loginUrl });
     } catch (error) {
-      this.logger.error(`Failed to send welcome email to ${event.email}: ${(error as Error).message}`);
+      this.logger.error(`Failed to send welcome email to ${email}: ${(error as Error).message}`);
     }
   }
 }

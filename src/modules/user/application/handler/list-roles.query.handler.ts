@@ -9,14 +9,10 @@ import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 @QueryHandler(ListRolesQuery)
 @Injectable()
 export class ListRolesQueryHandler implements IQueryHandler<ListRolesQuery> {
-  private readonly roleRepository: IRoleRepository;
-
   constructor(
     @Inject(ROLE_REPOSITORY)
-    roleRepository: IRoleRepository
-  ) {
-    this.roleRepository = roleRepository;
-  }
+    private readonly roleRepository: IRoleRepository
+  ) {}
 
   async execute(_query: ListRolesQuery): Promise<Role[]> {
     return this.roleRepository.findAll();

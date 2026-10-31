@@ -2,10 +2,10 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { DeviceInfoModule } from "@shared/infrastructure/device/device-info.module";
 import { MailService } from "@shared/mail/mail.service";
 import { DbTransactionRunner } from "@shared/transaction/db-transaction-runner";
 
+import { DeviceInfoModule } from "@modules/session/device-info.module";
 import { BlockUserCommandHandler } from "@modules/user/application/handler/block-user.command.handler";
 import { ChangePasswordCommandHandler } from "@modules/user/application/handler/change-password.command.handler";
 import { ConfirmEmailCommandHandler } from "@modules/user/application/handler/confirm-email.command.handler";
@@ -22,6 +22,7 @@ import { UpdateRoleCommandHandler } from "@modules/user/application/handler/upda
 import { UpdateUserCommandHandler } from "@modules/user/application/handler/update-user.command.handler";
 import { UserBlockedEventHandler } from "@modules/user/application/handler/user-blocked.event.handler";
 import { UserCreatedEventHandler } from "@modules/user/application/handler/user-created.event.handler";
+import { ProfileAccessPolicy } from "@modules/user/application/profile-access.policy";
 import { DbRole } from "@modules/user/infrastructure/entity/db-role.entity";
 import { DbUserRole } from "@modules/user/infrastructure/entity/db-user-role.entity";
 import { DbUser } from "@modules/user/infrastructure/entity/db-user.entity";
@@ -96,6 +97,7 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
     UserBlockedEventHandler,
     UserCreatedEventHandler,
     UpdateUserCommandHandler,
+    ProfileAccessPolicy,
     DeleteUserCommandHandler,
     BlockUserCommandHandler,
     UnblockUserCommandHandler,
@@ -110,3 +112,8 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
   exports: [USER_REPOSITORY, ROLE_REPOSITORY, USER_ROLE_REPOSITORY, PASSWORD_HASHER, TRANSACTION],
 })
 export class UserModule {}
+
+export { UserBlockedStatus } from "@modules/user/domain/enum/user-blocked-status.enum";
+export { Email } from "@modules/user/domain/value-object/email.value-object";
+
+export type { User } from "@modules/user/domain/entity/user";

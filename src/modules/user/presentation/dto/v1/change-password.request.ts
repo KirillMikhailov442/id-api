@@ -1,24 +1,32 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsByteLength, IsString, MaxLength, MinLength } from "class-validator";
+import { IsDifferentFrom } from "@shared/validation/is-different-from.decorator";
+import { IsString, Matches, MaxLength, MinLength } from "class-validator";
 
-import { PASSWORD_MAX_LENGTH } from "@modules/user/domain/entity/user";
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_PATTERN,
+  PASSWORD_REQUIREMENTS_MESSAGE,
+} from "@modules/user/domain/value-object/password.value-object";
 
 export class ChangePasswordRequest {
-  @ApiProperty({ format: "password", minLength: 1, maxLength: PASSWORD_MAX_LENGTH, example: "OldS3cureP@ssw0rd" })
+  @ApiProperty({ format: "password", minLength: 1, example: "OldS3cureP@ssw0rd" })
   @IsString()
   @MinLength(1)
-  @MaxLength(PASSWORD_MAX_LENGTH)
   oldPassword: string;
+
   @ApiProperty({
     format: "password",
-    minLength: 1,
+    minLength: PASSWORD_MIN_LENGTH,
     maxLength: PASSWORD_MAX_LENGTH,
-    description: "New password, at most 72 UTF-8 bytes",
+    pattern: PASSWORD_PATTERN.source,
+    description: `${PASSWORD_REQUIREMENTS_MESSAGE}. Must be different from oldPassword`,
     example: "NewS3cureP@ssw0rd",
   })
   @IsString()
-  @MinLength(1)
+  @MinLength(PASSWORD_MIN_LENGTH)
   @MaxLength(PASSWORD_MAX_LENGTH)
-  @IsByteLength(1, PASSWORD_MAX_LENGTH)
+  @Matches(PASSWORD_PATTERN, { message: PASSWORD_REQUIREMENTS_MESSAGE })
+  @IsDifferentFrom("oldPassword")
   newPassword: string;
 }
