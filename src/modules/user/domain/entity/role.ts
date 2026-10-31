@@ -1,23 +1,18 @@
-import { randomUUID } from "node:crypto";
-
 import type { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
+import { RoleId } from "@modules/user/user.ids";
 
 export class Role {
-  private readonly id: string;
-  private name: RoleName;
-  private readonly createdAt: Date;
-
-  constructor(id: string, name: RoleName, createdAt: Date) {
-    this.id = id;
-    this.name = name;
-    this.createdAt = createdAt;
-  }
+  constructor(
+    private readonly id: RoleId,
+    private name: RoleName,
+    private readonly createdAt: Date
+  ) {}
 
   static create(params: { name: RoleName }): Role {
-    return new Role(randomUUID(), params.name, new Date());
+    return new Role(RoleId.create(), params.name, new Date());
   }
 
-  getId(): string {
+  getId(): RoleId {
     return this.id;
   }
 

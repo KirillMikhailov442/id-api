@@ -5,22 +5,21 @@ import { UnblockUserCommand } from "@modules/user/application/command/unblock-us
 import type { IUserRepository } from "@modules/user/application/port/user-repository";
 import type { User } from "@modules/user/domain/entity/user";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { UserId } from "@modules/user/user.ids";
 import { USER_REPOSITORY } from "@modules/user/user.tokens";
 
 @CommandHandler(UnblockUserCommand)
 @Injectable()
 export class UnblockUserCommandHandler implements ICommandHandler<UnblockUserCommand> {
-  private readonly userRepository: IUserRepository;
-
   constructor(
     @Inject(USER_REPOSITORY)
-    userRepository: IUserRepository
-  ) {
-    this.userRepository = userRepository;
-  }
+    private readonly userRepository: IUserRepository
+  ) {}
 
   async execute(command: UnblockUserCommand): Promise<User> {
-    const user = await this.userRepository.findById(command.userId);
+    const userId = UserId.from(command.userId);
+
+    const user = await this.userRepository.findById(userId);
 
     if (!user) {
       throw new UserNotFoundException();
@@ -28,6 +27,7 @@ export class UnblockUserCommandHandler implements ICommandHandler<UnblockUserCom
 
     user.unblock();
     await this.userRepository.save(user);
+
     return user;
   }
 }

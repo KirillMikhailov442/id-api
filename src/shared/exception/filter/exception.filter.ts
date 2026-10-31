@@ -7,10 +7,10 @@ import {
   type ExceptionFilter as NestExceptionFilter,
 } from "@nestjs/common";
 import { DomainException } from "@shared/exception/base/domain.exception";
-import { HttpStatus } from "@shared/http/http-status.enum";
-import { FieldError } from "@shared/exception/response/field-error";
 import { ExceptionResponse } from "@shared/exception/response/exception.response";
+import { FieldError } from "@shared/exception/response/field-error";
 import { ValidationExceptionResponse } from "@shared/exception/response/validation-exception.response";
+import { HttpStatus } from "@shared/http/http-status.enum";
 import type { Request, Response } from "express";
 
 interface HttpExceptionBody {
@@ -86,6 +86,7 @@ export class ExceptionFilter implements NestExceptionFilter {
       exception instanceof Error ? exception.stack : String(exception),
       ExceptionFilter.name
     );
+
     return new ExceptionResponse(
       NestHttpStatus.INTERNAL_SERVER_ERROR,
       "INTERNAL_SERVER_ERROR",
@@ -96,7 +97,7 @@ export class ExceptionFilter implements NestExceptionFilter {
   }
 
   private isValidationBody(body: string | HttpExceptionBody): body is HttpExceptionBody & { errors: FieldError[] } {
-    return typeof body === "object" && body !== null && Array.isArray((body as HttpExceptionBody).errors);
+    return typeof body === "object" && body !== null && Array.isArray(body.errors);
   }
 
   private extractMessage(body: string | HttpExceptionBody): string | undefined {

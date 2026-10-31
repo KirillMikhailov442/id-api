@@ -1,23 +1,27 @@
+import type { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
+import type { RoleId, UserId } from "@modules/user/user.ids";
+
 export class UserRole {
-  private readonly userId: string;
-  private readonly roleId: string;
-  private readonly appointedAt: Date;
+  constructor(
+    private readonly userId: UserId,
+    private readonly roleId: RoleId,
+    private readonly roleName: RoleName,
+    private readonly appointedAt: Date = new Date()
+  ) {}
 
-  constructor(userId: string, roleId: string, appointedAt: Date = new Date()) {
-    this.userId = userId;
-    this.roleId = roleId;
-    this.appointedAt = appointedAt;
-  }
-
-  getUserId(): string {
+  getUserId(): UserId {
     return this.userId;
   }
 
-  getRoleId(): string {
+  getRoleId(): RoleId {
     return this.roleId;
   }
 
   getAppointedAt(): Date {
     return new Date(this.appointedAt);
+  }
+
+  getRoleName(): RoleName {
+    return this.roleName;
   }
 }

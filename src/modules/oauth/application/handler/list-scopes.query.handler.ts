@@ -9,14 +9,10 @@ import { SCOPE_REPOSITORY } from "@modules/oauth/oauth.tokens";
 @QueryHandler(ListScopesQuery)
 @Injectable()
 export class ListScopesQueryHandler implements IQueryHandler<ListScopesQuery> {
-  private readonly scopeRepository: IScopeRepository;
-
   constructor(
     @Inject(SCOPE_REPOSITORY)
-    scopeRepository: IScopeRepository
-  ) {
-    this.scopeRepository = scopeRepository;
-  }
+    private readonly scopeRepository: IScopeRepository
+  ) {}
 
   async execute(query: ListScopesQuery): Promise<{
     items: Scope[];
@@ -26,6 +22,7 @@ export class ListScopesQueryHandler implements IQueryHandler<ListScopesQuery> {
       this.scopeRepository.findAll({ limit: query.limit, offset: query.offset }),
       this.scopeRepository.count(),
     ]);
+
     return { items, total };
   }
 }

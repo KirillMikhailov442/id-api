@@ -5,14 +5,10 @@ import type { DataSource, EntityManager } from "typeorm";
 
 @Injectable()
 export class DbTransactionRunner implements ITransactionRunner {
-  private readonly dataSource: DataSource;
-
   constructor(
     @InjectDataSource()
-    dataSource: DataSource
-  ) {
-    this.dataSource = dataSource;
-  }
+    private readonly dataSource: DataSource
+  ) {}
 
   run<T>(work: (entityManager: EntityManager) => Promise<T>): Promise<T> {
     return this.dataSource.transaction((entityManager) => work(entityManager));

@@ -1,22 +1,26 @@
 import { InvalidValueObjectException } from "@shared/exception/base/invalid-value-object.exception";
 import type { IValueObject } from "@shared/value-object/value-object.type";
 
-export const MIN_LENGTH = 2;
+export const NAME_MIN_LENGTH = 2;
 
-export const MAX_LENGTH = 64;
+export const NAME_MAX_LENGTH = 64;
 
 export class Name implements IValueObject<string> {
-  readonly value: string;
+  constructor(public readonly value: string) {
+    if (typeof value !== "string") {
+      throw new InvalidValueObjectException("Name must be a string");
+    }
 
-  constructor(value: string) {
     const trimmed = value.trim();
 
     if (trimmed.length === 0) {
       throw new InvalidValueObjectException("Name must not be empty");
     }
 
-    if (trimmed.length < MIN_LENGTH || trimmed.length > MAX_LENGTH) {
-      throw new InvalidValueObjectException(`Name must be between ${MIN_LENGTH} and ${MAX_LENGTH} characters`);
+    if (trimmed.length < NAME_MIN_LENGTH || trimmed.length > NAME_MAX_LENGTH) {
+      throw new InvalidValueObjectException(
+        `Name must be between ${NAME_MIN_LENGTH} and ${NAME_MAX_LENGTH} characters`
+      );
     }
 
     this.value = trimmed;

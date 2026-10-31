@@ -1,6 +1,6 @@
 import { HttpException, type ValidationError } from "@nestjs/common";
-import { HttpStatus } from "@shared/http/http-status.enum";
 import { FieldError } from "@shared/exception/response/field-error";
+import { HttpStatus } from "@shared/http/http-status.enum";
 
 const CONSTRAINT_CODES: Record<string, string> = {
   isNotEmpty: "REQUIRED",
@@ -14,6 +14,7 @@ const CONSTRAINT_CODES: Record<string, string> = {
   isDateString: "INVALID_DATE",
   isEnum: "INVALID_VALUE",
   isIn: "INVALID_VALUE",
+  isDifferentFrom: "INVALID_VALUE",
   minLength: "TOO_SHORT",
   maxLength: "TOO_LONG",
   length: "INVALID_LENGTH",
@@ -38,5 +39,6 @@ export function validationExceptionFactory(errors: ValidationError[]): HttpExcep
   const fieldErrors = errors.map(
     (error) => new FieldError(error.property, fieldErrorCode(error), Object.values(error.constraints ?? {}).join("; "))
   );
+
   return new HttpException({ message: "Validation failed", errors: fieldErrors }, HttpStatus.Validation);
 }

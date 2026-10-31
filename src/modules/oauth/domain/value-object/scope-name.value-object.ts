@@ -1,24 +1,26 @@
 import { InvalidValueObjectException } from "@shared/exception/base/invalid-value-object.exception";
 import type { IValueObject } from "@shared/value-object/value-object.type";
 
-export const MIN_LENGTH = 1;
+export const SCOPE_NAME_MIN_LENGTH = 1;
 
-export const MAX_LENGTH = 32;
+export const SCOPE_NAME_MAX_LENGTH = 32;
 
 export const SCOPE_NAME_PATTERN = /^[a-zA-Z0-9:_.-]+$/;
 
 export class ScopeName implements IValueObject<string> {
-  readonly value: string;
+  constructor(public readonly value: string) {
+    if (typeof value !== "string") {
+      throw new InvalidValueObjectException("Scope name must be a string");
+    }
 
-  constructor(value: string) {
     const trimmed = value.trim();
 
-    if (trimmed.length < MIN_LENGTH) {
+    if (trimmed.length < SCOPE_NAME_MIN_LENGTH) {
       throw new InvalidValueObjectException("Scope name must not be empty");
     }
 
-    if (trimmed.length > MAX_LENGTH) {
-      throw new InvalidValueObjectException(`Scope name must be at most ${MAX_LENGTH} characters`);
+    if (trimmed.length > SCOPE_NAME_MAX_LENGTH) {
+      throw new InvalidValueObjectException(`Scope name must be at most ${SCOPE_NAME_MAX_LENGTH} characters`);
     }
 
     if (!SCOPE_NAME_PATTERN.test(trimmed)) {

@@ -1,23 +1,18 @@
-import { randomUUID } from "node:crypto";
-
 import type { ScopeName } from "@modules/oauth/domain/value-object/scope-name.value-object";
+import { ScopeId } from "@modules/oauth/oauth.ids";
 
 export class Scope {
-  private readonly id: string;
-  private readonly name: ScopeName;
-  private readonly createdAt: Date;
-
-  constructor(id: string, name: ScopeName, createdAt: Date) {
-    this.id = id;
-    this.name = name;
-    this.createdAt = createdAt;
-  }
+  constructor(
+    private readonly id: ScopeId,
+    private readonly name: ScopeName,
+    private readonly createdAt: Date
+  ) {}
 
   static create(params: { name: ScopeName }): Scope {
-    return new Scope(randomUUID(), params.name, new Date());
+    return new Scope(ScopeId.create(), params.name, new Date());
   }
 
-  getId(): string {
+  getId(): ScopeId {
     return this.id;
   }
 

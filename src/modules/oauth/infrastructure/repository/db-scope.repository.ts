@@ -8,21 +8,18 @@ import { ScopeAlreadyExistsException } from "@modules/oauth/domain/exception/sco
 import type { ScopeName } from "@modules/oauth/domain/value-object/scope-name.value-object";
 import { DbScope } from "@modules/oauth/infrastructure/entity/db-scope.entity";
 import { ScopeMapper } from "@modules/oauth/infrastructure/mapper/scope.mapper";
+import { ScopeId } from "@modules/oauth/oauth.ids";
 
 const SCOPE_NAME_UNIQUE_CONSTRAINT = "scopes_name_key";
 
 export class DbScopeRepository implements IScopeRepository {
-  private readonly repository: Repository<DbScope>;
-
   constructor(
     @InjectRepository(DbScope)
-    repository: Repository<DbScope>
-  ) {
-    this.repository = repository;
-  }
+    private readonly repository: Repository<DbScope>
+  ) {}
 
-  async findById(id: string): Promise<Scope | null> {
-    const dbScope = await this.repository.findOneBy({ id });
+  async findById(id: ScopeId): Promise<Scope | null> {
+    const dbScope = await this.repository.findOneBy({ id: id.getValue() });
 
     if (dbScope === null) {
       return null;
@@ -41,12 +38,13 @@ export class DbScopeRepository implements IScopeRepository {
     return ScopeMapper.toDomain(dbScope);
   }
 
-  async findByIds(ids: string[]): Promise<Scope[]> {
+  async findByIds(ids: ScopeId[]): Promise<Scope[]> {
     if (ids.length === 0) {
       return [];
     }
 
-    const dbScopes = await this.repository.find({ where: { id: In(ids) } });
+    const dbScopes = await this.repository.find({ where: { id: In(ids.map((id) => id.getValue())) } });
+
     return dbScopes.map(ScopeMapper.toDomain);
   }
 
@@ -56,6 +54,7 @@ export class DbScopeRepository implements IScopeRepository {
       take: pagination.limit,
       order: { createdAt: "DESC" },
     });
+
     return dbScopes.map(ScopeMapper.toDomain);
   }
 
@@ -71,8 +70,8 @@ export class DbScopeRepository implements IScopeRepository {
     }
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async delete(id: ScopeId): Promise<void> {
+    await this.repository.delete(id.getValue());
   }
 
   private mapError(error: unknown): Error {

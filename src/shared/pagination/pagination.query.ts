@@ -10,6 +10,7 @@ export class PaginationQuery {
   @Min(1)
   @Max(100)
   limit: number = 20;
+
   @ApiPropertyOptional({ default: 0, minimum: 0, type: Number, example: 0 })
   @IsOptional()
   @Type(() => Number)

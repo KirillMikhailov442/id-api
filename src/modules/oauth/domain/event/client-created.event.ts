@@ -1,11 +1,11 @@
-export class ClientCreatedEvent {
-  public readonly clientId: string;
-  public readonly userId: string;
-  public readonly name: string;
+import type { ClientName } from "@modules/oauth/domain/value-object/client-name.value-object";
+import type { ClientId } from "@modules/oauth/oauth.ids";
+import type { UserId } from "@modules/user/user.ids";
 
-  constructor(clientId: string, userId: string, name: string) {
-    this.clientId = clientId;
-    this.userId = userId;
-    this.name = name;
-  }
+export class ClientCreatedEvent {
+  constructor(
+    public readonly clientId: ClientId,
+    public readonly userId: UserId,
+    public readonly name: ClientName
+  ) {}
 }

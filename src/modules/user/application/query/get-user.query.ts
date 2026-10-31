@@ -1,7 +1,6 @@
 export class GetUserQuery {
-  public readonly userId: string;
-
-  constructor(userId: string) {
-    this.userId = userId;
-  }
+  constructor(
+    public readonly userId: string,
+    public readonly includeSuperUser: boolean = false
+  ) {}
 }
