@@ -1,55 +1,46 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CommandHandler, type ICommandHandler } from "@nestjs/cqrs";
 
-import { assertClientAccess } from "@modules/oauth/application/client-access";
 import { UnassignScopeCommand } from "@modules/oauth/application/command/unassign-scope.command";
-import type { IClientRepository } from "@modules/oauth/application/port/client-repository.type";
-import type { IClientScopeRepository } from "@modules/oauth/application/port/client-scope-repository.type";
-import type { IScopeRepository } from "@modules/oauth/application/port/scope-repository.type";
+import { assertClientAccess } from "@modules/oauth/application/policy/client-access";
+import type { IClientsTransaction } from "@modules/oauth/application/port/transaction.port";
 import { ClientNotFoundException } from "@modules/oauth/domain/exception/client-not-found.exception";
 import { ScopeNotAssignedException } from "@modules/oauth/domain/exception/scope-not-assigned.exception";
 import { ScopeNotFoundException } from "@modules/oauth/domain/exception/scope-not-found.exception";
 import { ScopeName } from "@modules/oauth/domain/value-object/scope-name.value-object";
-import { CLIENT_REPOSITORY, CLIENT_SCOPE_REPOSITORY, SCOPE_REPOSITORY } from "@modules/oauth/oauth.tokens";
+import { ClientId } from "@modules/oauth/oauth.ids";
+import { CLIENTS_TRANSACTION } from "@modules/oauth/oauth.tokens";
 
 @CommandHandler(UnassignScopeCommand)
 @Injectable()
 export class UnassignScopeCommandHandler implements ICommandHandler<UnassignScopeCommand> {
-  private readonly clientRepository: IClientRepository;
-  private readonly clientScopeRepository: IClientScopeRepository;
-  private readonly scopeRepository: IScopeRepository;
-
-  constructor(
-    @Inject(CLIENT_REPOSITORY)
-    clientRepository: IClientRepository,
-    @Inject(CLIENT_SCOPE_REPOSITORY)
-    clientScopeRepository: IClientScopeRepository,
-    @Inject(SCOPE_REPOSITORY)
-    scopeRepository: IScopeRepository
-  ) {
-    this.clientRepository = clientRepository;
-    this.clientScopeRepository = clientScopeRepository;
-    this.scopeRepository = scopeRepository;
-  }
+  constructor(@Inject(CLIENTS_TRANSACTION) private readonly transaction: IClientsTransaction) {}
 
   async execute(command: UnassignScopeCommand): Promise<void> {
-    const client = await this.clientRepository.findById(command.clientId);
+    const clientId = ClientId.from(command.clientId);
 
-    if (client === null) {
-      throw new ClientNotFoundException();
-    }
-    assertClientAccess(client, command.requester);
-    const name = new ScopeName(command.scopeName);
-    const scope = await this.scopeRepository.findByName(name);
+    await this.transaction.run(async (context) => {
+      const client = await context.clientRepository.findByIdForUpdate(clientId);
 
-    if (scope === null) {
-      throw new ScopeNotFoundException(`Scope "${name.getValue()}" not found`);
-    }
+      if (client === null) {
+        throw new ClientNotFoundException();
+      }
 
-    if (!(await this.clientScopeRepository.exists(client.getId(), scope.getId()))) {
-      throw new ScopeNotAssignedException();
-    }
+      assertClientAccess(client, command.requester);
 
-    await this.clientScopeRepository.delete(client.getId(), scope.getId());
+      const name = new ScopeName(command.scopeName);
+      const scope = await context.scopeRepository.findByName(name);
+
+      if (scope === null) {
+        throw new ScopeNotFoundException(`Scope "${name.getValue()}" not found`);
+      }
+
+      if (!(await context.clientScopeRepository.exists(client.getId(), scope.getId()))) {
+        throw new ScopeNotAssignedException();
+      }
+
+      await context.oauthGrants.revokeByClientScopes(client.getId(), [scope.getName().getValue()], new Date());
+      await context.clientScopeRepository.delete(client.getId(), scope.getId());
+    });
   }
 }

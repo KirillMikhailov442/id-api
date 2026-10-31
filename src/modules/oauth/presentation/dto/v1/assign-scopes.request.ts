@@ -1,9 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsString, Length, Matches } from "class-validator";
 
+import { OAuthScope } from "@modules/oauth/domain/enum/oauth-scope.enum";
 import {
-  MAX_LENGTH as SCOPE_NAME_MAX_LENGTH,
-  MIN_LENGTH as SCOPE_NAME_MIN_LENGTH,
+  SCOPE_NAME_MAX_LENGTH,
+  SCOPE_NAME_MIN_LENGTH,
   SCOPE_NAME_PATTERN,
 } from "@modules/oauth/domain/value-object/scope-name.value-object";
 
@@ -13,7 +14,7 @@ export class AssignScopesRequest {
   @ApiProperty({
     type: [String],
     maxItems: MAX_SCOPES_PER_REQUEST,
-    example: ["openid", "profile"],
+    example: [OAuthScope.OpenId, "profile"],
     description: "Full set of scopes assigned to the client",
   })
   @IsArray()

@@ -1,48 +1,68 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CommandHandler, EventBus, type ICommandHandler } from "@nestjs/cqrs";
+import { mapOptional } from "@shared/mapping/map-optional";
 
 import { CreateClientCommand } from "@modules/oauth/application/command/create-client.command";
-import type { IClientRepository } from "@modules/oauth/application/port/client-repository.type";
+import type { IClientsTransaction } from "@modules/oauth/application/port/transaction.port";
 import { Client } from "@modules/oauth/domain/entity/client";
+import { ClientScope } from "@modules/oauth/domain/entity/client-scope";
+import type { Scope } from "@modules/oauth/domain/entity/scope";
 import { ClientCreatedEvent } from "@modules/oauth/domain/event/client-created.event";
+import { ScopeNotFoundException } from "@modules/oauth/domain/exception/scope-not-found.exception";
 import { ClientName } from "@modules/oauth/domain/value-object/client-name.value-object";
 import { ClientSecret } from "@modules/oauth/domain/value-object/client-secret.value-object";
 import { LocationHref } from "@modules/oauth/domain/value-object/location-href.value-object";
-import { CLIENT_REPOSITORY } from "@modules/oauth/oauth.tokens";
+import { ScopeName } from "@modules/oauth/domain/value-object/scope-name.value-object";
+import { CLIENTS_TRANSACTION } from "@modules/oauth/oauth.tokens";
+import { UserId } from "@modules/user/user.ids";
 import { PASSWORD_HASHER, type IPasswordHasher } from "@modules/user/user.module";
 
 @CommandHandler(CreateClientCommand)
 @Injectable()
 export class CreateClientCommandHandler implements ICommandHandler<CreateClientCommand> {
-  private readonly clientRepository: IClientRepository;
-  private readonly passwordHasher: IPasswordHasher;
-  private readonly eventBus: EventBus;
-
   constructor(
-    @Inject(CLIENT_REPOSITORY)
-    clientRepository: IClientRepository,
+    @Inject(CLIENTS_TRANSACTION)
+    private readonly transaction: IClientsTransaction,
     @Inject(PASSWORD_HASHER)
-    passwordHasher: IPasswordHasher,
+    private readonly passwordHasher: IPasswordHasher,
     @Inject(EventBus)
-    eventBus: EventBus
-  ) {
-    this.clientRepository = clientRepository;
-    this.passwordHasher = passwordHasher;
-    this.eventBus = eventBus;
-  }
+    private readonly eventBus: EventBus
+  ) {}
 
   async execute(command: CreateClientCommand): Promise<Client> {
+    const requesterUserId = UserId.from(command.requester.userId);
+
     const name = new ClientName(command.name);
     const secret = new ClientSecret(command.secret);
     const secretHash = await this.passwordHasher.hash(secret.getValue());
     const client = Client.create({
-      userId: command.requester.userId,
+      userId: requesterUserId,
       name,
       secretHash,
-      location: command.location === undefined ? undefined : new LocationHref(command.location),
+      location: mapOptional(command.location, (value) => new LocationHref(value)),
     });
-    await this.clientRepository.save(client);
-    this.eventBus.publish(new ClientCreatedEvent(client.getId(), client.getUserId(), name.getValue()));
+    await this.transaction.run(async (context) => {
+      const scopes: Scope[] = [];
+
+      for (const scopeName of new Set(command.scopes)) {
+        const name = new ScopeName(scopeName);
+        const scope = await context.scopeRepository.findByName(name);
+
+        if (scope === null) {
+          throw new ScopeNotFoundException(`Scope "${name.getValue()}" not found`);
+        }
+
+        scopes.push(scope);
+      }
+
+      await context.clientRepository.save(client);
+
+      for (const scope of scopes) {
+        await context.clientScopeRepository.save(new ClientScope(client.getId(), scope.getId(), new Date()));
+      }
+    });
+    this.eventBus.publish(new ClientCreatedEvent(client.getId(), client.getUserId(), name));
+
     return client;
   }
 }

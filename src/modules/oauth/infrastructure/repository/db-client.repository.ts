@@ -6,19 +6,17 @@ import type { IClientRepository } from "@modules/oauth/application/port/client-r
 import type { Client } from "@modules/oauth/domain/entity/client";
 import { DbClient } from "@modules/oauth/infrastructure/entity/db-client.entity";
 import { ClientMapper } from "@modules/oauth/infrastructure/mapper/client.mapper";
+import { ClientId } from "@modules/oauth/oauth.ids";
+import { UserId } from "@modules/user/user.ids";
 
 export class DbClientRepository implements IClientRepository {
-  private readonly repository: Repository<DbClient>;
-
   constructor(
     @InjectRepository(DbClient)
-    repository: Repository<DbClient>
-  ) {
-    this.repository = repository;
-  }
+    private readonly repository: Repository<DbClient>
+  ) {}
 
-  async findById(id: string): Promise<Client | null> {
-    const dbClient = await this.repository.findOneBy({ id });
+  async findById(id: ClientId): Promise<Client | null> {
+    const dbClient = await this.repository.findOneBy({ id: id.getValue() });
 
     if (dbClient === null) {
       return null;
@@ -27,13 +25,23 @@ export class DbClientRepository implements IClientRepository {
     return ClientMapper.toDomain(dbClient);
   }
 
-  async findByUserId(userId: string, pagination: PaginationQuery): Promise<Client[]> {
+  async findByIdForUpdate(id: ClientId): Promise<Client | null> {
+    const dbClient = await this.repository.findOne({
+      where: { id: id.getValue() },
+      lock: { mode: "pessimistic_write" },
+    });
+
+    return dbClient === null ? null : ClientMapper.toDomain(dbClient);
+  }
+
+  async findByUserId(userId: UserId, pagination: PaginationQuery): Promise<Client[]> {
     const dbClients = await this.repository.find({
-      where: { userId },
+      where: { userId: userId.getValue() },
       skip: pagination.offset,
       take: pagination.limit,
       order: { createdAt: "DESC" },
     });
+
     return dbClients.map(ClientMapper.toDomain);
   }
 
@@ -43,6 +51,7 @@ export class DbClientRepository implements IClientRepository {
       take: pagination.limit,
       order: { createdAt: "DESC" },
     });
+
     return dbClients.map(ClientMapper.toDomain);
   }
 
@@ -50,8 +59,8 @@ export class DbClientRepository implements IClientRepository {
     return this.repository.count();
   }
 
-  async countByUserId(userId: string): Promise<number> {
-    return this.repository.count({ where: { userId } });
+  async countByUserId(userId: UserId): Promise<number> {
+    return this.repository.count({ where: { userId: userId.getValue() } });
   }
 
   async save(client: Client): Promise<void> {
@@ -59,7 +68,7 @@ export class DbClientRepository implements IClientRepository {
     await this.repository.save(dbClient);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async delete(id: ClientId): Promise<void> {
+    await this.repository.delete(id.getValue());
   }
 }

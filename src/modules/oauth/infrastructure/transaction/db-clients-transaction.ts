@@ -8,18 +8,15 @@ import { DbClient } from "@modules/oauth/infrastructure/entity/db-client.entity"
 import { DbScope } from "@modules/oauth/infrastructure/entity/db-scope.entity";
 import { DbClientScopeRepository } from "@modules/oauth/infrastructure/repository/db-client-scope.repository";
 import { DbClientRepository } from "@modules/oauth/infrastructure/repository/db-client.repository";
+import { DbOAuthGrantContext } from "@modules/oauth/infrastructure/repository/db-oauth-grant.store";
 import { DbScopeRepository } from "@modules/oauth/infrastructure/repository/db-scope.repository";
 
 @Injectable()
 export class DbClientsTransaction implements IClientsTransaction {
-  private readonly runner: DbTransactionRunner;
-
   constructor(
     @Inject(DbTransactionRunner)
-    runner: DbTransactionRunner
-  ) {
-    this.runner = runner;
-  }
+    private readonly runner: DbTransactionRunner
+  ) {}
 
   run<T>(work: (context: IClientsTransactionContext) => Promise<T>): Promise<T> {
     return this.runner.run((entityManager) => work(this.buildContext(entityManager)));
@@ -27,6 +24,7 @@ export class DbClientsTransaction implements IClientsTransaction {
 
   private buildContext(entityManager: EntityManager): IClientsTransactionContext {
     return {
+      oauthGrants: new DbOAuthGrantContext(entityManager),
       clientRepository: new DbClientRepository(entityManager.getRepository(DbClient)),
       clientScopeRepository: new DbClientScopeRepository(entityManager.getRepository(DbClientScope)),
       scopeRepository: new DbScopeRepository(entityManager.getRepository(DbScope)),
