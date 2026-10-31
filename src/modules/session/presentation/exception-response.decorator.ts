@@ -6,9 +6,8 @@ import {
   ApiNotFoundResponse,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { HttpStatus } from "@shared/http/http-status.enum";
-import { EXAMPLE_TIMESTAMP } from "@shared/exception/swagger/response-example";
 import { ExceptionResponse } from "@shared/exception/response/exception.response";
+import { HttpStatus } from "@shared/http/http-status.enum";
 
 export const ApiInvalidCredentialsResponse = () =>
   applyDecorators(
@@ -20,7 +19,7 @@ export const ApiInvalidCredentialsResponse = () =>
         code: "INVALID_CREDENTIALS",
         message: "Invalid credentials",
         path: "/v1/auth/login",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );
@@ -35,7 +34,7 @@ export const ApiUserBlockedResponse = () =>
         code: "USER_BLOCKED",
         message: "User is blocked",
         path: "/v1/auth/login",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );
@@ -50,7 +49,7 @@ export const ApiInvalidRefreshTokenResponse = () =>
         code: "INVALID_REFRESH_TOKEN",
         message: "Invalid refresh token",
         path: "/v1/auth/logout",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );
@@ -68,7 +67,7 @@ export const ApiInvalidAccessTokenResponse = () =>
         code: "INVALID_ACCESS_TOKEN",
         message: "Invalid access token",
         path: "/v1/users",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );
@@ -83,7 +82,7 @@ export const ApiAccessTokenExpiredResponse = () =>
         code: "ACCESS_TOKEN_EXPIRED",
         message: "Access token expired",
         path: "/v1/users",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );
@@ -98,7 +97,7 @@ export const ApiInsufficientRoleResponse = () =>
         code: "INSUFFICIENT_ROLE",
         message: "Insufficient role",
         path: "/v1/roles",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );
@@ -113,7 +112,7 @@ export const ApiInvalidSessionIdResponse = () =>
         code: "BAD_REQUEST",
         message: "Validation failed (uuid is expected)",
         path: "/v1/users/me/sessions/invalid-id",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );
@@ -128,7 +127,7 @@ export const ApiSessionNotFoundResponse = () =>
         code: "SESSION_NOT_FOUND",
         message: "Session not found",
         path: "/v1/users/me/sessions/9e20f958-86cb-4a71-a53a-dab1b026c739",
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
       },
     })
   );

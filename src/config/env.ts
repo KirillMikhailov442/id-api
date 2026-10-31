@@ -3,6 +3,21 @@ import { plainToInstance } from "class-transformer";
 import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Min, validateSync } from "class-validator";
 
 class EnvironmentVariables {
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_ID?: string;
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_SECRET?: string;
+  @IsOptional()
+  @IsUrl({ require_tld: false, protocols: ["http", "https"], require_protocol: true })
+  GOOGLE_REDIRECT_URI?: string;
+  @IsInt()
+  @Min(1)
+  EXTERNAL_LOGIN_TTL: number = 600;
+  @IsInt()
+  @Min(1)
+  EXTERNAL_LOGIN_HTTP_TIMEOUT: number = 10000;
   @IsInt()
   @Min(1)
   PORT: number = 3000;
@@ -19,6 +34,14 @@ class EnvironmentVariables {
   DB_NAME: string;
   @IsString()
   SWAGGER_PATH: string = "docs/swagger";
+  @IsString()
+  REDIS_URL: string = "redis://127.0.0.1:6379";
+  @IsInt()
+  @Min(1)
+  REDIS_CONNECT_TIMEOUT: number = 5000;
+  @IsInt()
+  @Min(1)
+  REDIS_COMMAND_TIMEOUT: number = 5000;
   @IsString()
   NODE_ENV: string = "development";
   @IsString()
@@ -65,17 +88,6 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   ID_TOKEN_TTL: number = 3600;
-  @IsString()
-  REDIS_URL: string = "redis://127.0.0.1:6379";
-  @IsInt()
-  @Min(1)
-  REDIS_CONNECT_TIMEOUT: number = 5000;
-  @IsInt()
-  @Min(1)
-  REDIS_COMMAND_TIMEOUT: number = 5000;
-  @IsString()
-  @IsNotEmpty()
-  ID_TOKEN_PRIVATE_KEY: string;
   @IsInt()
   @Min(1)
   OAUTH_ACCESS_TTL: number = 900;
@@ -85,24 +97,12 @@ class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   OAUTH_AUDIENCE: string = "id-api";
-  @IsOptional()
-  @IsString()
-  GOOGLE_CLIENT_ID?: string;
-  @IsOptional()
-  @IsString()
-  GOOGLE_CLIENT_SECRET?: string;
-  @IsOptional()
-  @IsUrl({ require_tld: false, protocols: ["http", "https"], require_protocol: true })
-  GOOGLE_REDIRECT_URI?: string;
-  @IsInt()
-  @Min(1)
-  EXTERNAL_LOGIN_TTL: number = 600;
-  @IsInt()
-  @Min(1)
-  EXTERNAL_LOGIN_HTTP_TIMEOUT: number = 10000;
   @IsInt()
   @Min(1)
   TOKEN_HISTORY_RETENTION_DAYS: number = 30;
+  @IsString()
+  @IsNotEmpty()
+  ID_TOKEN_PRIVATE_KEY: string;
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {

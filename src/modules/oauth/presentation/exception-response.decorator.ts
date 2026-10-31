@@ -7,11 +7,11 @@ import {
   ApiResponse,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { HttpStatus } from "@shared/http/http-status.enum";
-import { ApiValidationFailedResponse as ApiValidationFailedResponseFactory } from "@shared/exception/swagger/api-validation-failed-response";
-import type { FieldError } from "@shared/exception/response/field-error";
-import { EXAMPLE_TIMESTAMP, responseExample } from "@shared/exception/swagger/response-example";
 import { ExceptionResponse } from "@shared/exception/response/exception.response";
+import type { FieldError } from "@shared/exception/response/field-error";
+import { ApiValidationFailedResponse as ApiValidationFailedResponseFactory } from "@shared/exception/swagger/api-validation-failed-response";
+import { responseExample } from "@shared/exception/swagger/response-example";
+import { HttpStatus } from "@shared/http/http-status.enum";
 
 const EXAMPLE_CLIENT_ID = "00000000-0000-4000-8000-000000000000";
 
@@ -34,7 +34,12 @@ export const ApiClientAccessDeniedResponse = () =>
     ApiForbiddenResponse({
       description: "Only admins may create clients on behalf of another user",
       type: ExceptionResponse,
-      example: responseExample(HttpStatus.Forbidden, "access_denied", "Access to the client is denied", "/clients"),
+      example: responseExample(
+        HttpStatus.Forbidden,
+        "CLIENT_ACCESS_DENIED",
+        "Access to the client is denied",
+        "/clients"
+      ),
     })
   );
 
@@ -119,6 +124,11 @@ export const ApiScopeNotAssignedResponse = () =>
 
 export const ApiClientCreateValidationFailedResponse = () =>
   ApiValidationFailedResponse([
+    {
+      field: "scopes",
+      code: "INVALID_FORMAT",
+      message: "each value in scopes must match /^[a-zA-Z0-9:_.-]+$/ regular expression",
+    },
     { field: "name", code: "TOO_SHORT", message: "name must be longer than or equal to 2 characters" },
     { field: "secret", code: "TOO_SHORT", message: "secret must be longer than or equal to 12 characters" },
     { field: "location", code: "INVALID_FORMAT", message: "location must be a valid absolute URI" },
@@ -151,7 +161,7 @@ export const ApiClientInactiveResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.Forbidden,
-        "unauthorized_client",
+        "CLIENT_INACTIVE",
         "Client is inactive",
         `/clients/${EXAMPLE_CLIENT_ID}/codes`
       ),
@@ -165,7 +175,7 @@ export const ApiInvalidAuthorizationCodeResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.BadRequest,
-        "invalid_grant",
+        "INVALID_AUTHORIZATION_CODE",
         "Authorization code is invalid",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
@@ -179,7 +189,7 @@ export const ApiAuthorizationCodeExpiredResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.BadRequest,
-        "invalid_grant",
+        "AUTHORIZATION_CODE_EXPIRED",
         "Authorization code is expired",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
@@ -193,7 +203,7 @@ export const ApiAuthorizationCodeAlreadyUsedResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.Conflict,
-        "invalid_grant",
+        "AUTHORIZATION_CODE_ALREADY_USED",
         "Authorization code has already been used",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
@@ -211,9 +221,13 @@ export const ApiAuthorizationScopesNotAllowedResponse = () =>
         code: "VALIDATION_FAILED",
         message: "Validation failed",
         path: `/clients/${EXAMPLE_CLIENT_ID}/codes`,
-        timestamp: EXAMPLE_TIMESTAMP,
+        timestamp: "2026-10-21T09:00:00.000Z",
         errors: [
-          { field: "scopes", code: "invalid_scope", message: "Requested scopes are not assigned to the client" },
+          {
+            field: "scopes",
+            code: "AUTHORIZATION_SCOPES_NOT_ALLOWED",
+            message: "Requested scopes are not assigned to the client",
+          },
         ],
       },
     })
@@ -226,7 +240,7 @@ export const ApiRedirectUriNotAllowedResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.BadRequest,
-        "invalid_request",
+        "REDIRECT_URI_NOT_ALLOWED",
         "Redirect uri is not registered for the client",
         `/clients/${EXAMPLE_CLIENT_ID}/codes`
       ),
@@ -240,7 +254,7 @@ export const ApiInvalidClientCredentialsResponse = () =>
       type: ExceptionResponse,
       example: responseExample(
         HttpStatus.Unauthorized,
-        "invalid_client",
+        "INVALID_CLIENT_CREDENTIALS",
         "Client credentials are invalid",
         `/clients/${EXAMPLE_CLIENT_ID}/codes/redeem`
       ),
