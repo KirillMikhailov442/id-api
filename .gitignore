@@ -7,3 +7,4 @@ dist
 *.tsbuildinfo
 .idea
 .DS_Store
+coverage/
