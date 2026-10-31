@@ -7,11 +7,11 @@ import {
   ApiResponse,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { HttpStatus } from "@shared/domain/http-status.enum";
-import { ApiValidationFailedResponse as ApiValidationFailedResponseFactory } from "@shared/presentation/exception/api-validation-failed-response";
-import type { FieldError } from "@shared/presentation/exception/field-error";
-import { EXAMPLE_TIMESTAMP, responseExample } from "@shared/presentation/exception/response-example";
-import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
+import { HttpStatus } from "@shared/http/http-status.enum";
+import { ApiValidationFailedResponse as ApiValidationFailedResponseFactory } from "@shared/exception/swagger/api-validation-failed-response";
+import type { FieldError } from "@shared/exception/response/field-error";
+import { EXAMPLE_TIMESTAMP, responseExample } from "@shared/exception/swagger/response-example";
+import { ExceptionResponse } from "@shared/exception/response/exception.response";
 
 const EXAMPLE_CLIENT_ID = "00000000-0000-4000-8000-000000000000";
 

@@ -1,5 +1,5 @@
-import type { IRepository } from "@shared/domain/repository.type";
-import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import type { IRepository } from "@shared/repository/repository.type";
+import type { PaginationQuery } from "@shared/pagination/pagination.query";
 
 import type { Scope } from "@modules/oauth/domain/entity/scope";
 import type { ScopeName } from "@modules/oauth/domain/value-object/scope-name.value-object";

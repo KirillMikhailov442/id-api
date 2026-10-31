@@ -4,8 +4,8 @@ import { CommandBus } from "@nestjs/cqrs";
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { DeviceInfoParser } from "@shared/infrastructure/device/device-info-parser";
-import { Public } from "@shared/presentation/auth/public.decorator";
-import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/presentation/auth/refresh-cookie.options";
+import { Public } from "@shared/auth/decorator/public.decorator";
+import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/auth/cookie/refresh-cookie.options";
 import type { Request, Response } from "express";
 
 import { LoginCommand, type LoginResult } from "@modules/session/application/command/login.command";

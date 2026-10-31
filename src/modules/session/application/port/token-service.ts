@@ -1,4 +1,4 @@
-import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
+import type { AuthenticatedUser } from "@shared/auth/contract/authenticated-user.type";
 
 export type AccessTokenPayload = AuthenticatedUser;
 

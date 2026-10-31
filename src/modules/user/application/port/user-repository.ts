@@ -1,5 +1,5 @@
-import type { IRepository } from "@shared/domain/repository.type";
-import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import type { IRepository } from "@shared/repository/repository.type";
+import type { PaginationQuery } from "@shared/pagination/pagination.query";
 
 import type { User } from "@modules/user/domain/entity/user";
 import type { Email } from "@modules/user/domain/value-object/email.value-object";

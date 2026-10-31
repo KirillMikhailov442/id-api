@@ -1,11 +1,11 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { Roles } from "@shared/presentation/auth/roles.decorator";
-import { PaginationQuery } from "@shared/presentation/query/pagination.query";
-import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
-import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
-import { PaginationResponse } from "@shared/presentation/response/pagination.response";
+import { Roles } from "@shared/auth/decorator/roles.decorator";
+import { PaginationQuery } from "@shared/pagination/pagination.query";
+import { PaginationMeta } from "@shared/pagination/pagination-meta";
+import { ApiPaginationResponse } from "@shared/pagination/pagination-response.decorator";
+import { PaginationResponse } from "@shared/pagination/pagination.response";
 
 import { CreateScopeCommand } from "@modules/oauth/application/command/create-scope.command";
 import { ListScopesQuery } from "@modules/oauth/application/query/list-scopes.query";

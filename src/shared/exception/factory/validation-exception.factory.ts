@@ -1,6 +1,6 @@
 import { HttpException, type ValidationError } from "@nestjs/common";
-import { HttpStatus } from "@shared/domain/http-status.enum";
-import { FieldError } from "@shared/presentation/exception/field-error";
+import { HttpStatus } from "@shared/http/http-status.enum";
+import { FieldError } from "@shared/exception/response/field-error";
 
 const CONSTRAINT_CODES: Record<string, string> = {
   isNotEmpty: "REQUIRED",

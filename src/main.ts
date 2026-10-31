@@ -1,8 +1,8 @@
 import { Logger, ValidationPipe, VersioningType } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
-import { validationExceptionFactory } from "@shared/presentation/exception/factories/validation-exception.factory";
-import { ExceptionFilter } from "@shared/presentation/exception/filters/exception.filter";
+import { validationExceptionFactory } from "@shared/exception/factory/validation-exception.factory";
+import { ExceptionFilter } from "@shared/exception/filter/exception.filter";
 import cookieParser from "cookie-parser";
 
 import { setupSwagger } from "@config/swagger";

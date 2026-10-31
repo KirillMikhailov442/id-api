@@ -3,8 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { DeviceInfoModule } from "@shared/infrastructure/device/device-info.module";
-import { MailService } from "@shared/infrastructure/mail/mail.service";
-import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
+import { MailService } from "@shared/mail/mail.service";
+import { DbTransactionRunner } from "@shared/transaction/db-transaction-runner";
 
 import { BlockUserCommandHandler } from "@modules/user/application/handler/block-user.command.handler";
 import { ChangePasswordCommandHandler } from "@modules/user/application/handler/change-password.command.handler";

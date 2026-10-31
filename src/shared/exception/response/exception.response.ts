@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { FieldError } from "@shared/presentation/exception/field-error";
+import { FieldError } from "@shared/exception/response/field-error";
 
 export class ExceptionResponse {
   @ApiProperty({ example: 404 })

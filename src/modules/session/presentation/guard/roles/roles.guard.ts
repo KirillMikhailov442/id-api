@@ -1,7 +1,7 @@
 import { Inject, Injectable, type CanActivate, type ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import type { AuthenticatedRequest } from "@shared/presentation/auth/authenticated-request.type";
-import { ROLES_KEY } from "@shared/presentation/auth/roles.decorator";
+import type { AuthenticatedRequest } from "@shared/auth/contract/authenticated-request.type";
+import { ROLES_KEY } from "@shared/auth/decorator/roles.decorator";
 
 import { InsufficientRoleException } from "@modules/session/domain/exception/insufficient-role.exception";
 import { InvalidAccessTokenException } from "@modules/session/domain/exception/invalid-access-token.exception";

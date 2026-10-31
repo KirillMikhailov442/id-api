@@ -6,9 +6,9 @@ import {
   ApiNotFoundResponse,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { HttpStatus } from "@shared/domain/http-status.enum";
-import { EXAMPLE_TIMESTAMP } from "@shared/presentation/exception/response-example";
-import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
+import { HttpStatus } from "@shared/http/http-status.enum";
+import { EXAMPLE_TIMESTAMP } from "@shared/exception/swagger/response-example";
+import { ExceptionResponse } from "@shared/exception/response/exception.response";
 
 export const ApiInvalidCredentialsResponse = () =>
   applyDecorators(

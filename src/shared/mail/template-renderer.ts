@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { LAYOUT_TEMPLATE, TEMPLATE_EXTENSION } from "@shared/infrastructure/mail/mail.constants";
-import type { EmailContent } from "@shared/infrastructure/mail/mail.types";
+import { LAYOUT_TEMPLATE, TEMPLATE_EXTENSION } from "@shared/mail/mail.constants";
+import type { EmailContent } from "@shared/mail/mail.types";
 import Handlebars, { type TemplateDelegate } from "handlebars";
 
 const SHARED_TEMPLATES_DIR = join(__dirname, "templates");

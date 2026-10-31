@@ -1,5 +1,5 @@
 import { InjectRepository } from "@nestjs/typeorm";
-import type { PaginationQuery } from "@shared/presentation/query/pagination.query";
+import type { PaginationQuery } from "@shared/pagination/pagination.query";
 import { In, QueryFailedError, type Repository } from "typeorm";
 
 import type { IScopeRepository } from "@modules/oauth/application/port/scope-repository.type";

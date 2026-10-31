@@ -1,5 +1,5 @@
-import { DomainException } from "@shared/domain/exception/domain.exception";
-import { HttpStatus } from "@shared/domain/http-status.enum";
+import { DomainException } from "@shared/exception/base/domain.exception";
+import { HttpStatus } from "@shared/http/http-status.enum";
 
 export class SessionNotFoundException extends DomainException {
   readonly code = "SESSION_NOT_FOUND";

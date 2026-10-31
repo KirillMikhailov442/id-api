@@ -1,4 +1,4 @@
-import type { HttpStatus } from "@shared/domain/http-status.enum";
+import type { HttpStatus } from "@shared/http/http-status.enum";
 
 export abstract class DomainException extends Error {
   abstract readonly code: string;

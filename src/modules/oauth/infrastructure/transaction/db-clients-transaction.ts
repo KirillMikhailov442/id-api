@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
+import { DbTransactionRunner } from "@shared/transaction/db-transaction-runner";
 import type { EntityManager } from "typeorm";
 
 import type { IClientsTransaction, IClientsTransactionContext } from "@modules/oauth/application/port/transaction.port";

@@ -6,11 +6,11 @@ import {
   type ArgumentsHost,
   type ExceptionFilter as NestExceptionFilter,
 } from "@nestjs/common";
-import { DomainException } from "@shared/domain/exception/domain.exception";
-import { HttpStatus } from "@shared/domain/http-status.enum";
-import { FieldError } from "@shared/presentation/exception/field-error";
-import { ExceptionResponse } from "@shared/presentation/exception/responses/exception.response";
-import { ValidationExceptionResponse } from "@shared/presentation/exception/responses/validation-exception.response";
+import { DomainException } from "@shared/exception/base/domain.exception";
+import { HttpStatus } from "@shared/http/http-status.enum";
+import { FieldError } from "@shared/exception/response/field-error";
+import { ExceptionResponse } from "@shared/exception/response/exception.response";
+import { ValidationExceptionResponse } from "@shared/exception/response/validation-exception.response";
 import type { Request, Response } from "express";
 
 interface HttpExceptionBody {

@@ -1,4 +1,4 @@
-import { SortOrder } from "@shared/presentation/query/sort-order.enum";
+import { SortOrder } from "@shared/query/sort-order.enum";
 import { IsEnum, IsOptional, IsString } from "class-validator";
 
 export class SortQuery<T extends string = string> {

@@ -3,9 +3,9 @@ import { ConfigService } from "@nestjs/config";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
-import { Public } from "@shared/presentation/auth/public.decorator";
+import type { AuthenticatedUser } from "@shared/auth/contract/authenticated-user.type";
+import { CurrentUser } from "@shared/auth/decorator/current-user.decorator";
+import { Public } from "@shared/auth/decorator/public.decorator";
 import type { Response } from "express";
 
 import { IssueCodeCommand } from "@modules/oauth/application/command/issue-code.command";

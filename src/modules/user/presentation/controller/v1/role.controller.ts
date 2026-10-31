@@ -8,7 +8,7 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { Roles } from "@shared/presentation/auth/roles.decorator";
+import { Roles } from "@shared/auth/decorator/roles.decorator";
 
 import {
   ApiAccessTokenExpiredResponse,

@@ -1,4 +1,4 @@
-import type { IRepository } from "@shared/domain/repository.type";
+import type { IRepository } from "@shared/repository/repository.type";
 
 import type { Session } from "@modules/session/domain/entity/session";
 import type { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";

@@ -1,5 +1,5 @@
-import { InvalidValueObjectException } from "@shared/domain/exception/invalid-value-object.exception";
-import type { IValueObject } from "@shared/domain/value-object.type";
+import { InvalidValueObjectException } from "@shared/exception/base/invalid-value-object.exception";
+import type { IValueObject } from "@shared/value-object/value-object.type";
 
 export const MAX_LENGTH = 45;
 

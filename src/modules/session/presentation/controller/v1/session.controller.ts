@@ -2,9 +2,9 @@ import { Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseUUID
 import { ConfigService } from "@nestjs/config";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
-import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/presentation/auth/refresh-cookie.options";
+import type { AuthenticatedUser } from "@shared/auth/contract/authenticated-user.type";
+import { CurrentUser } from "@shared/auth/decorator/current-user.decorator";
+import { REFRESH_TOKEN_COOKIE, refreshCookieOptions } from "@shared/auth/cookie/refresh-cookie.options";
 import type { Response } from "express";
 
 import { RevokeSessionCommand } from "@modules/session/application/command/revoke-session.command";

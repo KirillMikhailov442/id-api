@@ -1,6 +1,6 @@
 import { applyDecorators, type Type } from "@nestjs/common";
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
-import { PaginationResponse } from "@shared/presentation/response/pagination.response";
+import { PaginationResponse } from "@shared/pagination/pagination.response";
 
 export const ApiPaginationResponse = (itemType: Type<unknown>, description: string) =>
   applyDecorators(

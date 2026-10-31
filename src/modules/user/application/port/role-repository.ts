@@ -1,4 +1,4 @@
-import type { IRepository } from "@shared/domain/repository.type";
+import type { IRepository } from "@shared/repository/repository.type";
 
 import type { Role } from "@modules/user/domain/entity/role";
 import type { RoleName } from "@modules/user/domain/value-object/role-name.value-object";

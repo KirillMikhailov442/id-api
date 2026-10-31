@@ -15,13 +15,13 @@ import {
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import type { AuthenticatedUser } from "@shared/presentation/auth/authenticated-user.type";
-import { CurrentUser } from "@shared/presentation/auth/current-user.decorator";
-import { Roles } from "@shared/presentation/auth/roles.decorator";
-import { PaginationQuery } from "@shared/presentation/query/pagination.query";
-import { PaginationMeta } from "@shared/presentation/response/pagination-meta";
-import { ApiPaginationResponse } from "@shared/presentation/response/pagination-response.decorator";
-import { PaginationResponse } from "@shared/presentation/response/pagination.response";
+import type { AuthenticatedUser } from "@shared/auth/contract/authenticated-user.type";
+import { CurrentUser } from "@shared/auth/decorator/current-user.decorator";
+import { Roles } from "@shared/auth/decorator/roles.decorator";
+import { PaginationQuery } from "@shared/pagination/pagination.query";
+import { PaginationMeta } from "@shared/pagination/pagination-meta";
+import { ApiPaginationResponse } from "@shared/pagination/pagination-response.decorator";
+import { PaginationResponse } from "@shared/pagination/pagination.response";
 
 import { AssignScopesCommand } from "@modules/oauth/application/command/assign-scopes.command";
 import { CreateClientCommand } from "@modules/oauth/application/command/create-client.command";

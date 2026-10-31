@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { DbTransactionRunner } from "@shared/infrastructure/transaction/db-transaction-runner";
+import { DbTransactionRunner } from "@shared/transaction/db-transaction-runner";
 
 import { AuthorizationRequestValidator } from "@modules/oauth/application/authorization-request-validator";
 import { AssignScopesCommandHandler } from "@modules/oauth/application/handler/assign-scopes.command.handler";

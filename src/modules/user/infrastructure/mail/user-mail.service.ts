@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { MailService } from "@shared/infrastructure/mail/mail.service";
-import { TemplateRenderer } from "@shared/infrastructure/mail/template-renderer";
+import { MailService } from "@shared/mail/mail.service";
+import { TemplateRenderer } from "@shared/mail/template-renderer";
 
 import {
   BLOCKED_ACCOUNT_TEMPLATE,

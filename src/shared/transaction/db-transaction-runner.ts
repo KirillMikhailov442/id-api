@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectDataSource } from "@nestjs/typeorm";
-import type { ITransactionRunner } from "@shared/infrastructure/transaction/transaction-runner.type";
+import type { ITransactionRunner } from "@shared/transaction/transaction-runner.type";
 import type { DataSource, EntityManager } from "typeorm";
 
 @Injectable()

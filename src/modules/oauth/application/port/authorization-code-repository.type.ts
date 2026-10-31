@@ -1,4 +1,4 @@
-import type { IRepository } from "@shared/domain/repository.type";
+import type { IRepository } from "@shared/repository/repository.type";
 
 import type { AuthorizationCode } from "@modules/oauth/domain/entity/authorization-code";
 

@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { SMTP_SECURE_TRUE } from "@shared/infrastructure/mail/mail.constants";
-import type { SendMailParams } from "@shared/infrastructure/mail/mail.types";
+import { SMTP_SECURE_TRUE } from "@shared/mail/mail.constants";
+import type { SendMailParams } from "@shared/mail/mail.types";
 import { createTransport, type Transporter } from "nodemailer";
 
 @Injectable()
