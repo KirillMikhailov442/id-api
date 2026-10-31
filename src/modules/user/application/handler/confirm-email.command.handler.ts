@@ -33,7 +33,7 @@ export class ConfirmEmailCommandHandler implements ICommandHandler<ConfirmEmailC
       throw new UserNotFoundException();
     }
 
-  if (user.getEmail().getValue() !== payload.email) {
+    if (user.getEmail().getValue() !== payload.email) {
       throw new InvalidEmailConfirmationTokenException();
     }
 
