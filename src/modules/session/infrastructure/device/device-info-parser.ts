@@ -1,11 +1,15 @@
 import type { IncomingHttpHeaders } from "node:http";
 import { Injectable } from "@nestjs/common";
-import { DeviceInfo } from "@shared/domain/device-info";
 import DeviceDetector, { type DetectResult } from "node-device-detector";
 import ClientHints from "node-device-detector/client-hints";
 
+import type { DeviceInfo } from "@modules/session/application/device-info.type";
+import { DeviceTypeName } from "@modules/session/domain/enum/device-type.enum";
+import { Browser } from "@modules/session/domain/value-object/browser.value-object";
+import { DeviceType } from "@modules/session/domain/value-object/device-type.value-object";
+import { OperatingSystem } from "@modules/session/domain/value-object/operating-system.value-object";
+
 const MAX_USER_AGENT_LENGTH = 2048;
-const MAX_FIELD_LENGTH = 128;
 
 interface ClientHintBrand {
   brand: string;
@@ -37,25 +41,41 @@ export class DeviceInfoParser {
       const hintedBrowser = this.detector.parseClient("", hints);
       const browser =
         hintedBrowser.type === "browser" && hintedBrowser.name !== "Chromium"
-          ? this.normalize(hintedBrowser.name)
+          ? Browser.isValid(hintedBrowser.name)
+            ? hintedBrowser.name
+            : merged.browser
           : merged.browser;
-      const deviceType = hintHeaders["sec-ch-ua-mobile"] === "?1" ? "mobile" : merged.deviceType;
-      return new DeviceInfo(browser, merged.os, deviceType);
+
+      const mobileTypes: ReadonlySet<string> = new Set([
+        DeviceTypeName.Smartphone,
+        DeviceTypeName.Phablet,
+        DeviceTypeName.FeaturePhone,
+      ]);
+      const deviceType =
+        hintHeaders["sec-ch-ua-mobile"] === "?1" && !mobileTypes.has(merged.deviceType ?? "")
+          ? DeviceTypeName.Smartphone
+          : merged.deviceType;
+
+      return { browser, os: merged.os, deviceType };
     } catch {
       try {
         return this.toDeviceInfo(this.detector.detect(userAgent));
       } catch {
-        return new DeviceInfo(null, null, null);
+        return { browser: null, os: null, deviceType: null };
       }
     }
   }
 
   private toDeviceInfo(result: DetectResult): DeviceInfo {
-    return new DeviceInfo(
-      this.normalize(result.client?.type === "browser" ? result.client.name : undefined),
-      this.normalize(result.os?.name),
-      this.normalizeDeviceType(result.device?.type)
-    );
+    const browser = result.client?.type === "browser" ? result.client.name : "";
+    const os = result.os?.name ?? "";
+    const deviceType = result.device?.type ?? "";
+
+    return {
+      browser: Browser.isValid(browser) ? browser : null,
+      os: OperatingSystem.isValid(os) ? os : null,
+      deviceType: DeviceType.isValid(deviceType) ? deviceType : null,
+    };
   }
 
   private brandPriority(brand: string): number {
@@ -68,21 +88,5 @@ export class DeviceInfoParser {
       default:
         return 2;
     }
-  }
-
-  private normalizeDeviceType(value: string | undefined): string | null {
-    switch (value) {
-      case "smartphone":
-      case "phablet":
-      case "feature phone":
-        return "mobile";
-      default:
-        return this.normalize(value);
-    }
-  }
-
-  private normalize(value: string | undefined): string | null {
-    const normalized = value?.trim().slice(0, MAX_FIELD_LENGTH);
-    return normalized === undefined || normalized.length === 0 ? null : normalized;
   }
 }
