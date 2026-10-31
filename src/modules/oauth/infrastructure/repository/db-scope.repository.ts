@@ -89,7 +89,7 @@ export class DbScopeRepository implements IScopeRepository {
         }
       ).constraint;
 
-      if (constraint === SCOPE_NAME_UNIQUE_CONSTRAINT) {
+      if (constraint === SCOPE_NAME_UNIQUE_CONSTRAINT || constraint === "UQ_1029065e5c13f582d843d73dee5") {
         return new ScopeAlreadyExistsException();
       }
     }
