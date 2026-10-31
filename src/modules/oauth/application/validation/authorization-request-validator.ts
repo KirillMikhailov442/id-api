@@ -10,42 +10,41 @@ import { ClientNotFoundException } from "@modules/oauth/domain/exception/client-
 import { RedirectUriNotAllowedException } from "@modules/oauth/domain/exception/redirect-uri-not-allowed.exception";
 import { CodeScopes } from "@modules/oauth/domain/value-object/code-scopes.value-object";
 import { RedirectUri } from "@modules/oauth/domain/value-object/redirect-uri.value-object";
+import { ClientId } from "@modules/oauth/oauth.ids";
 import { CLIENT_REPOSITORY, CLIENT_SCOPE_REPOSITORY, SCOPE_REPOSITORY } from "@modules/oauth/oauth.tokens";
 
 @Injectable()
 export class AuthorizationRequestValidator {
-  private readonly clientRepository: IClientRepository;
-  private readonly clientScopeRepository: IClientScopeRepository;
-  private readonly scopeRepository: IScopeRepository;
-
   constructor(
     @Inject(CLIENT_REPOSITORY)
-    clientRepository: IClientRepository,
+    private readonly clientRepository: IClientRepository,
     @Inject(CLIENT_SCOPE_REPOSITORY)
-    clientScopeRepository: IClientScopeRepository,
+    private readonly clientScopeRepository: IClientScopeRepository,
     @Inject(SCOPE_REPOSITORY)
-    scopeRepository: IScopeRepository
-  ) {
-    this.clientRepository = clientRepository;
-    this.clientScopeRepository = clientScopeRepository;
-    this.scopeRepository = scopeRepository;
-  }
+    private readonly scopeRepository: IScopeRepository
+  ) {}
 
-  async validate(clientId: string, redirectUri: string, scopes: string[]): Promise<Client> {
+  async validateRedirect(clientId: ClientId, redirectUri: string): Promise<Client> {
     const client = await this.clientRepository.findById(clientId);
 
     if (client === null) {
       throw new ClientNotFoundException();
     }
 
-    if (!client.getIsActive()) {
-      throw new ClientInactiveException();
-    }
-
     const redirectUriValue = new RedirectUri(redirectUri).getValue();
 
     if (client.getLocation()?.getValue() !== redirectUriValue) {
       throw new RedirectUriNotAllowedException();
+    }
+
+    return client;
+  }
+
+  async validate(clientId: ClientId, redirectUri: string, scopes: string[]): Promise<Client> {
+    const client = await this.validateRedirect(clientId, redirectUri);
+
+    if (!client.getIsActive()) {
+      throw new ClientInactiveException();
     }
 
     const requestedScopes = new CodeScopes(scopes);

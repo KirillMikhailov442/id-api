@@ -76,6 +76,15 @@ class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   ID_TOKEN_PRIVATE_KEY: string;
+  @IsInt()
+  @Min(1)
+  OAUTH_ACCESS_TTL: number = 900;
+  @IsInt()
+  @Min(1)
+  OAUTH_REFRESH_TTL: number = 2592000;
+  @IsString()
+  @IsNotEmpty()
+  OAUTH_AUDIENCE: string = "id-api";
 }
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {

@@ -6,6 +6,9 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { OAuthModule } from "@modules/oauth/oauth.module";
+import { OAuthAccessTokenGuard } from "@modules/oauth/presentation/guard/oauth-access-token.guard";
+import { RolesGuard } from "@modules/session/presentation/guard/roles.guard";
+import { SessionAccessTokenGuard } from "@modules/session/presentation/guard/session-access-token.guard";
 import { SessionModule } from "@modules/session/session.module";
 import { UserModule } from "@modules/user/user.module";
 
@@ -30,6 +33,11 @@ import { getThrottlerConfig } from "@config/rate-limit";
     SessionModule,
     OAuthModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useExisting: SessionAccessTokenGuard },
+    { provide: APP_GUARD, useExisting: OAuthAccessTokenGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}
