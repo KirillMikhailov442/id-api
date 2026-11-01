@@ -3,6 +3,8 @@ import { testHandler } from "@shared/testing/handler-test.spec-support";
 import { DeleteRoleCommand } from "@modules/user/application/command/delete-role.command";
 import { DeleteRoleCommandHandler } from "@modules/user/application/handler/delete-role.command.handler";
 import { makeRole, userRepositories } from "@modules/user/application/handler/user-test.spec-support";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
+import { ProtectedRoleException } from "@modules/user/domain/exception/protected-role.exception";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
 import { RoleId } from "@modules/user/user.ids";
 import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
@@ -26,6 +28,16 @@ describe("DeleteRoleCommandHandler", () => {
     expect(repositories.roleRepository.findById).toHaveBeenCalledWith(RoleId.from(item.getId().getValue()));
     expect(result).toBeUndefined();
     expect(repositories.roleRepository.delete).toHaveBeenCalledWith(item.getId());
+  });
+
+  it("rejects deletion of the SUPERUSER role without writing", async () => {
+    item = makeRole(RoleType.SuperUser);
+    repositories.roleRepository.findById.mockResolvedValue(item);
+    await expect(handler.execute(new DeleteRoleCommand(item.getId().getValue()))).rejects.toThrow(
+      ProtectedRoleException
+    );
+    expect(repositories.roleRepository.delete).not.toHaveBeenCalled();
+    expect(repositories.roleRepository.save).not.toHaveBeenCalled();
   });
 
   it("rejects a missing entity without writing", async () => {
