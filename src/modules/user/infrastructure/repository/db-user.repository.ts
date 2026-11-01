@@ -1,9 +1,9 @@
 import { InjectRepository } from "@nestjs/typeorm";
 import type { PaginationQuery } from "@shared/pagination/pagination.query";
-import { In, Not, QueryFailedError, type Repository } from "typeorm";
+import { In, QueryFailedError, type Repository } from "typeorm";
 
-import type { IUserRepository } from "@modules/user/application/port/user-repository";
-import { SUPER_USER_EMAIL, type User } from "@modules/user/domain/entity/user";
+import type { IUserRepository, UserFilter } from "@modules/user/application/port/user-repository";
+import type { User } from "@modules/user/domain/entity/user";
 import { EmailAlreadyRegisteredException } from "@modules/user/domain/exception/email-already-registered.exception";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
 import type { Email } from "@modules/user/domain/value-object/email.value-object";
@@ -34,13 +34,12 @@ export class DbUserRepository implements IUserRepository {
     return UserMapper.toDomain(dbUser, dbUserRoles);
   }
 
-  async findAll(pagination: PaginationQuery): Promise<User[]> {
-    const dbUsers = await this.userRepository.find({
-      where: { email: Not(SUPER_USER_EMAIL) },
-      skip: pagination.offset,
-      take: pagination.limit,
-      order: { createdAt: "DESC" },
-    });
+  async findAll(pagination: PaginationQuery, filter: UserFilter = {}): Promise<User[]> {
+    const dbUsers = await this.filteredUsersQuery(filter)
+      .skip(pagination.offset)
+      .take(pagination.limit)
+      .orderBy("user.createdAt", "DESC")
+      .getMany();
 
     if (dbUsers.length === 0) {
       return [];
@@ -60,8 +59,8 @@ export class DbUserRepository implements IUserRepository {
     );
   }
 
-  async count(): Promise<number> {
-    return this.userRepository.count({ where: { email: Not(SUPER_USER_EMAIL) } });
+  async count(filter: UserFilter = {}): Promise<number> {
+    return this.filteredUsersQuery(filter).getCount();
   }
 
   async findByEmail(email: Email): Promise<User | null> {
@@ -113,6 +112,27 @@ export class DbUserRepository implements IUserRepository {
     }
 
     await this.userRepository.delete(id.getValue());
+  }
+
+  private filteredUsersQuery(filter: UserFilter) {
+    const users = this.userRepository.createQueryBuilder("user");
+
+    if (filter.excludeRole === undefined) return users;
+
+    return users
+      .where((query) => {
+        const assignments = query
+          .subQuery()
+          .select("1")
+          .from(DbUserRole, "assignment")
+          .innerJoin("assignment.role", "role")
+          .where("assignment.userId = user.id")
+          .andWhere("role.name = :hiddenRole")
+          .getQuery();
+
+        return `NOT EXISTS ${assignments}`;
+      })
+      .setParameter("hiddenRole", filter.excludeRole);
   }
 
   private async loadUserRoles(userId: UserId): Promise<DbUserRole[]> {

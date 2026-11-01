@@ -3,6 +3,8 @@ import { testHandler } from "@shared/testing/handler-test.spec-support";
 import { UpdateRoleCommand } from "@modules/user/application/command/update-role.command";
 import { UpdateRoleCommandHandler } from "@modules/user/application/handler/update-role.command.handler";
 import { makeRole, userRepositories } from "@modules/user/application/handler/user-test.spec-support";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
+import { ProtectedRoleException } from "@modules/user/domain/exception/protected-role.exception";
 import { RoleAlreadyExistsException } from "@modules/user/domain/exception/role-already-exists.exception";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
 import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
@@ -33,6 +35,20 @@ describe("UpdateRoleCommandHandler", () => {
     expect(repos.roleRepository.findByName).not.toHaveBeenCalled();
     expect(repos.roleRepository.save).toHaveBeenCalledWith(role);
   });
+
+  it.each([RoleType.User, RoleType.Admin, RoleType.SuperUser])(
+    "rejects updates of the SUPERUSER role to %s without mutating or saving",
+    async (name) => {
+      role = makeRole(RoleType.SuperUser);
+      repos.roleRepository.findById.mockResolvedValue(role);
+      await expect(handler.execute(new UpdateRoleCommand(role.getId().getValue(), name))).rejects.toThrow(
+        ProtectedRoleException
+      );
+      expect(role.getName().getValue()).toBe(RoleType.SuperUser);
+      expect(repos.roleRepository.findByName).not.toHaveBeenCalled();
+      expect(repos.roleRepository.save).not.toHaveBeenCalled();
+    }
+  );
 
   it("rejects an unknown role", async () => {
     repos.roleRepository.findById.mockResolvedValue(null);

@@ -9,15 +9,18 @@ import request from "supertest";
 
 import { LoginCommand } from "@modules/session/application/command/login.command";
 import { DeviceInfoParser } from "@modules/session/device-info.module";
+import { AssignUserRoleCommand } from "@modules/user/application/command/assign-user-role.command";
 import { BlockUserCommand } from "@modules/user/application/command/block-user.command";
 import { ChangePasswordCommand } from "@modules/user/application/command/change-password.command";
 import { ConfirmEmailCommand } from "@modules/user/application/command/confirm-email.command";
 import { CreateUserCommand } from "@modules/user/application/command/create-user.command";
 import { DeleteUserCommand } from "@modules/user/application/command/delete-user.command";
+import { RemoveUserRoleCommand } from "@modules/user/application/command/remove-user-role.command";
 import { UnblockUserCommand } from "@modules/user/application/command/unblock-user.command";
 import { UpdateUserCommand } from "@modules/user/application/command/update-user.command";
 import { makeRole, makeUser } from "@modules/user/application/handler/user-test.spec-support";
 import { ProfileAccessPolicy } from "@modules/user/application/profile-access.policy";
+import { GetCurrentUserQuery } from "@modules/user/application/query/get-current-user.query";
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
 import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
 import { RoleType } from "@modules/user/domain/enum/role-type.enum";
@@ -25,6 +28,7 @@ import { EmailAlreadyRegisteredException } from "@modules/user/domain/exception/
 import { InvalidEmailConfirmationTokenException } from "@modules/user/domain/exception/invalid-email-confirmation-token.exception";
 import { InvalidOldPasswordException } from "@modules/user/domain/exception/invalid-old-password.exception";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { UserRoleChangeForbiddenException } from "@modules/user/domain/exception/user-role-change-forbidden.exception";
 import { UserController } from "@modules/user/presentation/controller/v1/user.controller";
 
 describe("UserController (HTTP)", () => {
@@ -86,6 +90,41 @@ describe("UserController (HTTP)", () => {
   afterAll(async () => {
     await app.close();
   });
+
+  for (const method of ["put", "delete"] as const) {
+    it(`dispatches ${method} role changes using trusted requester roles`, async () => {
+      const roleId = "00000000-0000-4000-8000-000000000005";
+      auth = { ...testSessionAuth, roles: [RoleType.SuperUser] };
+      execute.mockResolvedValue(undefined);
+
+      const response = await request(app.getHttpServer())[method](path() + "/roles/" + roleId)
+        .send({ requesterRoles: [RoleType.Admin] })
+        .expect(204);
+      const expected =
+        method === "put"
+          ? new AssignUserRoleCommand(user.getId().getValue(), roleId, [RoleType.SuperUser])
+          : new RemoveUserRoleCommand(user.getId().getValue(), roleId, [RoleType.SuperUser]);
+      expect(execute).toHaveBeenCalledWith(expected);
+      expect(response.text).toBe("");
+    });
+
+    it.each([
+      "invalid/roles/00000000-0000-4000-8000-000000000005",
+      "00000000-0000-4000-8000-000000000001/roles/invalid",
+    ])(`validates UUIDs on ${method} %s`, async (suffix) => {
+      await request(app.getHttpServer())[method]("/v1/users/" + suffix)
+        .expect(400);
+      expect(execute).not.toHaveBeenCalled();
+    });
+
+    it(`returns 403 for forbidden ${method} role changes`, async () => {
+      execute.mockRejectedValue(new UserRoleChangeForbiddenException());
+
+      const response = await request(app.getHttpServer())[method](path() + "/roles/00000000-0000-4000-8000-000000000005")
+        .expect(403);
+      expect(response.body).toMatchObject({ status: 403, code: "USER_ROLE_CHANGE_FORBIDDEN" });
+    });
+  }
 
   it("creates a user, logs in and sets an HttpOnly refresh cookie", async () => {
     execute.mockResolvedValueOnce(user).mockResolvedValueOnce({ accessToken: "access", refreshToken: "refresh" });
@@ -167,11 +206,31 @@ describe("UserController (HTTP)", () => {
     expect(response.body).toEqual(dto());
   });
 
+  it("forwards trusted session roles when listing and retrieving users", async () => {
+    auth = { ...testSessionAuth, roles: [RoleType.SuperUser] };
+    query.mockResolvedValueOnce({ items: [user], total: 1 }).mockResolvedValueOnce(user);
+
+    await request(app.getHttpServer()).get("/v1/users?requesterRoles=SUPERUSER").expect(200);
+    expect(query).toHaveBeenNthCalledWith(1, new ListUsersQuery(20, 0, [RoleType.SuperUser]));
+    await request(app.getHttpServer()).get(path()).expect(200);
+    expect(query).toHaveBeenNthCalledWith(2, new GetUserQuery(user.getId().getValue(), [RoleType.SuperUser]));
+  });
+
+  it("does not use query parameters as requester roles", async () => {
+    query.mockResolvedValueOnce({ items: [], total: 0 }).mockResolvedValueOnce(user);
+    await request(app.getHttpServer()).get("/v1/users?requesterRoles=SUPERUSER").expect(200);
+    expect(query).toHaveBeenNthCalledWith(1, new ListUsersQuery(20, 0, []));
+    await request(app.getHttpServer())
+      .get(path() + "?requesterRoles=SUPERUSER")
+      .expect(200);
+    expect(query).toHaveBeenNthCalledWith(2, new GetUserQuery(user.getId().getValue(), []));
+  });
+
   it("returns the full account DTO for the current session", async () => {
     query.mockResolvedValue(user);
 
     const response = await request(app.getHttpServer()).get("/v1/users/me").expect(200);
-    expect(query).toHaveBeenCalledWith(new GetUserQuery(user.getId().getValue(), true));
+    expect(query).toHaveBeenCalledWith(new GetCurrentUserQuery(user.getId().getValue()));
     expect(response.body).toEqual(dto());
   });
 
@@ -180,7 +239,7 @@ describe("UserController (HTTP)", () => {
     query.mockResolvedValue(user);
 
     const response = await request(app.getHttpServer()).get("/v1/users/me").expect(200);
-    expect(query).toHaveBeenCalledWith(new GetUserQuery(user.getId().getValue(), true));
+    expect(query).toHaveBeenCalledWith(new GetCurrentUserQuery(user.getId().getValue()));
     expect(response.body).toEqual(profileDto());
   });
 

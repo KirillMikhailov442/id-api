@@ -16,6 +16,7 @@ import { RoleController } from "@modules/user/presentation/controller/v1/role.co
 import { RoleDto } from "@modules/user/presentation/dto/v1/role.dto";
 import {
   ApiInvalidRoleIdResponse,
+  ApiProtectedRoleResponse,
   ApiRoleAlreadyExistsResponse,
   ApiRoleCreateValidationFailedResponse,
   ApiRoleNotFoundResponse,
@@ -73,7 +74,8 @@ export function registerRoleControllerSwagger(): void {
 
   documentMethod(
     "update",
-    ApiOperation({ description: "Requires admin role" }),
+    ApiOperation({ description: "Requires admin role. The SUPERUSER role cannot be modified or deleted." }),
+    ApiProtectedRoleResponse(),
     ApiOkResponse({ type: RoleDto, description: "Role updated" }),
     ApiInvalidRoleIdResponse(),
     ApiRoleAlreadyExistsResponse(),
@@ -84,7 +86,8 @@ export function registerRoleControllerSwagger(): void {
 
   documentMethod(
     "delete",
-    ApiOperation({ description: "Requires admin role" }),
+    ApiOperation({ description: "Requires admin role. The SUPERUSER role cannot be modified or deleted." }),
+    ApiProtectedRoleResponse(),
     ApiNoContentResponse({ description: "Role deleted" }),
     ApiInvalidRoleIdResponse(),
     ApiRoleNotFoundResponse(),

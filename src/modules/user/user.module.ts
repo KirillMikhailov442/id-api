@@ -6,6 +6,7 @@ import { MailService } from "@shared/mail/mail.service";
 import { DbTransactionRunner } from "@shared/transaction/db-transaction-runner";
 
 import { DeviceInfoModule } from "@modules/session/device-info.module";
+import { AssignUserRoleCommandHandler } from "@modules/user/application/handler/assign-user-role.command.handler";
 import { BlockUserCommandHandler } from "@modules/user/application/handler/block-user.command.handler";
 import { ChangePasswordCommandHandler } from "@modules/user/application/handler/change-password.command.handler";
 import { ConfirmEmailCommandHandler } from "@modules/user/application/handler/confirm-email.command.handler";
@@ -13,10 +14,12 @@ import { CreateRoleCommandHandler } from "@modules/user/application/handler/crea
 import { CreateUserCommandHandler } from "@modules/user/application/handler/create-user.command.handler";
 import { DeleteRoleCommandHandler } from "@modules/user/application/handler/delete-role.command.handler";
 import { DeleteUserCommandHandler } from "@modules/user/application/handler/delete-user.command.handler";
+import { GetCurrentUserQueryHandler } from "@modules/user/application/handler/get-current-user.query.handler";
 import { GetRoleQueryHandler } from "@modules/user/application/handler/get-role.query.handler";
 import { GetUserQueryHandler } from "@modules/user/application/handler/get-user.query.handler";
 import { ListRolesQueryHandler } from "@modules/user/application/handler/list-roles.query.handler";
 import { ListUsersQueryHandler } from "@modules/user/application/handler/list-users.query.handler";
+import { RemoveUserRoleCommandHandler } from "@modules/user/application/handler/remove-user-role.command.handler";
 import { ResolveExternalUserCommandHandler } from "@modules/user/application/handler/resolve-external-user.command.handler";
 import { UnblockUserCommandHandler } from "@modules/user/application/handler/unblock-user.command.handler";
 import { UpdateRoleCommandHandler } from "@modules/user/application/handler/update-role.command.handler";
@@ -102,9 +105,12 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
     UpdateUserCommandHandler,
     ProfileAccessPolicy,
     DeleteUserCommandHandler,
+    AssignUserRoleCommandHandler,
+    RemoveUserRoleCommandHandler,
     BlockUserCommandHandler,
     UnblockUserCommandHandler,
     GetUserQueryHandler,
+    GetCurrentUserQueryHandler,
     ListUsersQueryHandler,
     CreateRoleCommandHandler,
     UpdateRoleCommandHandler,

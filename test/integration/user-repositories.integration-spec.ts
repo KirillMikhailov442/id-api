@@ -1,13 +1,22 @@
 import { databaseFixture, verifyDatabaseLock } from "@test/integration/support";
 
+import { AssignUserRoleCommand } from "@modules/user/application/command/assign-user-role.command";
+import { RemoveUserRoleCommand } from "@modules/user/application/command/remove-user-role.command";
+import { AssignUserRoleCommandHandler } from "@modules/user/application/handler/assign-user-role.command.handler";
+import { GetUserQueryHandler } from "@modules/user/application/handler/get-user.query.handler";
+import { ListUsersQueryHandler } from "@modules/user/application/handler/list-users.query.handler";
+import { RemoveUserRoleCommandHandler } from "@modules/user/application/handler/remove-user-role.command.handler";
 import { makeRole, makeUser } from "@modules/user/application/handler/user-test.spec-support";
-import { SUPER_USER_EMAIL } from "@modules/user/domain/entity/user";
+import { GetUserQuery } from "@modules/user/application/query/get-user.query";
+import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
 import { UserRole } from "@modules/user/domain/entity/user-role";
 import { IdentityProvider } from "@modules/user/domain/enum/identity-provider.enum";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { EmailAlreadyRegisteredException } from "@modules/user/domain/exception/email-already-registered.exception";
 import { RoleAlreadyExistsException } from "@modules/user/domain/exception/role-already-exists.exception";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { UserRoleChangeForbiddenException } from "@modules/user/domain/exception/user-role-change-forbidden.exception";
 import { Email } from "@modules/user/domain/value-object/email.value-object";
 import { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
 import { DbUserIdentity } from "@modules/user/infrastructure/entity/db-user-identity.entity";
@@ -30,7 +39,19 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     await db?.close();
   });
 
-  it("applies actual migrations, including the session refresh hash constraint", async () => {
+  it("rolls back and reapplies the single migration with role seeds and no users", async () => {
+    await db.source.undoLastMigration();
+
+    const migrations = await db.source.runMigrations();
+    expect(migrations).toHaveLength(1);
+    expect(await db.source.query("SELECT name FROM roles ORDER BY name")).toEqual([
+      { name: RoleType.Admin },
+      { name: RoleType.SuperUser },
+      { name: RoleType.User },
+    ]);
+    expect(await db.source.getRepository(DbUser).count()).toBe(0);
+    expect(await db.source.query("SELECT * FROM user_roles")).toEqual([]);
+
     const constraints = await db.source.query<{ conname: string }[]>(
       "SELECT conname FROM pg_constraint WHERE conrelid = 'session_refresh_tokens'::regclass"
     );
@@ -69,19 +90,114 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     );
   });
 
-  it("excludes the super user from paginated listings and counts", async () => {
+  it("filters SUPERUSER only when requested and enforces handler visibility", async () => {
     const first = makeUser("first@example.com");
     const last = makeUser("last@example.com");
-    await db.users.run(async ({ userRepository: users }) => {
-      for (const user of [first, last, makeUser(SUPER_USER_EMAIL)]) await users.save(user);
+    const hidden = makeUser("hidden@example.com");
+    const adminRole = makeRole(RoleType.Admin);
+    const hiddenRole = makeRole(RoleType.SuperUser);
+
+    await db.users.run(async ({ userRepository: users, roleRepository: roles, userRoleRepository: assignments }) => {
+      for (const user of [first, last, hidden]) await users.save(user);
+
+      for (const role of [adminRole, hiddenRole]) await roles.save(role);
+
+      for (const user of [last, hidden]) {
+        await assignments.save(new UserRole(user.getId(), adminRole.getId(), adminRole.getName()));
+      }
+
+      await assignments.save(new UserRole(hidden.getId(), hiddenRole.getId(), hiddenRole.getName()));
     });
     await db.source.getRepository(DbUser).update(first.getId().getValue(), { createdAt: new Date("2020-01-01") });
-    await db.users.run(async ({ userRepository: users }) => {
-      expect(await users.count()).toBe(2);
-      expect((await users.findAll({ limit: 1, offset: 0 })).map((user) => user.getId())).toEqual([last.getId()]);
-      expect((await users.findAll({ limit: 1, offset: 1 })).map((user) => user.getId())).toEqual([first.getId()]);
-      expect(await users.findAll({ limit: 1, offset: 2 })).toEqual([]);
+    await db.users.run(async ({ userRepository: users, userRoleRepository: assignments }) => {
+      expect((await users.findById(hidden.getId()))?.getId()).toEqual(hidden.getId());
+      expect(await users.count()).toBe(3);
+      expect(await users.findAll({ limit: 10, offset: 0 })).toHaveLength(3);
+
+      const filter = { excludeRole: RoleType.SuperUser };
+      expect((await users.findById(first.getId()))?.getId()).toEqual(first.getId());
+      expect((await users.findById(last.getId()))?.getRoles().map((role) => role.getRoleId())).toEqual([
+        adminRole.getId(),
+      ]);
+      expect(await users.count(filter)).toBe(2);
+      expect((await users.findAll({ limit: 1, offset: 0 }, filter)).map((user) => user.getId())).toEqual([
+        last.getId(),
+      ]);
+      expect((await users.findAll({ limit: 1, offset: 1 }, filter)).map((user) => user.getId())).toEqual([
+        first.getId(),
+      ]);
+      expect(await users.findAll({ limit: 1, offset: 2 }, filter)).toEqual([]);
+
+      const get = new GetUserQueryHandler(users);
+      const list = new ListUsersQueryHandler(users);
+
+      for (const roles of [[], [RoleType.User], [RoleType.Admin]]) {
+        await expect(get.execute(new GetUserQuery(hidden.getId().getValue(), roles))).rejects.toThrow(
+          UserNotFoundException
+        );
+
+        const page = await list.execute(new ListUsersQuery(1, 1, roles));
+        expect(page.total).toBe(2);
+        expect(page.items.map((user) => user.getId())).toEqual([first.getId()]);
+      }
+
+      expect(await get.execute(new GetUserQuery(hidden.getId().getValue(), [RoleType.SuperUser]))).toEqual(
+        await users.findById(hidden.getId())
+      );
+
+      const fullPage = await list.execute(new ListUsersQuery(10, 0, [RoleType.SuperUser]));
+      expect(fullPage.total).toBe(3);
+      expect(fullPage.items.map((user) => user.getId())).toContainEqual(hidden.getId());
+
+      await assignments.delete(hidden.getId(), hiddenRole.getId());
+      expect((await users.findById(hidden.getId()))?.getId()).toEqual(hidden.getId());
+      expect(await users.count()).toBe(3);
+      expect(await users.findAll({ limit: 10, offset: 0 })).toHaveLength(3);
     });
+  });
+
+  it("promotes and demotes transactionally while protecting USER and SUPERUSER", async () => {
+    const user = makeUser();
+    const basic = makeRole(RoleType.User);
+    const admin = makeRole(RoleType.Admin);
+    const superRole = makeRole(RoleType.SuperUser);
+    await db.users.run(async (context) => {
+      await context.userRepository.save(user);
+
+      for (const role of [basic, admin, superRole]) await context.roleRepository.save(role);
+
+      await context.userRoleRepository.save(new UserRole(user.getId(), basic.getId(), basic.getName()));
+    });
+
+    const assign = new AssignUserRoleCommandHandler(db.users);
+    const remove = new RemoveUserRoleCommandHandler(db.users);
+    const id = user.getId().getValue();
+    const adminId = admin.getId().getValue();
+    const loadNames = () =>
+      db.users.run(async ({ userRepository }) => {
+        const loaded = await userRepository.findById(user.getId());
+
+        return loaded
+          ?.getRoles()
+          .map((role) => role.getRoleName().getValue())
+          .sort();
+      });
+
+    await assign.execute(new AssignUserRoleCommand(id, adminId, [RoleType.Admin]));
+    expect(await loadNames()).toEqual([RoleType.Admin, RoleType.User]);
+    await expect(remove.execute(new RemoveUserRoleCommand(id, adminId, [RoleType.Admin]))).rejects.toThrow(
+      UserRoleChangeForbiddenException
+    );
+    expect(await loadNames()).toEqual([RoleType.Admin, RoleType.User]);
+    await remove.execute(new RemoveUserRoleCommand(id, adminId, [RoleType.SuperUser]));
+    expect(await loadNames()).toEqual([RoleType.User]);
+    await expect(
+      assign.execute(new AssignUserRoleCommand(id, superRole.getId().getValue(), [RoleType.SuperUser]))
+    ).rejects.toThrow(UserRoleChangeForbiddenException);
+    await expect(
+      remove.execute(new RemoveUserRoleCommand(id, basic.getId().getValue(), [RoleType.SuperUser]))
+    ).rejects.toThrow(UserRoleChangeForbiddenException);
+    expect(await loadNames()).toEqual([RoleType.User]);
   });
 
   it("loads role names, supports empty ID sets, renames and deletes assignments", async () => {

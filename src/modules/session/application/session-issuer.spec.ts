@@ -9,7 +9,12 @@ import { SessionIssuer } from "@modules/session/application/session-issuer";
 import { UserBlockedException } from "@modules/session/domain/exception/user-blocked.exception";
 import { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
 import { REFRESH_TOKEN_SERVICE, SESSION_REPOSITORY, TOKEN_SERVICE } from "@modules/session/session.tokens";
-import { makeRole, makeUser, userRepositories } from "@modules/user/application/handler/user-test.spec-support";
+import {
+  makeRole,
+  makeUser,
+  userRepositories,
+  withUserRoles,
+} from "@modules/user/application/handler/user-test.spec-support";
 import { ROLE_REPOSITORY } from "@modules/user/user.tokens";
 
 describe("SessionIssuer", () => {
@@ -52,7 +57,7 @@ describe("SessionIssuer", () => {
 
   it("issues tokens and persists the session and hashed refresh inside the user's lock", async () => {
     const assigned = makeRole("old-name");
-    user.assignRole(assigned);
+    user = withUserRoles(user, [assigned]);
     assigned.rename(makeRole("current-name").getName());
     roles.findByIds.mockResolvedValue([assigned]);
 

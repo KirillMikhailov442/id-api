@@ -35,14 +35,17 @@ import type { Request, Response } from "express";
 import { OAuthScope } from "@modules/oauth/oauth.scopes";
 import { LoginCommand, type LoginResult } from "@modules/session/application/command/login.command";
 import { DeviceInfoParser } from "@modules/session/device-info.module";
+import { AssignUserRoleCommand } from "@modules/user/application/command/assign-user-role.command";
 import { BlockUserCommand } from "@modules/user/application/command/block-user.command";
 import { ChangePasswordCommand } from "@modules/user/application/command/change-password.command";
 import { ConfirmEmailCommand } from "@modules/user/application/command/confirm-email.command";
 import { CreateUserCommand } from "@modules/user/application/command/create-user.command";
 import { DeleteUserCommand } from "@modules/user/application/command/delete-user.command";
+import { RemoveUserRoleCommand } from "@modules/user/application/command/remove-user-role.command";
 import { UnblockUserCommand } from "@modules/user/application/command/unblock-user.command";
 import { UpdateUserCommand } from "@modules/user/application/command/update-user.command";
 import { ProfileAccessPolicy } from "@modules/user/application/profile-access.policy";
+import { GetCurrentUserQuery } from "@modules/user/application/query/get-current-user.query";
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
 import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
 import type { User } from "@modules/user/domain/entity/user";
@@ -97,9 +100,10 @@ export class UserController {
   @Get()
   async list(
     @Query()
-    pagination: PaginationQuery
+    pagination: PaginationQuery,
+    @CurrentUser() currentUser: AuthenticatedUser
   ): Promise<PaginationResponse<UserDto>> {
-    const query = new ListUsersQuery(pagination.limit, pagination.offset);
+    const query = new ListUsersQuery(pagination.limit, pagination.offset, currentUser.roles);
     const { items, total } = await this.queryBus.execute<
       ListUsersQuery,
       {
@@ -116,7 +120,7 @@ export class UserController {
   @OAuthAccessToken(OAuthScope.UserRead)
   @Get("me")
   async me(@CurrentAuth() auth: AuthContext): Promise<UserDto | ProfileDto> {
-    const user = await this.queryBus.execute<GetUserQuery, User>(new GetUserQuery(auth.userId, true));
+    const user = await this.queryBus.execute<GetCurrentUserQuery, User>(new GetCurrentUserQuery(auth.userId));
 
     return auth.type === AccessTokenType.Session ? UserDto.fromDomain(user) : ProfileDto.fromUser(user);
   }
@@ -165,12 +169,39 @@ export class UserController {
   @Get(":id")
   async get(
     @Param("id", ParseUUIDPipe)
-    id: string
+    id: string,
+    @CurrentUser() currentUser: AuthenticatedUser
   ): Promise<UserDto> {
-    const query = new GetUserQuery(id);
+    const query = new GetUserQuery(id, currentUser.roles);
     const user = await this.queryBus.execute<GetUserQuery, User>(query);
 
     return UserDto.fromDomain(user);
+  }
+
+  @Roles(RoleType.Admin, RoleType.SuperUser)
+  @Put(":id/roles/:roleId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async assignRole(
+    @Param("id", ParseUUIDPipe) userId: string,
+    @Param("roleId", ParseUUIDPipe) roleId: string,
+    @CurrentUser() currentUser: AuthenticatedUser
+  ): Promise<void> {
+    await this.commandBus.execute<AssignUserRoleCommand, void>(
+      new AssignUserRoleCommand(userId, roleId, currentUser.roles)
+    );
+  }
+
+  @Roles(RoleType.Admin, RoleType.SuperUser)
+  @Delete(":id/roles/:roleId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeRole(
+    @Param("id", ParseUUIDPipe) userId: string,
+    @Param("roleId", ParseUUIDPipe) roleId: string,
+    @CurrentUser() currentUser: AuthenticatedUser
+  ): Promise<void> {
+    await this.commandBus.execute<RemoveUserRoleCommand, void>(
+      new RemoveUserRoleCommand(userId, roleId, currentUser.roles)
+    );
   }
 
   @Roles(RoleType.Admin)

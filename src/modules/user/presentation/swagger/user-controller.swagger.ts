@@ -1,6 +1,9 @@
 import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiExtraModels,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -26,6 +29,7 @@ import {
   ApiInvalidOldPasswordResponse,
   ApiInvalidUserIdResponse,
   ApiPaginationValidationFailedResponse,
+  ApiRoleNotFoundResponse,
   ApiUnexpectedErrorResponse,
   ApiUpdateValidationFailedResponse,
   ApiUserAlreadyBlockedResponse,
@@ -76,7 +80,6 @@ export function registerUserControllerSwagger(): void {
     ApiAuthenticatedResponse(),
     ApiExtraModels(UserDto, ProfileDto),
     ApiOperation({
-      summary: "Get own profile",
       description:
         "Accepts an SSO token or an OAuth token with user:read. OAuth responses contain only id, name, surname and avatar.",
     }),
@@ -90,7 +93,6 @@ export function registerUserControllerSwagger(): void {
     ApiAuthenticatedResponse(),
     ApiExtraModels(UserDto, ProfileDto),
     ApiOperation({
-      summary: "Update own profile",
       description:
         "Accepts an SSO token or an OAuth token with user:write. OAuth may change only name and surname. Only SSO may change email. Provide at least one field.",
     }),
@@ -104,7 +106,7 @@ export function registerUserControllerSwagger(): void {
   documentMethod(
     "changePassword",
     ApiAuthenticatedResponse(),
-    ApiOperation({ summary: "Change current user password", description: "Requires the correct old password" }),
+    ApiOperation({ description: "Requires the correct old password" }),
     ApiNoContentResponse({ description: "Password changed" }),
     ApiInvalidOldPasswordResponse(),
     ApiChangePasswordValidationFailedResponse(),
@@ -129,6 +131,24 @@ export function registerUserControllerSwagger(): void {
     ApiUserNotFoundResponse(),
     ApiUnexpectedErrorResponse()
   );
+
+  for (const method of ["assignRole", "removeRole"] as const) {
+    documentMethod(
+      method,
+      ApiAuthenticatedResponse(),
+      ApiOperation({
+        description:
+          "ADMIN or SUPERUSER may promote a USER; only SUPERUSER may demote an ADMIN. USER is permanent. SUPERUSER cannot be assigned, removed, or have its roles changed. Role IDs refer to the roles catalog.",
+      }),
+      ApiNoContentResponse({ description: "User role changed" }),
+      ApiBadRequestResponse({ description: "Invalid user or role UUID" }),
+      ApiForbiddenResponse({ description: "INSUFFICIENT_ROLE or USER_ROLE_CHANGE_FORBIDDEN" }),
+      ApiConflictResponse({ description: "ROLE_ALREADY_ASSIGNED or ROLE_NOT_ASSIGNED" }),
+      ApiUserNotFoundResponse(),
+      ApiRoleNotFoundResponse(),
+      ApiUnexpectedErrorResponse()
+    );
+  }
 
   documentMethod(
     "update",

@@ -23,7 +23,6 @@ import { DbTransaction } from "@modules/user/infrastructure/transaction/db-trans
 import { RedisConnection } from "@config/redis";
 
 import { InitSchema1792742368266 } from "@app/migrations/1792742368266-InitSchema";
-import { UseSessionRefreshTokenHashConstraint1793318400000 } from "@app/migrations/1793318400000-UseSessionRefreshTokenHashConstraint";
 
 export async function databaseFixture() {
   const url = process.env.INTEGRATION_DATABASE_URL;
@@ -55,7 +54,7 @@ export async function databaseFixture() {
       DbOAuthGrant,
       DbOAuthRefreshToken,
     ],
-    migrations: [InitSchema1792742368266, UseSessionRefreshTokenHashConstraint1793318400000],
+    migrations: [InitSchema1792742368266],
     synchronize: false,
     logging: false,
   });

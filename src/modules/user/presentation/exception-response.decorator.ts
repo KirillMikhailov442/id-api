@@ -2,6 +2,7 @@ import { applyDecorators } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
+  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
 } from "@nestjs/swagger";
@@ -222,6 +223,19 @@ export const ApiRoleNotFoundResponse = () =>
     })
   );
 
+export const ApiProtectedRoleResponse = () =>
+  ApiForbiddenResponse({
+    description: "Insufficient role, or an attempt to modify or delete the protected SUPERUSER role",
+    type: ExceptionResponse,
+    example: {
+      status: HttpStatus.Forbidden,
+      code: "PROTECTED_ROLE",
+      message: "The SUPERUSER role cannot be modified or deleted",
+      path: `/roles/${EXAMPLE_USER_ID}`,
+      timestamp: "2026-10-21T09:00:00.000Z",
+    },
+  });
+
 export const ApiRoleAlreadyExistsResponse = () =>
   applyDecorators(
     ApiConflictResponse({
@@ -239,7 +253,11 @@ export const ApiRoleAlreadyExistsResponse = () =>
 
 export const ApiRoleValidationFailedResponse = () =>
   ApiValidationFailedResponse([
-    { field: "name", code: "INVALID_VALUE", message: "name must be one of the following values: USER, ADMIN" },
+    {
+      field: "name",
+      code: "INVALID_VALUE",
+      message: "name must be one of the following values: USER, ADMIN, SUPERUSER",
+    },
   ]);
 
 export const ApiRoleCreateValidationFailedResponse = () => ApiRoleValidationFailedResponse();

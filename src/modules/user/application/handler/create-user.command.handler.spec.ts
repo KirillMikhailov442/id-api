@@ -23,7 +23,7 @@ describe("CreateUserCommandHandler", () => {
     publish.mockReset();
     hash.mockResolvedValue("hashed-password");
     repos.userRepository.existsByEmail.mockResolvedValue(false);
-    repos.roleRepository.findByName.mockResolvedValue(makeRole());
+    repos.roleRepository.findByName.mockResolvedValue(makeRole("USER"));
     handler = await testHandler(CreateUserCommandHandler, [
       { provide: USER_REPOSITORY, useValue: repos.userRepository },
       { provide: PASSWORD_HASHER, useValue: { hash } },

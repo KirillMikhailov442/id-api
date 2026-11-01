@@ -34,7 +34,6 @@ export class OAuthGrantsControllerSwagger {
     this.documentMethod(
       "listOwn",
       ApiOperation({
-        summary: "List own OAuth permissions using an SSO access token",
         description:
           "Includes active, expired and revoked grants, newest first. Each authorization is listed separately.",
       }),
@@ -48,7 +47,6 @@ export class OAuthGrantsControllerSwagger {
     this.documentMethod(
       "listUser",
       ApiOperation({
-        summary: "List a user's OAuth permissions (ADMIN)",
         description: "Requires an internal SSO access token with the ADMIN role.",
       }),
       ApiQuery({ type: PaginationQuery }),
@@ -63,7 +61,6 @@ export class OAuthGrantsControllerSwagger {
 
     this.documentMethod(
       "revokeOwn",
-      ApiOperation({ summary: "Revoke an OAuth grant using the owner's SSO session token" }),
       ApiAuthenticatedResponse(),
       ApiNoContentResponse(),
       ApiNotFoundResponse({ description: "Grant not found or belongs to another user" })
@@ -72,7 +69,6 @@ export class OAuthGrantsControllerSwagger {
     this.documentMethod(
       "revokeUser",
       ApiOperation({
-        summary: "Revoke any user's OAuth grant (ADMIN)",
         description: "Requires an internal SSO access token with the ADMIN role.",
       }),
       ApiAuthenticatedResponse(),

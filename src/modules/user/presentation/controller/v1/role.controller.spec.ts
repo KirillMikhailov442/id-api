@@ -11,6 +11,7 @@ import { makeRole } from "@modules/user/application/handler/user-test.spec-suppo
 import { GetRoleQuery } from "@modules/user/application/query/get-role.query";
 import { ListRolesQuery } from "@modules/user/application/query/list-roles.query";
 import { RoleType } from "@modules/user/domain/enum/role-type.enum";
+import { ProtectedRoleException } from "@modules/user/domain/exception/protected-role.exception";
 import { RoleAlreadyExistsException } from "@modules/user/domain/exception/role-already-exists.exception";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
 import { RoleController } from "@modules/user/presentation/controller/v1/role.controller";
@@ -121,6 +122,15 @@ describe("RoleController (HTTP)", () => {
       .send({ name: RoleType.User })
       .expect(404);
     expect(response.body).toMatchObject({ status: 404, code: "ROLE_NOT_FOUND" });
+  });
+
+  it.each(["put", "delete"] as const)("returns 403 for a protected role on %s", async (method) => {
+    execute.mockRejectedValue(new ProtectedRoleException());
+
+    const response = await request(app.getHttpServer())[method]("/v1/roles/" + role.getId().getValue())
+      .send({ name: RoleType.Admin })
+      .expect(403);
+    expect(response.body).toMatchObject({ status: 403, code: "PROTECTED_ROLE" });
   });
 
   it.each(["post", "put"] as const)("returns 409 for duplicate roles on %s", async (method) => {
