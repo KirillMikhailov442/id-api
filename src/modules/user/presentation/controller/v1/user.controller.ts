@@ -43,6 +43,7 @@ import { DeleteUserCommand } from "@modules/user/application/command/delete-user
 import { UnblockUserCommand } from "@modules/user/application/command/unblock-user.command";
 import { UpdateUserCommand } from "@modules/user/application/command/update-user.command";
 import { ProfileAccessPolicy } from "@modules/user/application/profile-access.policy";
+import { GetCurrentUserQuery } from "@modules/user/application/query/get-current-user.query";
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
 import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
 import type { User } from "@modules/user/domain/entity/user";
@@ -97,9 +98,10 @@ export class UserController {
   @Get()
   async list(
     @Query()
-    pagination: PaginationQuery
+    pagination: PaginationQuery,
+    @CurrentUser() currentUser: AuthenticatedUser
   ): Promise<PaginationResponse<UserDto>> {
-    const query = new ListUsersQuery(pagination.limit, pagination.offset);
+    const query = new ListUsersQuery(pagination.limit, pagination.offset, currentUser.roles);
     const { items, total } = await this.queryBus.execute<
       ListUsersQuery,
       {
@@ -116,7 +118,7 @@ export class UserController {
   @OAuthAccessToken(OAuthScope.UserRead)
   @Get("me")
   async me(@CurrentAuth() auth: AuthContext): Promise<UserDto | ProfileDto> {
-    const user = await this.queryBus.execute<GetUserQuery, User>(new GetUserQuery(auth.userId, true));
+    const user = await this.queryBus.execute<GetCurrentUserQuery, User>(new GetCurrentUserQuery(auth.userId));
 
     return auth.type === AccessTokenType.Session ? UserDto.fromDomain(user) : ProfileDto.fromUser(user);
   }
@@ -165,9 +167,10 @@ export class UserController {
   @Get(":id")
   async get(
     @Param("id", ParseUUIDPipe)
-    id: string
+    id: string,
+    @CurrentUser() currentUser: AuthenticatedUser
   ): Promise<UserDto> {
-    const query = new GetUserQuery(id);
+    const query = new GetUserQuery(id, currentUser.roles);
     const user = await this.queryBus.execute<GetUserQuery, User>(query);
 
     return UserDto.fromDomain(user);

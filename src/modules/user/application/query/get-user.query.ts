@@ -1,6 +1,6 @@
 export class GetUserQuery {
   constructor(
     public readonly userId: string,
-    public readonly includeSuperUser: boolean = false
+    public readonly requesterRoles: readonly string[] = []
   ) {}
 }

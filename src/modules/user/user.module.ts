@@ -13,6 +13,7 @@ import { CreateRoleCommandHandler } from "@modules/user/application/handler/crea
 import { CreateUserCommandHandler } from "@modules/user/application/handler/create-user.command.handler";
 import { DeleteRoleCommandHandler } from "@modules/user/application/handler/delete-role.command.handler";
 import { DeleteUserCommandHandler } from "@modules/user/application/handler/delete-user.command.handler";
+import { GetCurrentUserQueryHandler } from "@modules/user/application/handler/get-current-user.query.handler";
 import { GetRoleQueryHandler } from "@modules/user/application/handler/get-role.query.handler";
 import { GetUserQueryHandler } from "@modules/user/application/handler/get-user.query.handler";
 import { ListRolesQueryHandler } from "@modules/user/application/handler/list-roles.query.handler";
@@ -105,6 +106,7 @@ export type { IUserRepository } from "@modules/user/application/port/user-reposi
     BlockUserCommandHandler,
     UnblockUserCommandHandler,
     GetUserQueryHandler,
+    GetCurrentUserQueryHandler,
     ListUsersQueryHandler,
     CreateRoleCommandHandler,
     UpdateRoleCommandHandler,

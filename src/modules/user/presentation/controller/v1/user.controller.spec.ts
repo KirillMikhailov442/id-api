@@ -18,6 +18,7 @@ import { UnblockUserCommand } from "@modules/user/application/command/unblock-us
 import { UpdateUserCommand } from "@modules/user/application/command/update-user.command";
 import { makeRole, makeUser } from "@modules/user/application/handler/user-test.spec-support";
 import { ProfileAccessPolicy } from "@modules/user/application/profile-access.policy";
+import { GetCurrentUserQuery } from "@modules/user/application/query/get-current-user.query";
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
 import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
 import { RoleType } from "@modules/user/domain/enum/role-type.enum";
@@ -167,11 +168,31 @@ describe("UserController (HTTP)", () => {
     expect(response.body).toEqual(dto());
   });
 
+  it("forwards trusted session roles when listing and retrieving users", async () => {
+    auth = { ...testSessionAuth, roles: [RoleType.SuperUser] };
+    query.mockResolvedValueOnce({ items: [user], total: 1 }).mockResolvedValueOnce(user);
+
+    await request(app.getHttpServer()).get("/v1/users?requesterRoles=SUPERUSER").expect(200);
+    expect(query).toHaveBeenNthCalledWith(1, new ListUsersQuery(20, 0, [RoleType.SuperUser]));
+    await request(app.getHttpServer()).get(path()).expect(200);
+    expect(query).toHaveBeenNthCalledWith(2, new GetUserQuery(user.getId().getValue(), [RoleType.SuperUser]));
+  });
+
+  it("does not use query parameters as requester roles", async () => {
+    query.mockResolvedValueOnce({ items: [], total: 0 }).mockResolvedValueOnce(user);
+    await request(app.getHttpServer()).get("/v1/users?requesterRoles=SUPERUSER").expect(200);
+    expect(query).toHaveBeenNthCalledWith(1, new ListUsersQuery(20, 0, []));
+    await request(app.getHttpServer())
+      .get(path() + "?requesterRoles=SUPERUSER")
+      .expect(200);
+    expect(query).toHaveBeenNthCalledWith(2, new GetUserQuery(user.getId().getValue(), []));
+  });
+
   it("returns the full account DTO for the current session", async () => {
     query.mockResolvedValue(user);
 
     const response = await request(app.getHttpServer()).get("/v1/users/me").expect(200);
-    expect(query).toHaveBeenCalledWith(new GetUserQuery(user.getId().getValue(), true));
+    expect(query).toHaveBeenCalledWith(new GetCurrentUserQuery(user.getId().getValue()));
     expect(response.body).toEqual(dto());
   });
 
@@ -180,7 +201,7 @@ describe("UserController (HTTP)", () => {
     query.mockResolvedValue(user);
 
     const response = await request(app.getHttpServer()).get("/v1/users/me").expect(200);
-    expect(query).toHaveBeenCalledWith(new GetUserQuery(user.getId().getValue(), true));
+    expect(query).toHaveBeenCalledWith(new GetCurrentUserQuery(user.getId().getValue()));
     expect(response.body).toEqual(profileDto());
   });
 

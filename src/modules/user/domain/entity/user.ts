@@ -13,7 +13,6 @@ import { UserId } from "@modules/user/user.ids";
 
 export const PASSWORD_HASH_MAX_LENGTH = 72;
 export const DEFAULT_AVATAR_PATH = "/assets/default-avatar.svg";
-export const SUPER_USER_EMAIL = "mikhssoadmin@gmail.com";
 
 export class User {
   constructor(

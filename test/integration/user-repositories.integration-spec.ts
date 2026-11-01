@@ -1,7 +1,10 @@
 import { databaseFixture, verifyDatabaseLock } from "@test/integration/support";
 
+import { GetUserQueryHandler } from "@modules/user/application/handler/get-user.query.handler";
+import { ListUsersQueryHandler } from "@modules/user/application/handler/list-users.query.handler";
 import { makeRole, makeUser } from "@modules/user/application/handler/user-test.spec-support";
-import { SUPER_USER_EMAIL } from "@modules/user/domain/entity/user";
+import { GetUserQuery } from "@modules/user/application/query/get-user.query";
+import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
 import { UserRole } from "@modules/user/domain/entity/user-role";
 import { IdentityProvider } from "@modules/user/domain/enum/identity-provider.enum";
 import { RoleType } from "@modules/user/domain/enum/role-type.enum";
@@ -81,18 +84,61 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     );
   });
 
-  it("excludes the super user from paginated listings and counts", async () => {
+  it("filters SUPERUSER only when requested and enforces handler visibility", async () => {
     const first = makeUser("first@example.com");
     const last = makeUser("last@example.com");
-    await db.users.run(async ({ userRepository: users }) => {
-      for (const user of [first, last, makeUser(SUPER_USER_EMAIL)]) await users.save(user);
+    const hidden = makeUser("hidden@example.com");
+    const adminRole = makeRole(RoleType.Admin);
+    const hiddenRole = makeRole(RoleType.SuperUser);
+
+    await db.users.run(async ({ userRepository: users, roleRepository: roles, userRoleRepository: assignments }) => {
+      for (const user of [first, last, hidden]) await users.save(user);
+      for (const role of [adminRole, hiddenRole]) await roles.save(role);
+      for (const user of [last, hidden]) {
+        await assignments.save(new UserRole(user.getId(), adminRole.getId(), adminRole.getName()));
+      }
+      await assignments.save(new UserRole(hidden.getId(), hiddenRole.getId(), hiddenRole.getName()));
     });
     await db.source.getRepository(DbUser).update(first.getId().getValue(), { createdAt: new Date("2020-01-01") });
-    await db.users.run(async ({ userRepository: users }) => {
-      expect(await users.count()).toBe(2);
-      expect((await users.findAll({ limit: 1, offset: 0 })).map((user) => user.getId())).toEqual([last.getId()]);
-      expect((await users.findAll({ limit: 1, offset: 1 })).map((user) => user.getId())).toEqual([first.getId()]);
-      expect(await users.findAll({ limit: 1, offset: 2 })).toEqual([]);
+    await db.users.run(async ({ userRepository: users, userRoleRepository: assignments }) => {
+      expect((await users.findById(hidden.getId()))?.getId()).toEqual(hidden.getId());
+      expect(await users.count()).toBe(3);
+      expect(await users.findAll({ limit: 10, offset: 0 })).toHaveLength(3);
+      const filter = { excludeRole: RoleType.SuperUser };
+      expect((await users.findById(first.getId()))?.getId()).toEqual(first.getId());
+      expect((await users.findById(last.getId()))?.getRoles().map((role) => role.getRoleId())).toEqual([
+        adminRole.getId(),
+      ]);
+      expect(await users.count(filter)).toBe(2);
+      expect((await users.findAll({ limit: 1, offset: 0 }, filter)).map((user) => user.getId())).toEqual([
+        last.getId(),
+      ]);
+      expect((await users.findAll({ limit: 1, offset: 1 }, filter)).map((user) => user.getId())).toEqual([
+        first.getId(),
+      ]);
+      expect(await users.findAll({ limit: 1, offset: 2 }, filter)).toEqual([]);
+
+      const get = new GetUserQueryHandler(users);
+      const list = new ListUsersQueryHandler(users);
+      for (const roles of [[], [RoleType.User], [RoleType.Admin]]) {
+        await expect(get.execute(new GetUserQuery(hidden.getId().getValue(), roles))).rejects.toThrow(
+          UserNotFoundException
+        );
+        const page = await list.execute(new ListUsersQuery(1, 1, roles));
+        expect(page.total).toBe(2);
+        expect(page.items.map((user) => user.getId())).toEqual([first.getId()]);
+      }
+      expect(await get.execute(new GetUserQuery(hidden.getId().getValue(), [RoleType.SuperUser]))).toEqual(
+        await users.findById(hidden.getId())
+      );
+      const fullPage = await list.execute(new ListUsersQuery(10, 0, [RoleType.SuperUser]));
+      expect(fullPage.total).toBe(3);
+      expect(fullPage.items.map((user) => user.getId())).toContainEqual(hidden.getId());
+
+      await assignments.delete(hidden.getId(), hiddenRole.getId());
+      expect((await users.findById(hidden.getId()))?.getId()).toEqual(hidden.getId());
+      expect(await users.count()).toBe(3);
+      expect(await users.findAll({ limit: 10, offset: 0 })).toHaveLength(3);
     });
   });
 

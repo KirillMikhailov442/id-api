@@ -7,6 +7,7 @@ import type { IUserRepository } from "@modules/user/application/port/user-reposi
 import type { IUserRoleRepository } from "@modules/user/application/port/user-role-repository";
 import { Role } from "@modules/user/domain/entity/role";
 import { User } from "@modules/user/domain/entity/user";
+import { UserRole } from "@modules/user/domain/entity/user-role";
 import { Email } from "@modules/user/domain/value-object/email.value-object";
 import { Name } from "@modules/user/domain/value-object/name.value-object";
 import { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
@@ -14,6 +15,22 @@ import { Surname } from "@modules/user/domain/value-object/surname.value-object"
 
 export function makeUser(email = "ivan@example.com", passwordHash: string | null = "password-hash") {
   return User.create({ name: new Name("Ivan"), surname: new Surname("Ivanov"), email: new Email(email), passwordHash });
+}
+
+export function withUserRoles(user: User, roles: Role[]): User {
+  return new User(
+    user.getId(),
+    user.getName(),
+    user.getSurname(),
+    user.getEmail(),
+    user.getPasswordHash(),
+    user.getIsConfirmed(),
+    user.getIsBlocked(),
+    user.getCreatedAt(),
+    user.getUpdatedAt(),
+    [...user.getRoles(), ...roles.map((role) => new UserRole(user.getId(), role.getId(), role.getName()))],
+    user.getAvatar()
+  );
 }
 
 export function makeRole(name = "user") {

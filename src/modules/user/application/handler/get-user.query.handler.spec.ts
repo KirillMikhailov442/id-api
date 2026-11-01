@@ -1,8 +1,14 @@
 import { testHandler } from "@shared/testing/handler-test.spec-support";
 
 import { GetUserQueryHandler } from "@modules/user/application/handler/get-user.query.handler";
-import { makeUser, userRepositories } from "@modules/user/application/handler/user-test.spec-support";
+import {
+  makeRole,
+  makeUser,
+  userRepositories,
+  withUserRoles,
+} from "@modules/user/application/handler/user-test.spec-support";
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
 import { UserId } from "@modules/user/user.ids";
 import { USER_REPOSITORY } from "@modules/user/user.tokens";
@@ -33,11 +39,23 @@ describe("GetUserQueryHandler", () => {
     expect(repositories.userRepository.delete).not.toHaveBeenCalled();
   });
 
-  it("hides the super user unless explicitly requested", async () => {
-    item = makeUser("mikhssoadmin@gmail.com");
+  it.each([[], [RoleType.User], [RoleType.Admin], ["superuser"]])(
+    "hides a superuser from requester roles %j",
+    async (...requesterRoles: string[]) => {
+      item.assignRole(makeRole(RoleType.User));
+      item.assignRole(makeRole(RoleType.Admin));
+      item = withUserRoles(item, [makeRole(RoleType.SuperUser)]);
+      repositories.userRepository.findById.mockResolvedValue(item);
+      await expect(handler.execute(new GetUserQuery(item.getId().getValue(), requesterRoles))).rejects.toThrow(
+        UserNotFoundException
+      );
+    }
+  );
+
+  it("allows a superuser to retrieve another superuser", async () => {
+    item = withUserRoles(item, [makeRole(RoleType.SuperUser)]);
     repositories.userRepository.findById.mockResolvedValue(item);
-    await expect(handler.execute(new GetUserQuery(item.getId().getValue()))).rejects.toThrow(UserNotFoundException);
-    await expect(handler.execute(new GetUserQuery(item.getId().getValue(), true))).resolves.toBe(item);
+    await expect(handler.execute(new GetUserQuery(item.getId().getValue(), [RoleType.SuperUser]))).resolves.toBe(item);
   });
 
   it("propagates repository failures", async () => {
