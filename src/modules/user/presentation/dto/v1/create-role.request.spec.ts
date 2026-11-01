@@ -6,7 +6,7 @@ import { CreateRoleRequest } from "@modules/user/presentation/dto/v1/create-role
 describe("CreateRoleRequest", () => {
   const valid = { name: "USER" };
 
-  it.each([{ name: "USER" }, { name: "ADMIN" }])("accepts valid input %p", (input) => {
+  it.each([{ name: "USER" }, { name: "ADMIN" }, { name: "SUPERUSER" }])("accepts valid input %p", (input) => {
     expect(validateSync(plainToInstance(CreateRoleRequest, input))).toEqual([]);
   });
 

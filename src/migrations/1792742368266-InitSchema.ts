@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import * as bcrypt from "bcrypt";
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class InitSchema1792742368266 implements MigrationInterface {
@@ -168,11 +167,9 @@ export class InitSchema1792742368266 implements MigrationInterface {
       created_at timestamptz NOT NULL,
       expires_at timestamptz NOT NULL,
       used_at timestamptz,
-      revoked_at timestamptz
+      revoked_at timestamptz,
+      CONSTRAINT "UQ_0c088f7a31f53d7421702ba7f2e" UNIQUE (token_hash)
     )`);
-    await queryRunner.query(
-      `CREATE UNIQUE INDEX session_refresh_tokens_hash_idx ON session_refresh_tokens(token_hash)`
-    );
     await queryRunner.query(`CREATE INDEX session_refresh_tokens_session_idx ON session_refresh_tokens(session_id)`);
     await queryRunner.query(`CREATE UNIQUE INDEX session_refresh_tokens_current_idx ON session_refresh_tokens(session_id)
       WHERE used_at IS NULL AND revoked_at IS NULL`);
@@ -212,34 +209,17 @@ export class InitSchema1792742368266 implements MigrationInterface {
             VALUES ('${randomUUID()}', 'ADMIN', now())
         `);
 
+    await queryRunner.query(`
+            INSERT INTO "roles" ("id", "name", "created_at")
+            VALUES ('${randomUUID()}', 'SUPERUSER', now())
+        `);
+
     for (const scope of ["openid", "user:read", "user:write", "offline_access"]) {
       await queryRunner.query(`INSERT INTO "scopes" ("id", "name", "created_at") VALUES ($1, $2, now())`, [
         randomUUID(),
         scope,
       ]);
     }
-
-    await queryRunner.query(`
-            INSERT INTO "users" ("id", "name", "surname", "email", "passwordHash", "emailConfirmed", "blocked", "created_at", "updated_at")
-            VALUES (
-                '${randomUUID()}',
-                'Super',
-                'User',
-                'mikhssoadmin@gmail.com',
-                '${bcrypt.hashSync("SuperUser1!", 10)}',
-                true,
-                false,
-                now(),
-                now()
-            )
-        `);
-    await queryRunner.query(`
-            INSERT INTO "user_roles" ("userId", "roleId", "appointedAt")
-            SELECT "users"."id", "roles"."id", now()
-            FROM "users"
-            JOIN "roles" ON "roles"."name" IN ('USER', 'ADMIN')
-            WHERE "users"."email" = 'mikhssoadmin@gmail.com'
-        `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

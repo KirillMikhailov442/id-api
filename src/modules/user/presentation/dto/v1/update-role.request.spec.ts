@@ -6,7 +6,7 @@ import { UpdateRoleRequest } from "@modules/user/presentation/dto/v1/update-role
 describe("UpdateRoleRequest", () => {
   const valid = { name: "USER" };
 
-  it.each([{ name: "USER" }, { name: "ADMIN" }])("accepts valid input %p", (input) => {
+  it.each([{ name: "USER" }, { name: "ADMIN" }, { name: "SUPERUSER" }])("accepts valid input %p", (input) => {
     expect(validateSync(plainToInstance(UpdateRoleRequest, input))).toEqual([]);
   });
 

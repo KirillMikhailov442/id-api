@@ -239,7 +239,11 @@ export const ApiRoleAlreadyExistsResponse = () =>
 
 export const ApiRoleValidationFailedResponse = () =>
   ApiValidationFailedResponse([
-    { field: "name", code: "INVALID_VALUE", message: "name must be one of the following values: USER, ADMIN" },
+    {
+      field: "name",
+      code: "INVALID_VALUE",
+      message: "name must be one of the following values: USER, ADMIN, SUPERUSER",
+    },
   ]);
 
 export const ApiRoleCreateValidationFailedResponse = () => ApiRoleValidationFailedResponse();

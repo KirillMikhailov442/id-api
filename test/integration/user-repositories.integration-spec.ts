@@ -4,6 +4,7 @@ import { makeRole, makeUser } from "@modules/user/application/handler/user-test.
 import { SUPER_USER_EMAIL } from "@modules/user/domain/entity/user";
 import { UserRole } from "@modules/user/domain/entity/user-role";
 import { IdentityProvider } from "@modules/user/domain/enum/identity-provider.enum";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { EmailAlreadyRegisteredException } from "@modules/user/domain/exception/email-already-registered.exception";
 import { RoleAlreadyExistsException } from "@modules/user/domain/exception/role-already-exists.exception";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
@@ -30,7 +31,18 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     await db?.close();
   });
 
-  it("applies actual migrations, including the session refresh hash constraint", async () => {
+  it("rolls back and reapplies the single migration with role seeds and no users", async () => {
+    await db.source.undoLastMigration();
+    const migrations = await db.source.runMigrations();
+    expect(migrations).toHaveLength(1);
+    expect(await db.source.query("SELECT name FROM roles ORDER BY name")).toEqual([
+      { name: RoleType.Admin },
+      { name: RoleType.SuperUser },
+      { name: RoleType.User },
+    ]);
+    expect(await db.source.getRepository(DbUser).count()).toBe(0);
+    expect(await db.source.query("SELECT * FROM user_roles")).toEqual([]);
+
     const constraints = await db.source.query<{ conname: string }[]>(
       "SELECT conname FROM pg_constraint WHERE conrelid = 'session_refresh_tokens'::regclass"
     );
