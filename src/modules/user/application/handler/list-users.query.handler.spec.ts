@@ -28,6 +28,7 @@ describe("ListUsersQueryHandler", () => {
     const { userRepository } = userRepositories();
     userRepository.findAll.mockResolvedValue([]);
     userRepository.count.mockResolvedValue(0);
+
     const handler = await testHandler(ListUsersQueryHandler, [{ provide: USER_REPOSITORY, useValue: userRepository }]);
 
     await handler.execute(new ListUsersQuery(5, 0, roles));

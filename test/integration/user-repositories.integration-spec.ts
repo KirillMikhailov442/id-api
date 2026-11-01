@@ -41,6 +41,7 @@ describe("User repositories and transactions (PostgreSQL)", () => {
 
   it("rolls back and reapplies the single migration with role seeds and no users", async () => {
     await db.source.undoLastMigration();
+
     const migrations = await db.source.runMigrations();
     expect(migrations).toHaveLength(1);
     expect(await db.source.query("SELECT name FROM roles ORDER BY name")).toEqual([
@@ -98,10 +99,13 @@ describe("User repositories and transactions (PostgreSQL)", () => {
 
     await db.users.run(async ({ userRepository: users, roleRepository: roles, userRoleRepository: assignments }) => {
       for (const user of [first, last, hidden]) await users.save(user);
+
       for (const role of [adminRole, hiddenRole]) await roles.save(role);
+
       for (const user of [last, hidden]) {
         await assignments.save(new UserRole(user.getId(), adminRole.getId(), adminRole.getName()));
       }
+
       await assignments.save(new UserRole(hidden.getId(), hiddenRole.getId(), hiddenRole.getName()));
     });
     await db.source.getRepository(DbUser).update(first.getId().getValue(), { createdAt: new Date("2020-01-01") });
@@ -109,6 +113,7 @@ describe("User repositories and transactions (PostgreSQL)", () => {
       expect((await users.findById(hidden.getId()))?.getId()).toEqual(hidden.getId());
       expect(await users.count()).toBe(3);
       expect(await users.findAll({ limit: 10, offset: 0 })).toHaveLength(3);
+
       const filter = { excludeRole: RoleType.SuperUser };
       expect((await users.findById(first.getId()))?.getId()).toEqual(first.getId());
       expect((await users.findById(last.getId()))?.getRoles().map((role) => role.getRoleId())).toEqual([
@@ -125,17 +130,21 @@ describe("User repositories and transactions (PostgreSQL)", () => {
 
       const get = new GetUserQueryHandler(users);
       const list = new ListUsersQueryHandler(users);
+
       for (const roles of [[], [RoleType.User], [RoleType.Admin]]) {
         await expect(get.execute(new GetUserQuery(hidden.getId().getValue(), roles))).rejects.toThrow(
           UserNotFoundException
         );
+
         const page = await list.execute(new ListUsersQuery(1, 1, roles));
         expect(page.total).toBe(2);
         expect(page.items.map((user) => user.getId())).toEqual([first.getId()]);
       }
+
       expect(await get.execute(new GetUserQuery(hidden.getId().getValue(), [RoleType.SuperUser]))).toEqual(
         await users.findById(hidden.getId())
       );
+
       const fullPage = await list.execute(new ListUsersQuery(10, 0, [RoleType.SuperUser]));
       expect(fullPage.total).toBe(3);
       expect(fullPage.items.map((user) => user.getId())).toContainEqual(hidden.getId());
@@ -154,9 +163,12 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     const superRole = makeRole(RoleType.SuperUser);
     await db.users.run(async (context) => {
       await context.userRepository.save(user);
+
       for (const role of [basic, admin, superRole]) await context.roleRepository.save(role);
+
       await context.userRoleRepository.save(new UserRole(user.getId(), basic.getId(), basic.getName()));
     });
+
     const assign = new AssignUserRoleCommandHandler(db.users);
     const remove = new RemoveUserRoleCommandHandler(db.users);
     const id = user.getId().getValue();
@@ -164,6 +176,7 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     const loadNames = () =>
       db.users.run(async ({ userRepository }) => {
         const loaded = await userRepository.findById(user.getId());
+
         return loaded
           ?.getRoles()
           .map((role) => role.getRoleName().getValue())

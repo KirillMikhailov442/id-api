@@ -96,8 +96,8 @@ describe("UserController (HTTP)", () => {
       const roleId = "00000000-0000-4000-8000-000000000005";
       auth = { ...testSessionAuth, roles: [RoleType.SuperUser] };
       execute.mockResolvedValue(undefined);
-      const response = await request(app.getHttpServer())
-        [method](path() + "/roles/" + roleId)
+
+      const response = await request(app.getHttpServer())[method](path() + "/roles/" + roleId)
         .send({ requesterRoles: [RoleType.Admin] })
         .expect(204);
       const expected =
@@ -112,16 +112,15 @@ describe("UserController (HTTP)", () => {
       "invalid/roles/00000000-0000-4000-8000-000000000005",
       "00000000-0000-4000-8000-000000000001/roles/invalid",
     ])(`validates UUIDs on ${method} %s`, async (suffix) => {
-      await request(app.getHttpServer())
-        [method]("/v1/users/" + suffix)
+      await request(app.getHttpServer())[method]("/v1/users/" + suffix)
         .expect(400);
       expect(execute).not.toHaveBeenCalled();
     });
 
     it(`returns 403 for forbidden ${method} role changes`, async () => {
       execute.mockRejectedValue(new UserRoleChangeForbiddenException());
-      const response = await request(app.getHttpServer())
-        [method](path() + "/roles/00000000-0000-4000-8000-000000000005")
+
+      const response = await request(app.getHttpServer())[method](path() + "/roles/00000000-0000-4000-8000-000000000005")
         .expect(403);
       expect(response.body).toMatchObject({ status: 403, code: "USER_ROLE_CHANGE_FORBIDDEN" });
     });

@@ -113,11 +113,13 @@ describe("User", () => {
     const admin = role(RoleType.Admin);
     user.assignRole(basic);
     jest.setSystemTime(later);
+
     const assignment = user.assignRole(admin);
     expect(assignment.getUserId()).toEqual(user.getId());
     expect(assignment.getRoleId()).toEqual(admin.getId());
     expect(assignment.getAppointedAt()).toEqual(later);
     expect(user.getUpdatedAt()).toEqual(later);
+
     const assigned = user.getRoles();
     assigned.pop();
     expect(user.getRoles()).toHaveLength(2);
@@ -131,6 +133,7 @@ describe("User", () => {
     const basic = role(RoleType.User);
     const admin = role(RoleType.Admin);
     user.assignRole(basic);
+
     const assignment = user.assignRole(admin);
     jest.setSystemTime(later);
     expect(user.removeRole(admin)).toBe(assignment);
@@ -155,6 +158,7 @@ describe("User", () => {
 
   it.each([RoleType.User, RoleType.SuperUser, "EDITOR"])("protects %s against role changes", (name) => {
     user.assignRole(role(RoleType.User));
+
     const roles = user.getRoles();
     jest.setSystemTime(later);
     expect(() => user.assignRole(role(name))).toThrow(UserRoleChangeForbiddenException);
@@ -179,12 +183,15 @@ describe("User", () => {
       initialTime,
       [basic, admin, privileged].map((item) => new UserRole(user.getId(), item.getId(), item.getName()))
     );
+
     const assignments = user.getRoles();
     jest.setSystemTime(later);
+
     for (const item of [basic, admin, privileged]) {
       expect(() => user.assignRole(item)).toThrow(UserRoleChangeForbiddenException);
       expect(() => user.removeRole(item)).toThrow(UserRoleChangeForbiddenException);
     }
+
     expect(user.getRoles()).toEqual(assignments);
     expect(user.getUpdatedAt()).toEqual(initialTime);
   });

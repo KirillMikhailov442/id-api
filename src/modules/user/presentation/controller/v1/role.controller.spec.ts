@@ -126,8 +126,8 @@ describe("RoleController (HTTP)", () => {
 
   it.each(["put", "delete"] as const)("returns 403 for a protected role on %s", async (method) => {
     execute.mockRejectedValue(new ProtectedRoleException());
-    const response = await request(app.getHttpServer())
-      [method]("/v1/roles/" + role.getId().getValue())
+
+    const response = await request(app.getHttpServer())[method]("/v1/roles/" + role.getId().getValue())
       .send({ name: RoleType.Admin })
       .expect(403);
     expect(response.body).toMatchObject({ status: 403, code: "PROTECTED_ROLE" });

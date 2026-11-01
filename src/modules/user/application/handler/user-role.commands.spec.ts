@@ -39,7 +39,9 @@ for (const action of ["assign", "remove"] as const) {
       user = makeUser();
       user.assignRole(makeRole(RoleType.User));
       role = makeRole(RoleType.Admin);
+
       if (action === "remove") user.assignRole(role);
+
       repos.userRepository.findById.mockResolvedValue(user);
       repos.roleRepository.findById.mockResolvedValue(role);
       handler =
@@ -50,6 +52,7 @@ for (const action of ["assign", "remove"] as const) {
 
     it("allows SUPERUSER to change ADMIN while retaining USER", async () => {
       await handler.execute(command([RoleType.SuperUser]));
+
       if (action === "assign") {
         const assignment = repos.userRoleRepository.save.mock.calls[0]?.[0];
         expect(assignment?.getUserId()).toEqual(user.getId());
@@ -58,6 +61,7 @@ for (const action of ["assign", "remove"] as const) {
       } else {
         expect(repos.userRoleRepository.delete).toHaveBeenCalledWith(user.getId(), role.getId());
       }
+
       expect(user.getRoles().some((item) => item.getRoleName().getValue() === RoleType.User)).toBe(true);
     });
 
@@ -117,6 +121,7 @@ for (const action of ["assign", "remove"] as const) {
       else {
         user.removeRole(role);
       }
+
       await expect(handler.execute(command([RoleType.SuperUser]))).rejects.toThrow(
         action === "assign" ? RoleAlreadyAssignedException : RoleNotAssignedException
       );
