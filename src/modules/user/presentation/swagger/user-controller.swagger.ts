@@ -80,7 +80,6 @@ export function registerUserControllerSwagger(): void {
     ApiAuthenticatedResponse(),
     ApiExtraModels(UserDto, ProfileDto),
     ApiOperation({
-      summary: "Get own profile",
       description:
         "Accepts an SSO token or an OAuth token with user:read. OAuth responses contain only id, name, surname and avatar.",
     }),
@@ -94,7 +93,6 @@ export function registerUserControllerSwagger(): void {
     ApiAuthenticatedResponse(),
     ApiExtraModels(UserDto, ProfileDto),
     ApiOperation({
-      summary: "Update own profile",
       description:
         "Accepts an SSO token or an OAuth token with user:write. OAuth may change only name and surname. Only SSO may change email. Provide at least one field.",
     }),
@@ -108,7 +106,7 @@ export function registerUserControllerSwagger(): void {
   documentMethod(
     "changePassword",
     ApiAuthenticatedResponse(),
-    ApiOperation({ summary: "Change current user password", description: "Requires the correct old password" }),
+    ApiOperation({ description: "Requires the correct old password" }),
     ApiNoContentResponse({ description: "Password changed" }),
     ApiInvalidOldPasswordResponse(),
     ApiChangePasswordValidationFailedResponse(),
@@ -139,7 +137,6 @@ export function registerUserControllerSwagger(): void {
       method,
       ApiAuthenticatedResponse(),
       ApiOperation({
-        summary: method === "assignRole" ? "Promote a USER to ADMIN" : "Demote an ADMIN to USER",
         description:
           "ADMIN or SUPERUSER may promote a USER; only SUPERUSER may demote an ADMIN. USER is permanent. SUPERUSER cannot be assigned, removed, or have its roles changed. Role IDs refer to the roles catalog.",
       }),

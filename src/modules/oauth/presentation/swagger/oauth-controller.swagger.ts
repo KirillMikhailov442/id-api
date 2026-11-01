@@ -30,7 +30,6 @@ export class OAuthControllerSwagger {
     this.documentMethod(
       "jwks",
       ApiOperation({
-        summary: "Get public keys for ID token verification (JWKS)",
         description:
           "Public endpoint; no Bearer token or client secret is required. Returns the current RSA public signing key " +
           "as a JSON Web Key Set (JWKS). The private key is never returned.\n\n" +

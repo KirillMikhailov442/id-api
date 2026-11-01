@@ -1,4 +1,4 @@
-import { ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import { ApiNoContentResponse, ApiOkResponse, ApiParam, ApiTags } from "@nestjs/swagger";
 
 import { SessionController } from "@modules/session/presentation/controller/v1/session.controller";
 import { SessionDto } from "@modules/session/presentation/dto/v1/session.dto";
@@ -30,7 +30,6 @@ export function registerSessionControllerSwagger(): void {
   documentMethod(
     "list",
     ApiAuthenticatedResponse(),
-    ApiOperation({ summary: "List current user's active sessions" }),
     ApiOkResponse({
       type: SessionDto,
       isArray: true,
@@ -41,7 +40,6 @@ export function registerSessionControllerSwagger(): void {
   documentMethod(
     "revoke",
     ApiAuthenticatedResponse(),
-    ApiOperation({ summary: "Revoke one of the current user's sessions" }),
     ApiParam({ name: "id", format: "uuid", description: "Session ID from refresh_tokens" }),
     ApiNoContentResponse({ description: "Session revoked; repeated requests for an owned session also succeed" }),
     ApiInvalidSessionIdResponse(),

@@ -1,5 +1,5 @@
 import { HttpStatus } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
 
 import { GoogleAuthController } from "@modules/session/presentation/controller/v1/google-auth.controller";
 
@@ -22,15 +22,10 @@ function documentMethod(name: GoogleAuthControllerMethod, ...decorators: MethodD
 export function registerGoogleAuthControllerSwagger(): void {
   ApiTags("auth")(GoogleAuthController);
 
-  documentMethod(
-    "start",
-    ApiOperation({ summary: "Start Google sign-in or registration" }),
-    ApiResponse({ status: HttpStatus.FOUND, description: "Redirect to Google" })
-  );
+  documentMethod("start", ApiResponse({ status: HttpStatus.FOUND, description: "Redirect to Google" }));
 
   documentMethod(
     "callback",
-    ApiOperation({ summary: "Complete Google sign-in, set refresh cookie and redirect to APP_WEB_URL" }),
     ApiResponse({ status: HttpStatus.FOUND, description: "Refresh cookie set; redirect to SSO home page" }),
     ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Invalid or expired Google login" }),
     ApiResponse({ status: HttpStatus.CONFLICT, description: "Email already belongs to an existing account" })
