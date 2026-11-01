@@ -30,7 +30,7 @@ describe("ResolveExternalUserCommandHandler", () => {
     publish.mockReset();
     repos.userIdentityRepository.findUserId.mockResolvedValue(null);
     repos.userRepository.existsByEmail.mockResolvedValue(false);
-    repos.roleRepository.findByName.mockResolvedValue(makeRole());
+    repos.roleRepository.findByName.mockResolvedValue(makeRole("USER"));
     handler = await testHandler(ResolveExternalUserCommandHandler, [
       { provide: TRANSACTION, useValue: repos.transaction },
       { provide: EventBus, useValue: { publish } },

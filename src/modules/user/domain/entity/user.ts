@@ -1,11 +1,14 @@
 import type { Role } from "@modules/user/domain/entity/role";
 import { UserRole } from "@modules/user/domain/entity/user-role";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { UserBlockedStatus } from "@modules/user/domain/enum/user-blocked-status.enum";
 import { UserEmailConfirmedStatus } from "@modules/user/domain/enum/user-email-confirmed-status.enum";
 import { EmailAlreadyConfirmedException } from "@modules/user/domain/exception/email-already-confirmed.exception";
 import { RoleAlreadyAssignedException } from "@modules/user/domain/exception/role-already-assigned.exception";
+import { RoleNotAssignedException } from "@modules/user/domain/exception/role-not-assigned.exception";
 import { UserAlreadyBlockedException } from "@modules/user/domain/exception/user-already-blocked.exception";
 import { UserAlreadyUnblockedException } from "@modules/user/domain/exception/user-already-unblocked.exception";
+import { UserRoleChangeForbiddenException } from "@modules/user/domain/exception/user-role-change-forbidden.exception";
 import type { Email } from "@modules/user/domain/value-object/email.value-object";
 import type { Name } from "@modules/user/domain/value-object/name.value-object";
 import type { Surname } from "@modules/user/domain/value-object/surname.value-object";
@@ -144,12 +147,51 @@ export class User {
     this.updatedAt = new Date();
   }
 
-  assignRole(role: Role): void {
+  assignRole(role: Role): UserRole {
+    this.assertRoleCanChange(role, true);
+
     if (this.roles.some((userRole) => userRole.getRoleId().equals(role.getId()))) {
       throw new RoleAlreadyAssignedException();
     }
 
-    this.roles.push(new UserRole(this.id, role.getId(), role.getName()));
+    const assignment = new UserRole(this.id, role.getId(), role.getName());
+    this.roles.push(assignment);
     this.updatedAt = new Date();
+
+    return assignment;
+  }
+
+  removeRole(role: Role): UserRole {
+    this.assertRoleCanChange(role);
+
+    const index = this.roles.findIndex((userRole) => userRole.getRoleId().equals(role.getId()));
+
+    if (index === -1) {
+      throw new RoleNotAssignedException();
+    }
+
+    const [assignment] = this.roles.splice(index, 1);
+    this.updatedAt = new Date();
+
+    return assignment;
+  }
+
+  private assertRoleCanChange(role: Role, allowInitialUser = false): void {
+    const roleName = role.getName().getValue();
+    const roleNames = this.roles.map((assignment) => assignment.getRoleName().getValue());
+
+    if (roleNames.includes(RoleType.SuperUser)) {
+      throw new UserRoleChangeForbiddenException("Roles of a SUPERUSER cannot be changed");
+    }
+
+    if (allowInitialUser && roleName === RoleType.User && this.roles.length === 0) return;
+
+    if (roleName !== RoleType.Admin) {
+      throw new UserRoleChangeForbiddenException("Only the ADMIN role can be assigned or removed; USER is a base role");
+    }
+
+    if (!roleNames.includes(RoleType.User)) {
+      throw new UserRoleChangeForbiddenException("The user must have the base USER role");
+    }
   }
 }

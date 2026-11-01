@@ -35,11 +35,13 @@ import type { Request, Response } from "express";
 import { OAuthScope } from "@modules/oauth/oauth.scopes";
 import { LoginCommand, type LoginResult } from "@modules/session/application/command/login.command";
 import { DeviceInfoParser } from "@modules/session/device-info.module";
+import { AssignUserRoleCommand } from "@modules/user/application/command/assign-user-role.command";
 import { BlockUserCommand } from "@modules/user/application/command/block-user.command";
 import { ChangePasswordCommand } from "@modules/user/application/command/change-password.command";
 import { ConfirmEmailCommand } from "@modules/user/application/command/confirm-email.command";
 import { CreateUserCommand } from "@modules/user/application/command/create-user.command";
 import { DeleteUserCommand } from "@modules/user/application/command/delete-user.command";
+import { RemoveUserRoleCommand } from "@modules/user/application/command/remove-user-role.command";
 import { UnblockUserCommand } from "@modules/user/application/command/unblock-user.command";
 import { UpdateUserCommand } from "@modules/user/application/command/update-user.command";
 import { ProfileAccessPolicy } from "@modules/user/application/profile-access.policy";
@@ -174,6 +176,32 @@ export class UserController {
     const user = await this.queryBus.execute<GetUserQuery, User>(query);
 
     return UserDto.fromDomain(user);
+  }
+
+  @Roles(RoleType.Admin, RoleType.SuperUser)
+  @Put(":id/roles/:roleId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async assignRole(
+    @Param("id", ParseUUIDPipe) userId: string,
+    @Param("roleId", ParseUUIDPipe) roleId: string,
+    @CurrentUser() currentUser: AuthenticatedUser
+  ): Promise<void> {
+    await this.commandBus.execute<AssignUserRoleCommand, void>(
+      new AssignUserRoleCommand(userId, roleId, currentUser.roles)
+    );
+  }
+
+  @Roles(RoleType.Admin, RoleType.SuperUser)
+  @Delete(":id/roles/:roleId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeRole(
+    @Param("id", ParseUUIDPipe) userId: string,
+    @Param("roleId", ParseUUIDPipe) roleId: string,
+    @CurrentUser() currentUser: AuthenticatedUser
+  ): Promise<void> {
+    await this.commandBus.execute<RemoveUserRoleCommand, void>(
+      new RemoveUserRoleCommand(userId, roleId, currentUser.roles)
+    );
   }
 
   @Roles(RoleType.Admin)

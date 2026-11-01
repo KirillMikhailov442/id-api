@@ -1,7 +1,11 @@
 import { databaseFixture, verifyDatabaseLock } from "@test/integration/support";
 
+import { AssignUserRoleCommand } from "@modules/user/application/command/assign-user-role.command";
+import { RemoveUserRoleCommand } from "@modules/user/application/command/remove-user-role.command";
+import { AssignUserRoleCommandHandler } from "@modules/user/application/handler/assign-user-role.command.handler";
 import { GetUserQueryHandler } from "@modules/user/application/handler/get-user.query.handler";
 import { ListUsersQueryHandler } from "@modules/user/application/handler/list-users.query.handler";
+import { RemoveUserRoleCommandHandler } from "@modules/user/application/handler/remove-user-role.command.handler";
 import { makeRole, makeUser } from "@modules/user/application/handler/user-test.spec-support";
 import { GetUserQuery } from "@modules/user/application/query/get-user.query";
 import { ListUsersQuery } from "@modules/user/application/query/list-users.query";
@@ -12,6 +16,7 @@ import { EmailAlreadyRegisteredException } from "@modules/user/domain/exception/
 import { RoleAlreadyExistsException } from "@modules/user/domain/exception/role-already-exists.exception";
 import { RoleNotFoundException } from "@modules/user/domain/exception/role-not-found.exception";
 import { UserNotFoundException } from "@modules/user/domain/exception/user-not-found.exception";
+import { UserRoleChangeForbiddenException } from "@modules/user/domain/exception/user-role-change-forbidden.exception";
 import { Email } from "@modules/user/domain/value-object/email.value-object";
 import { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
 import { DbUserIdentity } from "@modules/user/infrastructure/entity/db-user-identity.entity";
@@ -140,6 +145,46 @@ describe("User repositories and transactions (PostgreSQL)", () => {
       expect(await users.count()).toBe(3);
       expect(await users.findAll({ limit: 10, offset: 0 })).toHaveLength(3);
     });
+  });
+
+  it("promotes and demotes transactionally while protecting USER and SUPERUSER", async () => {
+    const user = makeUser();
+    const basic = makeRole(RoleType.User);
+    const admin = makeRole(RoleType.Admin);
+    const superRole = makeRole(RoleType.SuperUser);
+    await db.users.run(async (context) => {
+      await context.userRepository.save(user);
+      for (const role of [basic, admin, superRole]) await context.roleRepository.save(role);
+      await context.userRoleRepository.save(new UserRole(user.getId(), basic.getId(), basic.getName()));
+    });
+    const assign = new AssignUserRoleCommandHandler(db.users);
+    const remove = new RemoveUserRoleCommandHandler(db.users);
+    const id = user.getId().getValue();
+    const adminId = admin.getId().getValue();
+    const loadNames = () =>
+      db.users.run(async ({ userRepository }) => {
+        const loaded = await userRepository.findById(user.getId());
+        return loaded
+          ?.getRoles()
+          .map((role) => role.getRoleName().getValue())
+          .sort();
+      });
+
+    await assign.execute(new AssignUserRoleCommand(id, adminId, [RoleType.Admin]));
+    expect(await loadNames()).toEqual([RoleType.Admin, RoleType.User]);
+    await expect(remove.execute(new RemoveUserRoleCommand(id, adminId, [RoleType.Admin]))).rejects.toThrow(
+      UserRoleChangeForbiddenException
+    );
+    expect(await loadNames()).toEqual([RoleType.Admin, RoleType.User]);
+    await remove.execute(new RemoveUserRoleCommand(id, adminId, [RoleType.SuperUser]));
+    expect(await loadNames()).toEqual([RoleType.User]);
+    await expect(
+      assign.execute(new AssignUserRoleCommand(id, superRole.getId().getValue(), [RoleType.SuperUser]))
+    ).rejects.toThrow(UserRoleChangeForbiddenException);
+    await expect(
+      remove.execute(new RemoveUserRoleCommand(id, basic.getId().getValue(), [RoleType.SuperUser]))
+    ).rejects.toThrow(UserRoleChangeForbiddenException);
+    expect(await loadNames()).toEqual([RoleType.User]);
   });
 
   it("loads role names, supports empty ID sets, renames and deletes assignments", async () => {

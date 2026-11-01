@@ -1,11 +1,15 @@
 import { Role } from "@modules/user/domain/entity/role";
 import { DEFAULT_AVATAR_PATH, User } from "@modules/user/domain/entity/user";
+import { UserRole } from "@modules/user/domain/entity/user-role";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 import { UserBlockedStatus } from "@modules/user/domain/enum/user-blocked-status.enum";
 import { UserEmailConfirmedStatus } from "@modules/user/domain/enum/user-email-confirmed-status.enum";
 import { EmailAlreadyConfirmedException } from "@modules/user/domain/exception/email-already-confirmed.exception";
 import { RoleAlreadyAssignedException } from "@modules/user/domain/exception/role-already-assigned.exception";
+import { RoleNotAssignedException } from "@modules/user/domain/exception/role-not-assigned.exception";
 import { UserAlreadyBlockedException } from "@modules/user/domain/exception/user-already-blocked.exception";
 import { UserAlreadyUnblockedException } from "@modules/user/domain/exception/user-already-unblocked.exception";
+import { UserRoleChangeForbiddenException } from "@modules/user/domain/exception/user-role-change-forbidden.exception";
 import { Email } from "@modules/user/domain/value-object/email.value-object";
 import { Name } from "@modules/user/domain/value-object/name.value-object";
 import { RoleName } from "@modules/user/domain/value-object/role-name.value-object";
@@ -102,27 +106,87 @@ describe("User", () => {
     expect(() => user.unblock()).toThrow(UserAlreadyUnblockedException);
   });
 
-  it("assigns roles by identity and protects the role collection from external changes", () => {
-    const role = Role.create({ name: new RoleName("admin") });
+  const role = (name: string) => Role.create({ name: new RoleName(name) });
+
+  it("initializes USER and promotes to ADMIN, returning the assignment to persist", () => {
+    const basic = role(RoleType.User);
+    const admin = role(RoleType.Admin);
+    user.assignRole(basic);
     jest.setSystemTime(later);
-    user.assignRole(role);
-
-    const assigned = user.getRoles();
-    expect(assigned).toHaveLength(1);
-    expect(assigned[0].getUserId().equals(user.getId())).toBe(true);
-    expect(assigned[0].getRoleId().equals(role.getId())).toBe(true);
-    expect(assigned[0].getRoleName().getValue()).toBe("admin");
-    expect(assigned[0].getAppointedAt()).toEqual(later);
-    assigned.pop();
-    expect(user.getRoles()).toHaveLength(1);
-    jest.setSystemTime(new Date("2026-01-03T00:00:00Z"));
-
-    const rehydrated = new Role(role.getId(), new RoleName("renamed"), initialTime);
-    expect(() => user.assignRole(rehydrated)).toThrow(RoleAlreadyAssignedException);
-    expect(user.getRoles()).toHaveLength(1);
+    const assignment = user.assignRole(admin);
+    expect(assignment.getUserId()).toEqual(user.getId());
+    expect(assignment.getRoleId()).toEqual(admin.getId());
+    expect(assignment.getAppointedAt()).toEqual(later);
     expect(user.getUpdatedAt()).toEqual(later);
-    user.assignRole(Role.create({ name: new RoleName("reader") }));
+    const assigned = user.getRoles();
+    assigned.pop();
     expect(user.getRoles()).toHaveLength(2);
+    jest.setSystemTime(new Date("2026-01-03T00:00:00Z"));
+    expect(() => user.assignRole(admin)).toThrow(RoleAlreadyAssignedException);
+    expect(user.getRoles()).toHaveLength(2);
+    expect(user.getUpdatedAt()).toEqual(later);
+  });
+
+  it("removes ADMIN by identity while preserving USER and updating the timestamp", () => {
+    const basic = role(RoleType.User);
+    const admin = role(RoleType.Admin);
+    user.assignRole(basic);
+    const assignment = user.assignRole(admin);
+    jest.setSystemTime(later);
+    expect(user.removeRole(admin)).toBe(assignment);
+    expect(user.getRoles().map((item) => item.getRoleId())).toEqual([basic.getId()]);
+    expect(user.getUpdatedAt()).toEqual(later);
+    jest.setSystemTime(new Date("2026-01-03T00:00:00Z"));
+    expect(() => user.removeRole(admin)).toThrow(RoleNotAssignedException);
+    expect(user.getUpdatedAt()).toEqual(later);
+  });
+
+  it.each([RoleType.SuperUser, "EDITOR"])("rejects assigning %s even to an uninitialized user", (name) => {
+    jest.setSystemTime(later);
+    expect(() => user.assignRole(role(name))).toThrow(UserRoleChangeForbiddenException);
+    expect(user.getRoles()).toEqual([]);
+    expect(user.getUpdatedAt()).toEqual(initialTime);
+  });
+
+  it("requires USER before assigning ADMIN", () => {
+    expect(() => user.assignRole(role(RoleType.Admin))).toThrow(UserRoleChangeForbiddenException);
+    expect(user.getRoles()).toEqual([]);
+  });
+
+  it.each([RoleType.User, RoleType.SuperUser, "EDITOR"])("protects %s against role changes", (name) => {
+    user.assignRole(role(RoleType.User));
+    const roles = user.getRoles();
+    jest.setSystemTime(later);
+    expect(() => user.assignRole(role(name))).toThrow(UserRoleChangeForbiddenException);
+    expect(() => user.removeRole(role(name))).toThrow(UserRoleChangeForbiddenException);
+    expect(user.getRoles()).toEqual(roles);
+    expect(user.getUpdatedAt()).toEqual(initialTime);
+  });
+
+  it("restores an existing SUPERUSER while rejecting every subsequent role change", () => {
+    const basic = role(RoleType.User);
+    const admin = role(RoleType.Admin);
+    const privileged = role(RoleType.SuperUser);
+    user = new User(
+      user.getId(),
+      user.getName(),
+      user.getSurname(),
+      user.getEmail(),
+      user.getPasswordHash(),
+      user.getIsConfirmed(),
+      user.getIsBlocked(),
+      initialTime,
+      initialTime,
+      [basic, admin, privileged].map((item) => new UserRole(user.getId(), item.getId(), item.getName()))
+    );
+    const assignments = user.getRoles();
+    jest.setSystemTime(later);
+    for (const item of [basic, admin, privileged]) {
+      expect(() => user.assignRole(item)).toThrow(UserRoleChangeForbiddenException);
+      expect(() => user.removeRole(item)).toThrow(UserRoleChangeForbiddenException);
+    }
+    expect(user.getRoles()).toEqual(assignments);
+    expect(user.getUpdatedAt()).toEqual(initialTime);
   });
 
   it("protects dates returned to callers", () => {
