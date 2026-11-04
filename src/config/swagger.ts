@@ -8,6 +8,7 @@ import { ClientControllerSwagger } from "@modules/oauth/presentation/swagger/cli
 import { OAuthControllerSwagger } from "@modules/oauth/presentation/swagger/oauth-controller.swagger";
 import { OAuthGrantsControllerSwagger } from "@modules/oauth/presentation/swagger/oauth-grants-controller.swagger";
 import { ScopeControllerSwagger } from "@modules/oauth/presentation/swagger/scope-controller.swagger";
+import { registerAdminSessionControllerSwagger } from "@modules/session/presentation/swagger/admin-session-controller.swagger";
 import { registerAuthControllerSwagger } from "@modules/session/presentation/swagger/auth-controller.swagger";
 import { registerGoogleAuthControllerSwagger } from "@modules/session/presentation/swagger/google-auth-controller.swagger";
 import { registerSessionControllerSwagger } from "@modules/session/presentation/swagger/session-controller.swagger";
@@ -26,6 +27,7 @@ export function registerSwaggerControllers(): void {
   registerAuthControllerSwagger();
   registerGoogleAuthControllerSwagger();
   registerSessionControllerSwagger();
+  registerAdminSessionControllerSwagger();
   registerUserControllerSwagger();
   registerRoleControllerSwagger();
 }
