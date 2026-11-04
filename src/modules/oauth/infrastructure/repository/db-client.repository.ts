@@ -38,9 +38,8 @@ export class DbClientRepository implements IClientRepository {
     return dbClient === null ? null : ClientMapper.toDomain(dbClient);
   }
 
-  async findByUserId(userId: UserId, pagination: PaginationQuery): Promise<Client[]> {
-    const dbClients = await this.withScopes(this.repository.createQueryBuilder("client"))
-      .where("client.userId = :userId", { userId: userId.getValue() })
+  async findByUserId(userId: UserId, pagination: PaginationQuery, search?: string): Promise<Client[]> {
+    const dbClients = await this.withScopes(this.filteredClientsQuery(search, userId))
       .skip(pagination.offset)
       .take(pagination.limit)
       .orderBy("client.createdAt", "DESC")
@@ -50,8 +49,8 @@ export class DbClientRepository implements IClientRepository {
     return dbClients.map(ClientMapper.toDomain);
   }
 
-  async findAll(pagination: PaginationQuery): Promise<Client[]> {
-    const dbClients = await this.withScopes(this.repository.createQueryBuilder("client"))
+  async findAll(pagination: PaginationQuery, search?: string): Promise<Client[]> {
+    const dbClients = await this.withScopes(this.filteredClientsQuery(search))
       .skip(pagination.offset)
       .take(pagination.limit)
       .orderBy("client.createdAt", "DESC")
@@ -61,12 +60,12 @@ export class DbClientRepository implements IClientRepository {
     return dbClients.map(ClientMapper.toDomain);
   }
 
-  async count(): Promise<number> {
-    return this.repository.count();
+  async count(search?: string): Promise<number> {
+    return this.filteredClientsQuery(search).getCount();
   }
 
-  async countByUserId(userId: UserId): Promise<number> {
-    return this.repository.count({ where: { userId: userId.getValue() } });
+  async countByUserId(userId: UserId, search?: string): Promise<number> {
+    return this.filteredClientsQuery(search, userId).getCount();
   }
 
   async save(client: Client): Promise<void> {
@@ -82,5 +81,25 @@ export class DbClientRepository implements IClientRepository {
     return query
       .leftJoin(DbClientScope, "assignment", "assignment.clientId = client.id")
       .leftJoinAndMapMany("client.scopes", DbScope, "scope", "scope.id = assignment.scopeId");
+  }
+
+  private filteredClientsQuery(search?: string, userId?: UserId) {
+    const query = this.repository.createQueryBuilder("client");
+
+    if (userId !== undefined) query.andWhere("client.userId = :userId", { userId: userId.getValue() });
+
+    const term = search?.trim() ?? "";
+
+    if (term.length > 0) {
+      const escapedSearch = term.replace(/[\\%_]/g, "\\$&");
+      query.andWhere(
+        "(CAST(client.id AS text) ILIKE :search OR client.name ILIKE :search OR client.location ILIKE :search)",
+        {
+          search: `%${escapedSearch}%`,
+        }
+      );
+    }
+
+    return query;
   }
 }

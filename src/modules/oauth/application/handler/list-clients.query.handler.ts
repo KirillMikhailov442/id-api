@@ -22,8 +22,8 @@ export class ListClientsQueryHandler implements IQueryHandler<ListClientsQuery> 
     const requesterUserId = UserId.from(query.requester.userId);
 
     const [items, total] = await Promise.all([
-      this.clientRepository.findByUserId(requesterUserId, { limit: query.limit, offset: query.offset }),
-      this.clientRepository.countByUserId(requesterUserId),
+      this.clientRepository.findByUserId(requesterUserId, { limit: query.limit, offset: query.offset }, query.search),
+      this.clientRepository.countByUserId(requesterUserId, query.search),
     ]);
 
     return { items, total };

@@ -16,9 +16,16 @@ describe("ListClientsQueryHandler", () => {
     const handler = await testHandler(ListClientsQueryHandler, [
       { provide: CLIENT_REPOSITORY, useValue: clientRepository },
     ]);
-    await expect(handler.execute(new ListClientsQuery(requester, 5, 10))).resolves.toEqual({ items, total: 12 });
-    expect(clientRepository.findByUserId).toHaveBeenCalledWith(UserId.from(requester.userId), { limit: 5, offset: 10 });
-    expect(clientRepository.countByUserId).toHaveBeenCalledWith(UserId.from(requester.userId));
+    await expect(handler.execute(new ListClientsQuery(requester, 5, 10, "Test"))).resolves.toEqual({
+      items,
+      total: 12,
+    });
+    expect(clientRepository.findByUserId).toHaveBeenCalledWith(
+      UserId.from(requester.userId),
+      { limit: 5, offset: 10 },
+      "Test"
+    );
+    expect(clientRepository.countByUserId).toHaveBeenCalledWith(UserId.from(requester.userId), "Test");
     expect(clientRepository.findAll).not.toHaveBeenCalled();
   });
 

@@ -7,8 +7,8 @@ import type { UserId } from "@modules/user/user.ids";
 
 export interface IClientRepository extends IRepository<Client, ClientId> {
   findByIdForUpdate(id: ClientId): Promise<Client | null>;
-  findByUserId(userId: UserId, pagination: PaginationQuery): Promise<Client[]>;
-  findAll(pagination: PaginationQuery): Promise<Client[]>;
-  count(): Promise<number>;
-  countByUserId(userId: UserId): Promise<number>;
+  findByUserId(userId: UserId, pagination: PaginationQuery, search?: string): Promise<Client[]>;
+  findAll(pagination: PaginationQuery, search?: string): Promise<Client[]>;
+  count(search?: string): Promise<number>;
+  countByUserId(userId: UserId, search?: string): Promise<number>;
 }

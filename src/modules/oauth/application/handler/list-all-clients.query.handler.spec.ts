@@ -15,9 +15,9 @@ describe("ListAllClientsQueryHandler", () => {
     const handler = await testHandler(ListAllClientsQueryHandler, [
       { provide: CLIENT_REPOSITORY, useValue: clientRepository },
     ]);
-    await expect(handler.execute(new ListAllClientsQuery(5, 10))).resolves.toEqual({ items, total: 15 });
-    expect(clientRepository.findAll).toHaveBeenCalledWith({ limit: 5, offset: 10 });
-    expect(clientRepository.count).toHaveBeenCalledTimes(1);
+    await expect(handler.execute(new ListAllClientsQuery(5, 10, "Test"))).resolves.toEqual({ items, total: 15 });
+    expect(clientRepository.findAll).toHaveBeenCalledWith({ limit: 5, offset: 10 }, "Test");
+    expect(clientRepository.count).toHaveBeenCalledWith("Test");
   });
 
   it("propagates repository errors", async () => {
