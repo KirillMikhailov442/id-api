@@ -146,8 +146,7 @@ export function registerUserControllerSwagger(): void {
       method,
       ApiAuthenticatedResponse(),
       ApiOperation({
-        description:
-          "ADMIN or SUPERUSER may promote a USER; only SUPERUSER may demote an ADMIN. USER is permanent. SUPERUSER cannot be assigned, removed, or have its roles changed. Role IDs refer to the roles catalog.",
+        description: "Requires admin role",
       }),
       ApiNoContentResponse({ description: "User role changed" }),
       ApiBadRequestResponse({ description: "Invalid user or role UUID" }),
