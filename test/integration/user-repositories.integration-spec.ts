@@ -156,6 +156,60 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     });
   });
 
+  it("searches users with literal substrings, consistent pagination and role visibility", async () => {
+    const first = makeUser("search_one@example.com");
+    const second = makeUser("search.two@example.com");
+    const hidden = makeUser("search.hidden@example.com");
+    const hiddenRole = makeRole(RoleType.SuperUser);
+    await db.users.run(async ({ userRepository: users, roleRepository: roles, userRoleRepository: assignments }) => {
+      for (const user of [first, second, hidden]) await users.save(user);
+
+      await roles.save(hiddenRole);
+      await assignments.save(new UserRole(hidden.getId(), hiddenRole.getId(), hiddenRole.getName()));
+    });
+    await db.source.getRepository(DbUser).update(first.getId().getValue(), {
+      name: "Alice",
+      surname: "Cooper_%\\",
+      createdAt: new Date("2020-01-01"),
+    });
+    await db.source.getRepository(DbUser).update(second.getId().getValue(), { name: "Bob", surname: "Smith" });
+    await db.source.getRepository(DbUser).update(hidden.getId().getValue(), { name: "Alice", surname: "Hidden" });
+
+    await db.users.run(async ({ userRepository: users }) => {
+      const list = new ListUsersQueryHandler(users);
+
+      for (const search of ["ALIC", "COOPER", "alice coop", "SEARCH_ONE@", "  Alice  ", "%", "_", "\\"]) {
+        const page = await list.execute(new ListUsersQuery(10, 0, [RoleType.Admin], search));
+        expect(page.total).toBe(1);
+        expect(page.items.map((user) => user.getId())).toEqual([first.getId()]);
+      }
+
+      const page = await list.execute(new ListUsersQuery(1, 1, [RoleType.Admin], "SEARCH"));
+      expect(page.total).toBe(2);
+      expect(page.items.map((user) => user.getId())).toEqual([first.getId()]);
+
+      const pastEnd = await list.execute(new ListUsersQuery(1, 2, [RoleType.Admin], "SEARCH"));
+      expect(pastEnd).toEqual({ items: [], total: 2 });
+
+      const full = await list.execute(new ListUsersQuery(10, 0, [RoleType.SuperUser], "ALICE"));
+      expect(full.total).toBe(2);
+      expect(full.items.map((user) => user.getId())).toContainEqual(hidden.getId());
+
+      for (const search of ["", "   "]) {
+        const all = await list.execute(new ListUsersQuery(10, 0, [RoleType.Admin], search));
+        expect(all.total).toBe(2);
+        expect(all.items).toHaveLength(2);
+      }
+
+      for (const search of ["missing", "' OR 1=1 --", "search.hidden"]) {
+        expect(await list.execute(new ListUsersQuery(10, 0, [RoleType.Admin], search))).toEqual({
+          items: [],
+          total: 0,
+        });
+      }
+    });
+  });
+
   it("promotes and demotes transactionally while protecting USER and SUPERUSER", async () => {
     const user = makeUser();
     const basic = makeRole(RoleType.User);

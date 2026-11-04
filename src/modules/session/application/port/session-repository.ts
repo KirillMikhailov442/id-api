@@ -1,9 +1,20 @@
+import type { PaginationQuery } from "@shared/pagination/pagination.query";
 import type { IRepository } from "@shared/repository/repository.type";
 
 import type { Session } from "@modules/session/domain/entity/session";
 import type { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
 import type { SessionId } from "@modules/session/session.ids";
 import type { UserId } from "@modules/user/user.ids";
+
+export interface SessionPageFilter {
+  search?: string;
+  activeOnly?: boolean;
+}
+
+export interface SessionPage {
+  items: Session[];
+  total: number;
+}
 
 export interface ISessionRepository extends IRepository<Session, SessionId> {
   withUserLock<T>(userId: UserId, work: (repository: ISessionRepository) => Promise<T>): Promise<T>;
@@ -15,6 +26,7 @@ export interface ISessionRepository extends IRepository<Session, SessionId> {
     expiresAt: Date;
   } | null>;
   createRefreshToken(session: Session, refreshHash: RefreshHash): Promise<void>;
+  findPageByUserId(userId: UserId, pagination: PaginationQuery, filter?: SessionPageFilter): Promise<SessionPage>;
   findByUserId(userId: UserId): Promise<Session[]>;
   findActiveByUserId(userId: UserId): Promise<Session[]>;
   rotate(

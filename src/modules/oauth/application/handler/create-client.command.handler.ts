@@ -35,13 +35,8 @@ export class CreateClientCommandHandler implements ICommandHandler<CreateClientC
     const name = new ClientName(command.name);
     const secret = new ClientSecret(command.secret);
     const secretHash = await this.passwordHasher.hash(secret.getValue());
-    const client = Client.create({
-      userId: requesterUserId,
-      name,
-      secretHash,
-      location: mapOptional(command.location, (value) => new LocationHref(value)),
-    });
-    await this.transaction.run(async (context) => {
+    const location = mapOptional(command.location, (value) => new LocationHref(value));
+    const client = await this.transaction.run(async (context) => {
       const scopes: Scope[] = [];
 
       for (const scopeName of new Set(command.scopes)) {
@@ -55,11 +50,20 @@ export class CreateClientCommandHandler implements ICommandHandler<CreateClientC
         scopes.push(scope);
       }
 
+      const client = Client.create({
+        userId: requesterUserId,
+        name,
+        secretHash,
+        location,
+        scopes,
+      });
       await context.clientRepository.save(client);
 
       for (const scope of scopes) {
         await context.clientScopeRepository.save(new ClientScope(client.getId(), scope.getId(), new Date()));
       }
+
+      return client;
     });
     this.eventBus.publish(new ClientCreatedEvent(client.getId(), client.getUserId(), name));
 

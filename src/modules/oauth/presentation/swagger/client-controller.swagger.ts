@@ -1,4 +1,11 @@
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 import { ApiPaginationResponse } from "@shared/pagination/pagination-response.decorator";
 
 import { ClientController } from "@modules/oauth/presentation/controller/v1/client.controller";
@@ -44,6 +51,14 @@ export class ClientControllerSwagger {
     this.documentMethod(
       "list",
       ApiAuthenticatedResponse(),
+      ApiOperation({ description: "Returns clients owned by the current authenticated user" }),
+      ApiQuery({
+        name: "search",
+        required: false,
+        schema: { type: "string", maxLength: 255 },
+        description:
+          "Case-insensitive substring search by client ID, name or location URL. Whitespace is trimmed; empty search returns all visible clients. Wildcards are literal.",
+      }),
       ApiPaginationResponse(ClientDto, "Paginated list of own clients"),
       ApiPaginationValidationFailedResponse(),
       ApiUnexpectedErrorResponse()
@@ -53,6 +68,13 @@ export class ClientControllerSwagger {
       "listAll",
       ApiAuthenticatedResponse(),
       ApiOperation({ description: "Requires admin role" }),
+      ApiQuery({
+        name: "search",
+        required: false,
+        schema: { type: "string", maxLength: 255 },
+        description:
+          "Case-insensitive substring search by client ID, name or location URL. Whitespace is trimmed; empty search returns all visible clients. Wildcards are literal.",
+      }),
       ApiPaginationResponse(ClientDto, "Paginated list of all clients"),
       ApiInsufficientRoleResponse(),
       ApiPaginationValidationFailedResponse(),

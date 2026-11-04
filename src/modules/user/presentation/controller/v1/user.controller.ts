@@ -30,6 +30,7 @@ import { AccessTokenType } from "@shared/auth/enum/access-token-type.enum";
 import { PaginationMeta } from "@shared/pagination/pagination-meta";
 import { PaginationQuery } from "@shared/pagination/pagination.query";
 import { PaginationResponse } from "@shared/pagination/pagination.response";
+import { SearchQuery } from "@shared/query/search.query";
 import type { Request, Response } from "express";
 
 import { OAuthScope } from "@modules/oauth/oauth.scopes";
@@ -101,9 +102,11 @@ export class UserController {
   async list(
     @Query()
     pagination: PaginationQuery,
+    @Query()
+    search: SearchQuery,
     @CurrentUser() currentUser: AuthenticatedUser
   ): Promise<PaginationResponse<UserDto>> {
-    const query = new ListUsersQuery(pagination.limit, pagination.offset, currentUser.roles);
+    const query = new ListUsersQuery(pagination.limit, pagination.offset, currentUser.roles, search.search);
     const { items, total } = await this.queryBus.execute<
       ListUsersQuery,
       {

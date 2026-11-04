@@ -19,8 +19,8 @@ export class ListAllClientsQueryHandler implements IQueryHandler<ListAllClientsQ
     total: number;
   }> {
     const [items, total] = await Promise.all([
-      this.clientRepository.findAll({ limit: query.limit, offset: query.offset }),
-      this.clientRepository.count(),
+      this.clientRepository.findAll({ limit: query.limit, offset: query.offset }, query.search),
+      this.clientRepository.count(query.search),
     ]);
 
     return { items, total };

@@ -1,4 +1,5 @@
-import { ApiNoContentResponse, ApiOkResponse, ApiParam, ApiTags } from "@nestjs/swagger";
+import { ApiNoContentResponse, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ApiPaginationResponse } from "@shared/pagination/pagination-response.decorator";
 
 import { SessionController } from "@modules/session/presentation/controller/v1/session.controller";
 import { SessionDto } from "@modules/session/presentation/dto/v1/session.dto";
@@ -7,6 +8,7 @@ import {
   ApiInvalidSessionIdResponse,
   ApiSessionNotFoundResponse,
 } from "@modules/session/presentation/exception-response.decorator";
+import { ApiPaginationValidationFailedResponse } from "@modules/user/presentation/exception-response.decorator";
 
 type SessionControllerMethod = {
   [K in keyof SessionController]: SessionController[K] extends (...args: never[]) => unknown ? K : never;
@@ -30,10 +32,14 @@ export function registerSessionControllerSwagger(): void {
   documentMethod(
     "list",
     ApiAuthenticatedResponse(),
-    ApiOkResponse({
-      type: SessionDto,
-      isArray: true,
-      description: "Non-revoked, unexpired sessions ordered by last use, newest first",
+    ApiPaginationResponse(SessionDto, "Non-revoked, unexpired sessions ordered by last use, newest first"),
+    ApiPaginationValidationFailedResponse(),
+    ApiQuery({
+      name: "search",
+      required: false,
+      schema: { type: "string", maxLength: 255 },
+      description:
+        "Case-insensitive substring search by session ID, IP, browser, OS or device type. Whitespace is trimmed; empty search returns all active sessions. Wildcards are literal.",
     })
   );
 

@@ -5,13 +5,16 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AccessTokenResolver } from "@shared/auth/access-token-resolver";
 import { TokenHistoryCleanupService } from "@shared/scheduled-tasks/token-history-cleanup.service";
 
+import { GetUserSessionQueryHandler } from "@modules/session/application/handler/get-user-session.query.handler";
 import { ListActiveSessionsQueryHandler } from "@modules/session/application/handler/list-active-sessions.query.handler";
+import { ListUserSessionsQueryHandler } from "@modules/session/application/handler/list-user-sessions.query.handler";
 import { LoginWithGoogleCommandHandler } from "@modules/session/application/handler/login-with-google.command.handler";
 import { LoginCommandHandler } from "@modules/session/application/handler/login.command.handler";
 import { LogoutAllCommandHandler } from "@modules/session/application/handler/logout-all.command.handler";
 import { LogoutCommandHandler } from "@modules/session/application/handler/logout.command.handler";
 import { RefreshCommandHandler } from "@modules/session/application/handler/refresh.command.handler";
 import { RevokeSessionCommandHandler } from "@modules/session/application/handler/revoke-session.command.handler";
+import { RevokeUserSessionsCommandHandler } from "@modules/session/application/handler/revoke-user-sessions.command.handler";
 import { StartGoogleLoginCommandHandler } from "@modules/session/application/handler/start-google-login.command.handler";
 import { SessionIssuer } from "@modules/session/application/session-issuer";
 import { DeviceInfoModule } from "@modules/session/device-info.module";
@@ -24,6 +27,7 @@ import { RedisSessionRevocationStore } from "@modules/session/infrastructure/sec
 import { JwtAccessTokenService } from "@modules/session/infrastructure/security/token/jwt-access-token.service";
 import { RefreshTokenService } from "@modules/session/infrastructure/security/token/refresh-token.service";
 import { SessionAuthenticationService } from "@modules/session/infrastructure/security/token/session-authentication.service";
+import { AdminSessionController } from "@modules/session/presentation/controller/v1/admin-session.controller";
 import { AuthController } from "@modules/session/presentation/controller/v1/auth.controller";
 import { GoogleAuthController } from "@modules/session/presentation/controller/v1/google-auth.controller";
 import { SessionController } from "@modules/session/presentation/controller/v1/session.controller";
@@ -54,7 +58,7 @@ export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modul
       }),
     }),
   ],
-  controllers: [AuthController, SessionController, GoogleAuthController],
+  controllers: [AuthController, SessionController, GoogleAuthController, AdminSessionController],
   providers: [
     TokenHistoryCleanupService,
     GoogleLoginClient,
@@ -75,11 +79,14 @@ export { SESSION_REPOSITORY, TOKEN_SERVICE, REFRESH_TOKEN_SERVICE } from "@modul
     { provide: TOKEN_SERVICE, useExisting: JwtAccessTokenService },
     { provide: REFRESH_TOKEN_SERVICE, useExisting: RefreshTokenService },
     ListActiveSessionsQueryHandler,
+    ListUserSessionsQueryHandler,
+    GetUserSessionQueryHandler,
     LoginCommandHandler,
     LogoutCommandHandler,
     LogoutAllCommandHandler,
     RefreshCommandHandler,
     RevokeSessionCommandHandler,
+    RevokeUserSessionsCommandHandler,
     AccessTokenResolver,
     SessionAccessTokenGuard,
   ],

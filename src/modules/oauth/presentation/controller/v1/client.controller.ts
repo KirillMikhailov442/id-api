@@ -20,6 +20,7 @@ import { Roles } from "@shared/auth/decorator/roles.decorator";
 import { PaginationMeta } from "@shared/pagination/pagination-meta";
 import { PaginationQuery } from "@shared/pagination/pagination.query";
 import { PaginationResponse } from "@shared/pagination/pagination.response";
+import { SearchQuery } from "@shared/query/search.query";
 
 import { AssignScopesCommand } from "@modules/oauth/application/command/assign-scopes.command";
 import { CreateClientCommand } from "@modules/oauth/application/command/create-client.command";
@@ -72,14 +73,15 @@ export class ClientController {
     return ClientDto.fromDomain(client);
   }
 
-  @Get()
+  @Get("me")
   async list(
     @CurrentUser()
     currentUser: AuthenticatedUser,
     @Query()
-    pagination: PaginationQuery
+    pagination: PaginationQuery,
+    @Query() search: SearchQuery
   ): Promise<PaginationResponse<ClientDto>> {
-    const query = new ListClientsQuery(toRequester(currentUser), pagination.limit, pagination.offset);
+    const query = new ListClientsQuery(toRequester(currentUser), pagination.limit, pagination.offset, search.search);
     const { items, total } = await this.queryBus.execute<
       ListClientsQuery,
       {
@@ -92,13 +94,14 @@ export class ClientController {
     return new PaginationResponse(clients, new PaginationMeta(total, pagination.limit, pagination.offset));
   }
 
-  @Get("all")
+  @Get()
   @Roles(RoleType.Admin)
   async listAll(
     @Query()
-    pagination: PaginationQuery
+    pagination: PaginationQuery,
+    @Query() search: SearchQuery
   ): Promise<PaginationResponse<ClientDto>> {
-    const query = new ListAllClientsQuery(pagination.limit, pagination.offset);
+    const query = new ListAllClientsQuery(pagination.limit, pagination.offset, search.search);
     const { items, total } = await this.queryBus.execute<
       ListAllClientsQuery,
       {

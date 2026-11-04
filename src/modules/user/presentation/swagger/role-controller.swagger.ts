@@ -74,7 +74,7 @@ export function registerRoleControllerSwagger(): void {
 
   documentMethod(
     "update",
-    ApiOperation({ description: "Requires admin role. The SUPERUSER role cannot be modified or deleted." }),
+    ApiOperation({ description: "Requires admin role" }),
     ApiProtectedRoleResponse(),
     ApiOkResponse({ type: RoleDto, description: "Role updated" }),
     ApiInvalidRoleIdResponse(),
@@ -86,7 +86,7 @@ export function registerRoleControllerSwagger(): void {
 
   documentMethod(
     "delete",
-    ApiOperation({ description: "Requires admin role. The SUPERUSER role cannot be modified or deleted." }),
+    ApiOperation({ description: "Requires admin role" }),
     ApiProtectedRoleResponse(),
     ApiNoContentResponse({ description: "Role deleted" }),
     ApiInvalidRoleIdResponse(),

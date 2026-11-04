@@ -1,7 +1,10 @@
 import { databaseFixture, eventually, redisFixture } from "@test/integration/support";
 
 import { Session } from "@modules/session/domain/entity/session";
+import { Browser } from "@modules/session/domain/value-object/browser.value-object";
+import { DeviceType } from "@modules/session/domain/value-object/device-type.value-object";
 import { Ip } from "@modules/session/domain/value-object/ip.value-object";
+import { OperatingSystem } from "@modules/session/domain/value-object/operating-system.value-object";
 import { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
 import { DbSessionRefreshToken } from "@modules/session/infrastructure/entity/db-session-refresh-token.entity";
 import { DbSession } from "@modules/session/infrastructure/entity/db-session.entity";
@@ -50,6 +53,109 @@ describe("Session persistence, rotation and revocation (PostgreSQL + Redis)", ()
   afterAll(async () => {
     await redis?.close();
     await db?.close();
+  });
+
+  it("searches session pages with owner isolation, active filtering and consistent totals", async () => {
+    const foreignUser = makeUser("foreign@example.com");
+    await db.users.run(({ userRepository }) => userRepository.save(foreignUser));
+
+    const first = new Session(
+      SessionId.create(),
+      user.getId(),
+      new Browser("Chrome"),
+      new OperatingSystem("Windows"),
+      new DeviceType("smartphone"),
+      new Ip("10.1.1.1"),
+      new Date("2020-01-01"),
+      new Date("2100-01-01"),
+      new Date("2020-01-02"),
+      null
+    );
+    const second = new Session(
+      SessionId.create(),
+      user.getId(),
+      new Browser("Chrome"),
+      null,
+      null,
+      new Ip("10.0.0.1"),
+      new Date("2021-01-01"),
+      new Date("2100-01-01"),
+      new Date("2021-01-02"),
+      null
+    );
+    const expired = new Session(
+      SessionId.create(),
+      user.getId(),
+      new Browser("Chrome"),
+      null,
+      null,
+      new Ip("unknown"),
+      new Date("2022-01-01"),
+      new Date("2023-01-01"),
+      new Date("2022-01-02"),
+      null
+    );
+    const revoked = new Session(
+      SessionId.create(),
+      user.getId(),
+      new Browser("Chrome"),
+      null,
+      null,
+      new Ip("unknown"),
+      new Date("2023-01-01"),
+      new Date("2100-01-01"),
+      new Date("2023-01-02"),
+      new Date("2023-01-03")
+    );
+    const foreign = Session.create({
+      userId: foreignUser.getId(),
+      browser: new Browser("Chrome"),
+      os: null,
+      deviceType: null,
+      ip: new Ip("10.1.1.1"),
+      expiresAt: new Date("2100-01-01"),
+    });
+
+    for (const item of [first, second, expired, revoked, foreign]) await repository.save(item);
+
+    for (const search of ["windows", "PHONE", "10.1.1.1", first.getId().getValue()]) {
+      const page = await repository.findPageByUserId(
+        user.getId(),
+        { limit: 10, offset: 0 },
+        { search, activeOnly: true }
+      );
+      expect(page.total).toBe(1);
+      expect(page.items.map((item) => item.getId())).toEqual([first.getId()]);
+    }
+
+    const active = await repository.findPageByUserId(
+      user.getId(),
+      { limit: 1, offset: 1 },
+      { search: "  CHROME  ", activeOnly: true }
+    );
+    expect(active.total).toBe(2);
+    expect(active.items.map((item) => item.getId())).toEqual([first.getId()]);
+
+    const retained = await repository.findPageByUserId(user.getId(), { limit: 1, offset: 1 }, { search: "chrome" });
+    expect(retained.total).toBe(4);
+    expect(retained.items.map((item) => item.getId())).toEqual([expired.getId()]);
+    expect(await repository.findPageByUserId(user.getId(), { limit: 1, offset: 10 }, { search: "chrome" })).toEqual({
+      items: [],
+      total: 4,
+    });
+
+    for (const search of ["", "   "]) {
+      const page = await repository.findPageByUserId(user.getId(), { limit: 10, offset: 0 }, { search });
+      expect(page.total).toBe(5);
+      expect(page.items).toHaveLength(5);
+    }
+
+    for (const search of ["missing", "' OR 1=1 --", foreign.getId().getValue(), "%", "_", "\\"]) {
+      expect(await repository.findPageByUserId(user.getId(), { limit: 10, offset: 0 }, { search })).toEqual({
+        items: [],
+        total: 0,
+      });
+    }
   });
 
   it("loads sessions and their version from refresh history", async () => {

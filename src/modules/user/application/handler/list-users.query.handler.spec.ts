@@ -36,6 +36,24 @@ describe("ListUsersQueryHandler", () => {
     expect(userRepository.count).toHaveBeenCalledWith({ excludeRole });
   });
 
+  it.each([
+    { input: "  Ivan Ivanov  ", search: "Ivan Ivanov" },
+    { input: "", search: undefined },
+    { input: "   ", search: undefined },
+  ])("normalizes search and applies it to both items and total: %j", async ({ input, search }) => {
+    const { userRepository } = userRepositories();
+    userRepository.findAll.mockResolvedValue([]);
+    userRepository.count.mockResolvedValue(0);
+
+    const handler = await testHandler(ListUsersQueryHandler, [{ provide: USER_REPOSITORY, useValue: userRepository }]);
+
+    await handler.execute(new ListUsersQuery(5, 0, [RoleType.Admin], input));
+
+    const filter = { excludeRole: RoleType.SuperUser, search };
+    expect(userRepository.findAll).toHaveBeenCalledWith({ limit: 5, offset: 0 }, filter);
+    expect(userRepository.count).toHaveBeenCalledWith(filter);
+  });
+
   it("propagates a count failure", async () => {
     const { userRepository } = userRepositories();
     const error = new Error("count failed");

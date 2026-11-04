@@ -47,7 +47,7 @@ export class OAuthGrantsControllerSwagger {
     this.documentMethod(
       "listUser",
       ApiOperation({
-        description: "Requires an internal SSO access token with the ADMIN role.",
+        description: "Requires admin role",
       }),
       ApiQuery({ type: PaginationQuery }),
       ApiPaginationResponse(OAuthGrantDto, "OAuth permissions granted by the specified user"),
@@ -69,7 +69,7 @@ export class OAuthGrantsControllerSwagger {
     this.documentMethod(
       "revokeUser",
       ApiOperation({
-        description: "Requires an internal SSO access token with the ADMIN role.",
+        description: "Requires admin role",
       }),
       ApiAuthenticatedResponse(),
       ApiInsufficientRoleResponse(),

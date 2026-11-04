@@ -117,22 +117,33 @@ export class DbUserRepository implements IUserRepository {
   private filteredUsersQuery(filter: UserFilter) {
     const users = this.userRepository.createQueryBuilder("user");
 
-    if (filter.excludeRole === undefined) return users;
+    const search = filter.search?.trim() ?? "";
 
-    return users
-      .where((query) => {
-        const assignments = query
-          .subQuery()
-          .select("1")
-          .from(DbUserRole, "assignment")
-          .innerJoin("assignment.role", "role")
-          .where("assignment.userId = user.id")
-          .andWhere("role.name = :hiddenRole")
-          .getQuery();
+    if (search.length > 0) {
+      const escapedSearch = search.replace(/[\\%_]/g, "\\$&");
+      users.andWhere("(CONCAT_WS(' ', user.name, user.surname) ILIKE :search OR user.email ILIKE :search)", {
+        search: `%${escapedSearch}%`,
+      });
+    }
 
-        return `NOT EXISTS ${assignments}`;
-      })
-      .setParameter("hiddenRole", filter.excludeRole);
+    if (filter.excludeRole !== undefined) {
+      users
+        .andWhere((query) => {
+          const assignments = query
+            .subQuery()
+            .select("1")
+            .from(DbUserRole, "assignment")
+            .innerJoin("assignment.role", "role")
+            .where("assignment.userId = user.id")
+            .andWhere("role.name = :hiddenRole")
+            .getQuery();
+
+          return `NOT EXISTS ${assignments}`;
+        })
+        .setParameter("hiddenRole", filter.excludeRole);
+    }
+
+    return users;
   }
 
   private async loadUserRoles(userId: UserId): Promise<DbUserRole[]> {

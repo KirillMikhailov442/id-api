@@ -1,7 +1,9 @@
 import type { Server } from "node:http";
 import type { INestApplication } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import type { AuthContext } from "@shared/auth/contract/auth-context";
+import { oauthAuth } from "@shared/testing/auth-test.spec-support";
 import { controllerApp, testSessionAuth } from "@shared/testing/controller-test.spec-support";
 import request from "supertest";
 
@@ -19,6 +21,8 @@ import { ClientNotFoundException } from "@modules/oauth/domain/exception/client-
 import { ScopeNotAssignedException } from "@modules/oauth/domain/exception/scope-not-assigned.exception";
 import { ScopeNotFoundException } from "@modules/oauth/domain/exception/scope-not-found.exception";
 import { ClientController } from "@modules/oauth/presentation/controller/v1/client.controller";
+import { RolesGuard } from "@modules/session/presentation/guard/roles.guard";
+import { RoleType } from "@modules/user/domain/enum/role-type.enum";
 
 describe("ClientController (HTTP)", () => {
   let app: INestApplication<Server>;
@@ -36,6 +40,7 @@ describe("ClientController (HTTP)", () => {
     location: null,
     isActive: true,
     createdAt: client.getCreatedAt().toISOString(),
+    scopes: [],
   });
   const scopeDto = () => ({
     id: scope.getId().getValue(),
@@ -47,6 +52,7 @@ describe("ClientController (HTTP)", () => {
     app = await controllerApp(
       ClientController,
       [
+        { provide: APP_GUARD, useClass: RolesGuard },
         { provide: CommandBus, useValue: { execute } },
         { provide: QueryBus, useValue: { execute: query } },
       ],
@@ -98,33 +104,87 @@ describe("ClientController (HTTP)", () => {
   it("lists the requester's clients with pagination", async () => {
     query.mockResolvedValue({ items: [client], total: 12 });
 
-    const response = await request(app.getHttpServer()).get("/v1/clients?limit=5&offset=10").expect(200);
+    const response = await request(app.getHttpServer()).get("/v1/clients/me?limit=5&offset=10").expect(200);
     expect(query).toHaveBeenCalledWith(new ListClientsQuery(actor, 5, 10));
     expect(response.body).toEqual({ items: [dto()], meta: { total: 12, limit: 5, offset: 10 } });
   });
 
-  it("lists all clients through the separate query", async () => {
+  it("lists all clients for an admin", async () => {
+    auth = { ...testSessionAuth, roles: [RoleType.Admin] };
     query.mockResolvedValue({ items: [client], total: 1 });
 
-    const response = await request(app.getHttpServer()).get("/v1/clients/all").expect(200);
+    const response = await request(app.getHttpServer()).get("/v1/clients").expect(200);
     expect(query).toHaveBeenCalledWith(new ListAllClientsQuery(20, 0));
     expect(response.body).toEqual({ items: [dto()], meta: { total: 1, limit: 20, offset: 0 } });
+  });
+
+  it.each(["/v1/clients/me", "/v1/clients"])("forwards search and pagination for %s", async (url) => {
+    if (url === "/v1/clients") auth = { ...testSessionAuth, roles: [RoleType.Admin] };
+
+    query.mockResolvedValue({ items: [], total: 4 });
+
+    const response = await request(app.getHttpServer())
+      .get(url)
+      .query({ search: "Portal", limit: 5, offset: 10 })
+      .expect(200);
+    expect(query).toHaveBeenCalledWith(
+      url === "/v1/clients" ? new ListAllClientsQuery(5, 10, "Portal") : new ListClientsQuery(actor, 5, 10, "Portal")
+    );
+    expect(response.body).toEqual({ items: [], meta: { total: 4, limit: 5, offset: 10 } });
+  });
+
+  it.each(["/v1/clients/me", "/v1/clients"])("validates search and pagination for %s", async (url) => {
+    if (url === "/v1/clients") auth = { ...testSessionAuth, roles: [RoleType.Admin] };
+
+    for (const params of [{ search: "a".repeat(256) }, { search: ["a", "b"] }, { limit: 101 }, { offset: -1 }]) {
+      await request(app.getHttpServer()).get(url).query(params).expect(422);
+    }
+
+    expect(query).not.toHaveBeenCalled();
   });
 
   it("returns an empty page with pagination defaults", async () => {
     query.mockResolvedValue({ items: [], total: 0 });
 
-    const response = await request(app.getHttpServer()).get("/v1/clients").expect(200);
+    const response = await request(app.getHttpServer()).get("/v1/clients/me").expect(200);
     expect(query).toHaveBeenCalledWith(new ListClientsQuery(actor, 20, 0));
     expect(response.body).toEqual({ items: [], meta: { total: 0, limit: 20, offset: 0 } });
   });
 
-  it("gets a client by UUID", async () => {
+  it.each([[], [RoleType.User], [RoleType.SuperUser], ["admin"]])(
+    "denies the all-client list without ADMIN: %j",
+    async (...roles: string[]) => {
+      auth = { ...testSessionAuth, roles };
+      await request(app.getHttpServer()).get("/v1/clients").expect(403);
+      expect(query).not.toHaveBeenCalled();
+    }
+  );
+
+  it("rejects OAuth tokens for the all-client list", async () => {
+    auth = oauthAuth(["ADMIN"]);
+    await request(app.getHttpServer()).get("/v1/clients").expect(403);
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each(["/v1/clients", "/v1/clients/me"])("requires authentication for %s", async (url) => {
+    auth = undefined;
+    await request(app.getHttpServer()).get(url).expect(401);
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("removes the old /clients/all list route", async () => {
+    auth = { ...testSessionAuth, roles: [RoleType.Admin] };
+    await request(app.getHttpServer()).get("/v1/clients/all").expect(400);
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("gets a client by UUID with its scope names", async () => {
+    client = makeClient([scope, makeScope("email")]);
     query.mockResolvedValue(client);
 
     const response = await request(app.getHttpServer()).get(path()).expect(200);
     expect(query).toHaveBeenCalledWith(new GetClientQuery(actor, client.getId().getValue()));
-    expect(response.body).toEqual(dto());
+    expect(response.body).toEqual({ ...dto(), scopes: ["profile", "email"] });
   });
 
   it("updates the supplied fields and preserves false isActive", async () => {
@@ -232,7 +292,7 @@ describe("ClientController (HTTP)", () => {
 
   it.each(["limit=0", "offset=-1", "limit=101"])("rejects invalid pagination %s", async (params) => {
     await request(app.getHttpServer())
-      .get("/v1/clients?" + params)
+      .get("/v1/clients/me?" + params)
       .expect(422);
     expect(query).not.toHaveBeenCalled();
   });
