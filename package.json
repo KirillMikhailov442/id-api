@@ -27,7 +27,8 @@
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
     "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate src/migrations/AutoMigration -p -d src/config/database.ts",
     "migration:run": "tsx node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
-    "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d src/config/database.ts"
+    "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d src/config/database.ts",
+    "seed": "tsx src/config/run-seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -43,6 +44,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.8",
     "google-auth-library": "^11.3.2",
     "handlebars": "^4.7.10",
     "node-device-detector": "2.2.7",
@@ -73,7 +75,6 @@
     "@types/swagger-ui-express": "^4.1.8",
     "concurrently": "^10.0.6",
     "cross-env": "^10.1.0",
-    "dotenv": "^18.0.8",
     "eslint": "^10.0.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^16.5.0",

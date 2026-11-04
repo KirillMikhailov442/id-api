@@ -24,6 +24,8 @@ import { DbUser } from "@modules/user/infrastructure/entity/db-user.entity";
 import { DbUserIdentityRepository } from "@modules/user/infrastructure/repository/db-user-identity.repository";
 import { RoleId, UserId } from "@modules/user/user.ids";
 
+import { seedDatabase } from "@config/database-seed";
+
 describe("User repositories and transactions (PostgreSQL)", () => {
   let db: Awaited<ReturnType<typeof databaseFixture>>;
 
@@ -39,16 +41,25 @@ describe("User repositories and transactions (PostgreSQL)", () => {
     await db?.close();
   });
 
-  it("rolls back and reapplies the single migration with role seeds and no users", async () => {
+  it("reapplies the schema and seeds the default roles and scopes separately", async () => {
     await db.source.undoLastMigration();
 
     const migrations = await db.source.runMigrations();
     expect(migrations).toHaveLength(1);
-    expect(await db.source.query("SELECT name FROM roles ORDER BY name")).toEqual([
-      { name: RoleType.Admin },
-      { name: RoleType.SuperUser },
-      { name: RoleType.User },
-    ]);
+    expect(await db.source.query("SELECT id FROM roles")).toEqual([]);
+    expect(await db.source.query("SELECT id FROM scopes")).toEqual([]);
+
+    await seedDatabase(db.source);
+
+    const roles = await db.source.query<{ name: string }[]>("SELECT * FROM roles ORDER BY name");
+    const scopes = await db.source.query<{ name: string }[]>("SELECT * FROM scopes ORDER BY name");
+    expect(roles.map(({ name }) => name)).toEqual([RoleType.Admin, RoleType.SuperUser, RoleType.User]);
+    expect(scopes.map(({ name }) => name)).toEqual(["offline_access", "openid", "user:read", "user:write"]);
+
+    await seedDatabase(db.source);
+
+    expect(await db.source.query("SELECT * FROM roles ORDER BY name")).toEqual(roles);
+    expect(await db.source.query("SELECT * FROM scopes ORDER BY name")).toEqual(scopes);
     expect(await db.source.getRepository(DbUser).count()).toBe(0);
     expect(await db.source.query("SELECT * FROM user_roles")).toEqual([]);
 
