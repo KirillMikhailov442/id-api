@@ -190,6 +190,30 @@ describe("UserController (HTTP)", () => {
     expect(response.body).toEqual({ items: [dto()], meta: { total: 12, limit: 5, offset: 10 } });
   });
 
+  it("forwards search with pagination and trusted roles", async () => {
+    auth = { ...testSessionAuth, roles: [RoleType.SuperUser] };
+    query.mockResolvedValue({ items: [user], total: 1 });
+
+    const response = await request(app.getHttpServer())
+      .get("/v1/users")
+      .query({ search: "Ivan Ivanov", limit: 5, offset: 0 })
+      .expect(200);
+
+    expect(query).toHaveBeenCalledWith(new ListUsersQuery(5, 0, [RoleType.SuperUser], "Ivan Ivanov"));
+    expect(response.body).toEqual({ items: [dto()], meta: { total: 1, limit: 5, offset: 0 } });
+  });
+
+  it.each(["", "   ", "a".repeat(255)])("accepts a valid search: %j", async (search) => {
+    query.mockResolvedValue({ items: [], total: 0 });
+    await request(app.getHttpServer()).get("/v1/users").query({ search }).expect(200);
+    expect(query).toHaveBeenCalledWith(new ListUsersQuery(20, 0, [], search));
+  });
+
+  it.each([{ search: "a".repeat(256) }, { search: ["ivan", "petr"] }])("rejects invalid search: %j", async (params) => {
+    await request(app.getHttpServer()).get("/v1/users").query(params).expect(422);
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("returns an empty page with defaults", async () => {
     query.mockResolvedValue({ items: [], total: 0 });
 

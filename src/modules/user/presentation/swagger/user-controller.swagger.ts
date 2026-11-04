@@ -7,6 +7,7 @@ import {
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   getSchemaPath,
 } from "@nestjs/swagger";
@@ -70,7 +71,15 @@ export function registerUserControllerSwagger(): void {
   documentMethod(
     "list",
     ApiAuthenticatedResponse(),
-    ApiPaginationResponse(UserDto, "Paginated list of users"),
+    ApiPaginationResponse(UserDto, "Paginated list of users matching search"),
+    ApiQuery({
+      name: "search",
+      required: false,
+      schema: { type: "string", maxLength: 255 },
+      description:
+        "Case-insensitive substring search by name, surname, full name or email. Surrounding whitespace is ignored; empty search returns all visible users. Wildcards are treated literally.",
+      example: "ivan",
+    }),
     ApiPaginationValidationFailedResponse(),
     ApiUnexpectedErrorResponse()
   );

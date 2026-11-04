@@ -6,6 +6,7 @@ import type { Email } from "@modules/user/domain/value-object/email.value-object
 import type { UserId } from "@modules/user/user.ids";
 
 export interface UserFilter {
+  search?: string;
   excludeRole?: string;
 }
 

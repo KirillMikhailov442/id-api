@@ -19,7 +19,9 @@ export class ListUsersQueryHandler implements IQueryHandler<ListUsersQuery> {
     items: User[];
     total: number;
   }> {
+    const search = query.search?.trim() ?? "";
     const filter = {
+      search: search.length === 0 ? undefined : search,
       excludeRole: query.requesterRoles.includes(RoleType.SuperUser) ? undefined : RoleType.SuperUser,
     };
     const [items, total] = await Promise.all([
