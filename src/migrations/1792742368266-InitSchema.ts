@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class InitSchema1792742368266 implements MigrationInterface {
@@ -199,27 +198,6 @@ export class InitSchema1792742368266 implements MigrationInterface {
     await queryRunner.query(`CREATE INDEX oauth_refresh_tokens_grant_idx ON oauth_refresh_tokens(grant_id)`);
     await queryRunner.query(`CREATE UNIQUE INDEX oauth_refresh_tokens_current_idx ON oauth_refresh_tokens(grant_id)
       WHERE used_at IS NULL AND revoked_at IS NULL`);
-
-    await queryRunner.query(`
-            INSERT INTO "roles" ("id", "name", "created_at")
-            VALUES ('${randomUUID()}', 'USER', now())
-        `);
-    await queryRunner.query(`
-            INSERT INTO "roles" ("id", "name", "created_at")
-            VALUES ('${randomUUID()}', 'ADMIN', now())
-        `);
-
-    await queryRunner.query(`
-            INSERT INTO "roles" ("id", "name", "created_at")
-            VALUES ('${randomUUID()}', 'SUPERUSER', now())
-        `);
-
-    for (const scope of ["openid", "user:read", "user:write", "offline_access"]) {
-      await queryRunner.query(`INSERT INTO "scopes" ("id", "name", "created_at") VALUES ($1, $2, now())`, [
-        randomUUID(),
-        scope,
-      ]);
-    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
