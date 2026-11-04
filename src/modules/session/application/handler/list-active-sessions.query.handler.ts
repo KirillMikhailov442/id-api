@@ -1,9 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { QueryHandler, type IQueryHandler } from "@nestjs/cqrs";
 
-import type { ISessionRepository } from "@modules/session/application/port/session-repository";
+import type { ISessionRepository, SessionPage } from "@modules/session/application/port/session-repository";
 import { ListActiveSessionsQuery } from "@modules/session/application/query/list-active-sessions.query";
-import type { Session } from "@modules/session/domain/entity/session";
 import { SESSION_REPOSITORY } from "@modules/session/session.tokens";
 import { UserId } from "@modules/user/user.ids";
 
@@ -15,9 +14,11 @@ export class ListActiveSessionsQueryHandler implements IQueryHandler<ListActiveS
     private readonly sessionRepository: ISessionRepository
   ) {}
 
-  execute(query: ListActiveSessionsQuery): Promise<Session[]> {
-    const userId = UserId.from(query.userId);
-
-    return this.sessionRepository.findActiveByUserId(userId);
+  execute(query: ListActiveSessionsQuery): Promise<SessionPage> {
+    return this.sessionRepository.findPageByUserId(
+      UserId.from(query.userId),
+      { limit: query.limit, offset: query.offset },
+      { search: query.search, activeOnly: true }
+    );
   }
 }

@@ -18,6 +18,7 @@ export function makeSession() {
 
 export function sessionRepository() {
   const repository = {
+    findPageByUserId: mockFn<ISessionRepository["findPageByUserId"]>(),
     findById: mockFn<ISessionRepository["findById"]>(),
     save: mockFn<ISessionRepository["save"]>(),
     delete: mockFn<ISessionRepository["delete"]>(),

@@ -6,11 +6,13 @@ import { Test } from "@nestjs/testing";
 import type { AuthenticatedRequest } from "@shared/auth/contract/authenticated-request.type";
 import type { AuthenticatedUser } from "@shared/auth/contract/authenticated-user.type";
 import { AccessTokenType } from "@shared/auth/enum/access-token-type.enum";
+import { validationExceptionFactory } from "@shared/exception/factory/validation-exception.factory";
 import { ExceptionFilter } from "@shared/exception/filter/exception.filter";
 import type { NextFunction, Response } from "express";
 import request from "supertest";
 
 import { RevokeSessionCommand } from "@modules/session/application/command/revoke-session.command";
+import type { SessionPage } from "@modules/session/application/port/session-repository";
 import { ListActiveSessionsQuery } from "@modules/session/application/query/list-active-sessions.query";
 import { Session } from "@modules/session/domain/entity/session";
 import { SessionNotFoundException } from "@modules/session/domain/exception/session-not-found.exception";
@@ -22,13 +24,15 @@ import { SessionController } from "@modules/session/presentation/controller/v1/s
 import { SessionId } from "@modules/session/session.ids";
 import { UserId } from "@modules/user/user.ids";
 
+import { setupGlobalPipes } from "@config/validation";
+
 describe("SessionController (HTTP)", () => {
   let app: INestApplication<Server>;
   let currentUser: AuthenticatedUser | undefined;
   const userId = "00000000-0000-4000-8000-000000000001";
   const currentSessionId = "00000000-0000-4000-8000-000000000002";
   const otherSessionId = "00000000-0000-4000-8000-000000000003";
-  const queryExecute = jest.fn<Promise<Session[]>, [ListActiveSessionsQuery]>();
+  const queryExecute = jest.fn<Promise<SessionPage>, [ListActiveSessionsQuery]>();
   const commandExecute = jest.fn<Promise<void>, [RevokeSessionCommand]>();
 
   beforeAll(async () => {
@@ -44,6 +48,7 @@ describe("SessionController (HTTP)", () => {
     app = module.createNestApplication();
     app.enableVersioning({ type: VersioningType.URI });
     app.useGlobalFilters(new ExceptionFilter());
+    setupGlobalPipes(app, validationExceptionFactory);
     app.use((httpRequest: AuthenticatedRequest, _response: Response, next: NextFunction) => {
       if (currentUser !== undefined) {
         httpRequest.user = currentUser;
@@ -66,11 +71,11 @@ describe("SessionController (HTTP)", () => {
   });
 
   it("returns an empty list when the user has no active sessions", async () => {
-    queryExecute.mockResolvedValue([]);
+    queryExecute.mockResolvedValue({ items: [], total: 0 });
 
     const response = await request(app.getHttpServer()).get("/v1/users/me/sessions").expect(200);
 
-    expect(response.body).toEqual([]);
+    expect(response.body).toEqual({ items: [], meta: { total: 0, limit: 20, offset: 0 } });
     expect(queryExecute).toHaveBeenCalledTimes(1);
     expect(queryExecute).toHaveBeenCalledWith(new ListActiveSessionsQuery(userId));
     expect(commandExecute).not.toHaveBeenCalled();
@@ -80,59 +85,84 @@ describe("SessionController (HTTP)", () => {
     const createdAt = new Date("2026-10-01T10:00:00.000Z");
     const lastUsedAt = new Date("2026-10-02T12:00:00.000Z");
     const expiresAt = new Date("2026-11-01T10:00:00.000Z");
-    queryExecute.mockResolvedValue([
-      new Session(
-        SessionId.from(currentSessionId),
-        UserId.from(userId),
-        new Browser("Chrome"),
-        new OperatingSystem("Windows"),
-        new DeviceType("desktop"),
-        new Ip("127.0.0.1"),
-        createdAt,
-        expiresAt,
-        lastUsedAt,
-        null
-      ),
-      new Session(
-        SessionId.from(otherSessionId),
-        UserId.from(userId),
-        null,
-        null,
-        null,
-        new Ip("127.0.0.2"),
-        createdAt,
-        expiresAt,
-        lastUsedAt,
-        null
-      ),
-    ]);
+    queryExecute.mockResolvedValue({
+      items: [
+        new Session(
+          SessionId.from(currentSessionId),
+          UserId.from(userId),
+          new Browser("Chrome"),
+          new OperatingSystem("Windows"),
+          new DeviceType("desktop"),
+          new Ip("127.0.0.1"),
+          createdAt,
+          expiresAt,
+          lastUsedAt,
+          null
+        ),
+        new Session(
+          SessionId.from(otherSessionId),
+          UserId.from(userId),
+          null,
+          null,
+          null,
+          new Ip("127.0.0.2"),
+          createdAt,
+          expiresAt,
+          lastUsedAt,
+          null
+        ),
+      ],
+      total: 2,
+    });
 
     const response = await request(app.getHttpServer()).get("/v1/users/me/sessions").expect(200);
 
     expect(queryExecute).toHaveBeenCalledTimes(1);
     expect(queryExecute).toHaveBeenCalledWith(new ListActiveSessionsQuery(userId));
-    expect(response.body).toEqual([
-      {
-        id: currentSessionId,
-        browser: "Chrome",
-        os: "Windows",
-        deviceType: "desktop",
-        createdAt: "2026-10-01T10:00:00.000Z",
-        lastUsedAt: "2026-10-02T12:00:00.000Z",
-        isCurrent: true,
-      },
-      {
-        id: otherSessionId,
-        browser: null,
-        os: null,
-        deviceType: null,
-        createdAt: "2026-10-01T10:00:00.000Z",
-        lastUsedAt: "2026-10-02T12:00:00.000Z",
-        isCurrent: false,
-      },
-    ]);
+    expect(response.body).toEqual({
+      items: [
+        {
+          id: currentSessionId,
+          browser: "Chrome",
+          os: "Windows",
+          deviceType: "desktop",
+          createdAt: "2026-10-01T10:00:00.000Z",
+          lastUsedAt: "2026-10-02T12:00:00.000Z",
+          isCurrent: true,
+        },
+        {
+          id: otherSessionId,
+          browser: null,
+          os: null,
+          deviceType: null,
+          createdAt: "2026-10-01T10:00:00.000Z",
+          lastUsedAt: "2026-10-02T12:00:00.000Z",
+          isCurrent: false,
+        },
+      ],
+      meta: { total: 2, limit: 20, offset: 0 },
+    });
     expect(commandExecute).not.toHaveBeenCalled();
   });
+
+  it("forwards search and pagination and retains the filtered total past the last page", async () => {
+    queryExecute.mockResolvedValue({ items: [], total: 7 });
+
+    const response = await request(app.getHttpServer())
+      .get("/v1/users/me/sessions")
+      .query({ search: "Chrome", limit: 5, offset: 10 })
+      .expect(200);
+    expect(queryExecute).toHaveBeenCalledWith(new ListActiveSessionsQuery(userId, 5, 10, "Chrome"));
+    expect(response.body).toEqual({ items: [], meta: { total: 7, limit: 5, offset: 10 } });
+  });
+
+  it.each([{ limit: 0 }, { limit: 101 }, { offset: -1 }, { search: "a".repeat(256) }, { search: ["a", "b"] }])(
+    "rejects invalid list parameters %j",
+    async (params) => {
+      await request(app.getHttpServer()).get("/v1/users/me/sessions").query(params).expect(422);
+      expect(queryExecute).not.toHaveBeenCalled();
+    }
+  );
 
   it("revokes another session without clearing the refresh cookie", async () => {
     commandExecute.mockResolvedValue(undefined);

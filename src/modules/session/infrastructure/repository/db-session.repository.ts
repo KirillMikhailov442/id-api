@@ -1,8 +1,13 @@
 import { Inject } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import type { PaginationQuery } from "@shared/pagination/pagination.query";
 import { IsNull, MoreThan, Raw, type Repository } from "typeorm";
 
-import type { ISessionRepository } from "@modules/session/application/port/session-repository";
+import type {
+  ISessionRepository,
+  SessionPage,
+  SessionPageFilter,
+} from "@modules/session/application/port/session-repository";
 import type { ISessionRevocationStore } from "@modules/session/application/port/session-revocation-store.type";
 import type { Session } from "@modules/session/domain/entity/session";
 import type { RefreshHash } from "@modules/session/domain/value-object/refresh-hash.value-object";
@@ -92,6 +97,41 @@ export class DbSessionRepository implements ISessionRepository {
       usedAt: null,
       revokedAt: null,
     });
+  }
+
+  async findPageByUserId(
+    userId: UserId,
+    pagination: PaginationQuery,
+    filter: SessionPageFilter = {}
+  ): Promise<SessionPage> {
+    const query = this.sessionRepository
+      .createQueryBuilder("session")
+      .where("session.userId = :userId", { userId: userId.getValue() });
+
+    if (filter.activeOnly === true) {
+      query.andWhere("session.revokedAt IS NULL").andWhere("session.expiresAt > :now", { now: new Date() });
+    }
+
+    const search = filter.search?.trim() ?? "";
+
+    if (search.length > 0) {
+      const escapedSearch = search.replace(/[\\%_]/g, "\\$&");
+      query.andWhere(
+        "(CAST(session.id AS text) ILIKE :search OR session.ip ILIKE :search OR session.browser ILIKE :search OR session.os ILIKE :search OR session.deviceType ILIKE :search)",
+        { search: `%${escapedSearch}%` }
+      );
+    }
+
+    if (filter.activeOnly === true) query.orderBy("session.lastUsedAt", "DESC");
+
+    const [sessions, total] = await query
+      .addOrderBy("session.createdAt", "DESC")
+      .addOrderBy("session.id", "DESC")
+      .skip(pagination.offset)
+      .take(pagination.limit)
+      .getManyAndCount();
+
+    return { items: sessions.map((session) => SessionMapper.toDomain(session)), total };
   }
 
   async findByUserId(userId: UserId): Promise<Session[]> {
