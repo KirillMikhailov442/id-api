@@ -36,6 +36,7 @@ describe("ClientController (HTTP)", () => {
     location: null,
     isActive: true,
     createdAt: client.getCreatedAt().toISOString(),
+    scopes: [],
   });
   const scopeDto = () => ({
     id: scope.getId().getValue(),
@@ -119,12 +120,13 @@ describe("ClientController (HTTP)", () => {
     expect(response.body).toEqual({ items: [], meta: { total: 0, limit: 20, offset: 0 } });
   });
 
-  it("gets a client by UUID", async () => {
+  it("gets a client by UUID with its scope names", async () => {
+    client = makeClient([scope, makeScope("email")]);
     query.mockResolvedValue(client);
 
     const response = await request(app.getHttpServer()).get(path()).expect(200);
     expect(query).toHaveBeenCalledWith(new GetClientQuery(actor, client.getId().getValue()));
-    expect(response.body).toEqual(dto());
+    expect(response.body).toEqual({ ...dto(), scopes: ["profile", "email"] });
   });
 
   it("updates the supplied fields and preserves false isActive", async () => {

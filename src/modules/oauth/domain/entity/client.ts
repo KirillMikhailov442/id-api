@@ -1,3 +1,4 @@
+import type { Scope } from "@modules/oauth/domain/entity/scope";
 import { ClientAlreadyActiveException } from "@modules/oauth/domain/exception/client-already-active.exception";
 import { ClientAlreadyInactiveException } from "@modules/oauth/domain/exception/client-already-inactive.exception";
 import type { ClientName } from "@modules/oauth/domain/value-object/client-name.value-object";
@@ -15,10 +16,17 @@ export class Client {
     private readonly secretHash: string,
     private isActive: boolean,
     private readonly createdAt: Date,
-    private location: LocationHref | null
+    private location: LocationHref | null,
+    private readonly scopes: readonly Scope[] = []
   ) {}
 
-  static create(params: { userId: UserId; name: ClientName; secretHash: string; location?: LocationHref }): Client {
+  static create(params: {
+    userId: UserId;
+    name: ClientName;
+    secretHash: string;
+    location?: LocationHref;
+    scopes?: readonly Scope[];
+  }): Client {
     return new Client(
       ClientId.create(),
       params.userId,
@@ -26,7 +34,8 @@ export class Client {
       params.secretHash,
       true,
       new Date(),
-      params.location ?? null
+      params.location ?? null,
+      params.scopes
     );
   }
 
@@ -40,6 +49,10 @@ export class Client {
 
   getName(): ClientName {
     return this.name;
+  }
+
+  getScopes(): readonly Scope[] {
+    return this.scopes;
   }
 
   getSecretHash(): string {

@@ -39,6 +39,7 @@ describe("CreateClientCommandHandler", () => {
     expect(client.getUserId().getValue()).toBe(requester.userId);
     expect(client.getSecretHash()).toBe("secret-hash");
     expect(client.getLocation()?.getValue()).toBe("https://app.example.com/callback");
+    expect(client.getScopes().map((scope) => scope.getName().getValue())).toEqual(["profile"]);
     expect(repos.scopeRepository.findByName).toHaveBeenCalledTimes(1);
     expect(repos.clientRepository.save).toHaveBeenCalledWith(client);
     expect(repos.clientScopeRepository.save).toHaveBeenCalledTimes(1);
@@ -51,6 +52,7 @@ describe("CreateClientCommandHandler", () => {
   it("supports clients without a location or scopes", async () => {
     const client = await handler.execute(new CreateClientCommand(requester, "Client", "test-client-secret"));
     expect(client.getLocation()).toBeNull();
+    expect(client.getScopes()).toEqual([]);
     expect(repos.scopeRepository.findByName).not.toHaveBeenCalled();
     expect(repos.clientScopeRepository.save).not.toHaveBeenCalled();
     expect(repos.clientRepository.save).toHaveBeenCalledWith(client);

@@ -100,22 +100,35 @@ describe("OAuth repositories and transactions (PostgreSQL)", () => {
 
   it("stores scope assignments and removes them when a scope is deleted", async () => {
     const scope = makeScope();
-    await db.clients.run(async ({ scopeRepository: scopes, clientScopeRepository: assignments }) => {
-      await scopes.save(scope);
-      await assignments.save(new ClientScope(client.getId(), scope.getId(), new Date()));
-      expect(await assignments.exists(client.getId(), scope.getId())).toBe(true);
-      expect((await assignments.findByClientId(client.getId())).map((item) => item.getScopeId())).toEqual([
-        scope.getId(),
-      ]);
-      expect((await scopes.findByName(new ScopeName("profile")))?.getId()).toEqual(scope.getId());
-      expect((await scopes.findByIds([scope.getId()])).map((item) => item.getId())).toEqual([scope.getId()]);
-      expect(await scopes.findByIds([])).toEqual([]);
-      expect(await scopes.findById(ScopeId.create())).toBeNull();
-      expect(await scopes.count()).toBe(1);
-      expect(await scopes.findAll({ limit: 1, offset: 0 })).toHaveLength(1);
-      await scopes.delete(scope.getId());
-      expect(await assignments.findByClientId(client.getId())).toEqual([]);
-    });
+    await db.clients.run(
+      async ({ scopeRepository: scopes, clientScopeRepository: assignments, clientRepository: clients }) => {
+        await scopes.save(scope);
+        await assignments.save(new ClientScope(client.getId(), scope.getId(), new Date()));
+        expect(await assignments.exists(client.getId(), scope.getId())).toBe(true);
+        expect((await assignments.findByClientId(client.getId())).map((item) => item.getScopeId())).toEqual([
+          scope.getId(),
+        ]);
+        expect((await scopes.findByName(new ScopeName("profile")))?.getId()).toEqual(scope.getId());
+        expect((await scopes.findByIds([scope.getId()])).map((item) => item.getId())).toEqual([scope.getId()]);
+        expect(await scopes.findByIds([])).toEqual([]);
+        expect(await scopes.findById(ScopeId.create())).toBeNull();
+        expect(await scopes.count()).toBe(1);
+        expect(await scopes.findAll({ limit: 1, offset: 0 })).toHaveLength(1);
+
+        const pagination = { limit: 1, offset: 0 };
+        const fromDetails = await clients.findById(client.getId());
+        const fromOwnList = await clients.findByUserId(client.getUserId(), pagination);
+        const fromAllClients = await clients.findAll(pagination);
+
+        expect(fromDetails?.getScopes()).toEqual([scope]);
+        expect(fromOwnList[0]?.getScopes()).toEqual([scope]);
+        expect(fromAllClients[0]?.getScopes()).toEqual([scope]);
+
+        await scopes.delete(scope.getId());
+        expect((await clients.findById(client.getId()))?.getScopes()).toEqual([]);
+        expect(await assignments.findByClientId(client.getId())).toEqual([]);
+      }
+    );
   });
 
   it("maps the migration's real scope name constraint to a domain exception", async () => {

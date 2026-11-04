@@ -3,6 +3,7 @@ import { Column, Entity, Index, PrimaryColumn } from "typeorm";
 import { SECRET_HASH_MAX_LENGTH } from "@modules/oauth/domain/entity/client";
 import { CLIENT_NAME_MAX_LENGTH } from "@modules/oauth/domain/value-object/client-name.value-object";
 import { LOCATION_HREF_MAX_LENGTH } from "@modules/oauth/domain/value-object/location-href.value-object";
+import type { DbScope } from "@modules/oauth/infrastructure/entity/db-scope.entity";
 
 @Entity("clients")
 @Index("clients_index_0", ["userId"])
@@ -27,4 +28,6 @@ export class DbClient {
 
   @Column({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
+
+  scopes?: DbScope[];
 }

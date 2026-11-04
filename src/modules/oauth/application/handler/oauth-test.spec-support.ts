@@ -19,11 +19,12 @@ export const ownerId = "00000000-0000-4000-8000-000000000001";
 export const requester = { userId: ownerId, roles: [] as string[] };
 export const outsider = { userId: "00000000-0000-4000-8000-000000000002", roles: [] as string[] };
 
-export function makeClient() {
+export function makeClient(scopes: readonly Scope[] = []) {
   return Client.create({
     userId: UserId.from(ownerId),
     name: new ClientName("Test client"),
     secretHash: "secret-hash",
+    scopes,
   });
 }
 

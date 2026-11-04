@@ -23,6 +23,9 @@ export class ClientDto {
   @ApiProperty({ format: "date-time", example: "2026-10-21T09:00:00.000Z" })
   createdAt: string;
 
+  @ApiProperty({ type: [String], example: ["profile"] })
+  scopes: string[];
+
   static fromDomain(client: Client): ClientDto {
     const dto = new ClientDto();
 
@@ -32,6 +35,8 @@ export class ClientDto {
     dto.location = client.getLocation()?.getValue() ?? null;
     dto.isActive = client.getIsActive();
     dto.createdAt = client.getCreatedAt().toISOString();
+
+    dto.scopes = client.getScopes().map((scope) => scope.getName().getValue());
 
     return dto;
   }
